@@ -1,2 +1,4 @@
 # PospoLiteHTML
-PospoLiteHTML is a simple HTML viewer engine made fully in Free Pascal.
+PospoLiteHTML is a simple HTML viewer engine fully made in Free Pascal.
+
+*Warning: This package is not complete.*
