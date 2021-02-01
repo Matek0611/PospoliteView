@@ -12,11 +12,15 @@ PospoLiteHTML is a simple HTML viewer engine fully made in Free Pascal.
 
 ### Change Log
 
+#### Alpha - 02.2021
+
+- Fixed ` procedure CheckAndCorrectURL(var AURL: string; const ALocation: string) `
+
 #### Alpha - 01.2021
 
-- First step to make base HTML classes
+- First step to make basic HTML classes
 - Beginning of transitions and animations 
 
 #### Alpha - XX.2020
 
-- First modules created.
+- First modules created
