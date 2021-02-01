@@ -8,7 +8,7 @@ PospoLiteHTML is a simple HTML viewer engine fully made in Free Pascal.
 - Installation
 - Components List
 - Simple Demo
-- Wiki
+- [Wiki](wiki)
 
 ### Change Log
 
