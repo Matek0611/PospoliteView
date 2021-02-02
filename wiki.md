@@ -4,10 +4,10 @@
 
 ### Table of Contents
 
-1. Modules
-1. Classes and Interfaces
-1. PospoLiteJS
-1. Offline and Online usage
+1. [Modules](#Modules)
+1. [Classes and Interfaces](#Classes-and-Interfaces)
+1. [PospoLiteJS](#PospoLiteJS)
+1. [Offline and Online Usage](#Offline-and-Online-Usage)
 
 #### Modules
 
