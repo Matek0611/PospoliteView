@@ -6,4 +6,6 @@
 
 1. Modules
 
-  1.1. x
+2. Classes and Interfaces
+  - IPLHTMLZoomed
+  - TPLCSSCustomControl
