@@ -5,7 +5,13 @@
 ### Table of Contents
 
 1. Modules
+1. Classes and Interfaces
+1. PospoLiteJS
+1. Offline and Online usage
 
-2. Classes and Interfaces
-  - IPLHTMLZoomed
-  - TPLCSSCustomControl
+#### Modules
+
+#### Classes And Interfaces
+
+##### `IPLHTMLZoomed`
+##### `TPLCSSCustomControl`
