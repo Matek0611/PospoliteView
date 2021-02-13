@@ -14,7 +14,7 @@ PospoLiteHTML is a simple HTML viewer engine fully made in Free Pascal.
 
 #### Alpha - 02.2021
 
-- Added transition effect for basic `background-color`
+- Added transition effect for `TPLHTMLBasicObject` (background-color)
 - Fixed `CheckAndCorrectURL` procedure in `PospoLiteHTML.Internet` unit
 
 #### Alpha - 01.2021
