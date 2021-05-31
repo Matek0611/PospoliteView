@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <PathDelim Value="\"/>
+    <Name Value="pospolite_view"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <CodeGeneration>
+        <SmartLinkUnit Value="True"/>
+      </CodeGeneration>
+    </CompilerOptions>
+    <Files Count="16">
+      <Item1>
+        <Filename Value="pospolite.view.basics.pas"/>
+        <UnitName Value="Pospolite.View.Basics"/>
+      </Item1>
+      <Item2>
+        <Filename Value="pospolite.view.basics.generics.inc"/>
+        <Type Value="Include"/>
+      </Item2>
+      <Item3>
+        <Filename Value="pospolite.view.basics.helpers.inc"/>
+        <Type Value="Include"/>
+      </Item3>
+      <Item4>
+        <Filename Value="pospolite.view.basics.funcs.inc"/>
+        <Type Value="Include"/>
+      </Item4>
+      <Item5>
+        <Filename Value="pospolite.view.js.basics.pas"/>
+        <UnitName Value="Pospolite.View.JS.Basics"/>
+      </Item5>
+      <Item6>
+        <Filename Value="pospolite.view.dom.screen.pas"/>
+        <UnitName Value="Pospolite.View.DOM.Screen"/>
+      </Item6>
+      <Item7>
+        <Filename Value="pospolite.view.dom.window.pas"/>
+        <UnitName Value="Pospolite.View.DOM.Window"/>
+      </Item7>
+      <Item8>
+        <Filename Value="pospolite.view.css.basics.pas"/>
+        <UnitName Value="Pospolite.View.CSS.Basics"/>
+      </Item8>
+      <Item9>
+        <Filename Value="pospolite.view.css.declaration.pas"/>
+        <UnitName Value="Pospolite.View.CSS.Declaration"/>
+      </Item9>
+      <Item10>
+        <Filename Value="pospolite.view.css.selector.pas"/>
+        <UnitName Value="Pospolite.View.CSS.Selector"/>
+      </Item10>
+      <Item11>
+        <Filename Value="pospolite.view.drawing.basics.pas"/>
+        <UnitName Value="Pospolite.View.Drawing.Basics"/>
+      </Item11>
+      <Item12>
+        <Filename Value="pospolite.view.drawing.drawer.pas"/>
+        <UnitName Value="Pospolite.View.Drawing.Drawer"/>
+      </Item12>
+      <Item13>
+        <Filename Value="pospolite.view.drawing.drawerd2d1.pas"/>
+        <UnitName Value="Pospolite.View.Drawing.DrawerD2D1"/>
+      </Item13>
+      <Item14>
+        <Filename Value="pospolite.view.drawing.drawerd2d1.definitions.pas"/>
+        <UnitName Value="Pospolite.View.Drawing.DrawerD2D1.Definitions"/>
+      </Item14>
+      <Item15>
+        <Filename Value="pospolite.view.drawing.imagecodecs.pas"/>
+        <UnitName Value="Pospolite.View.Drawing.ImageCodecs"/>
+      </Item15>
+      <Item16>
+        <Filename Value="pospolite.view.drawing.renderer.pas"/>
+        <UnitName Value="pospolite.view.drawing.renderer"/>
+      </Item16>
+    </Files>
+    <RequiredPkgs Count="2">
+      <Item1>
+        <PackageName Value="LCL"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="FCL"/>
+      </Item2>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
