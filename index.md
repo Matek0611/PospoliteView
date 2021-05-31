@@ -15,7 +15,7 @@ PospoLite View is a simple HTML viewer engine fully made in Free Pascal.
 #### Alpha - 04/05.2021
 
 - Improved `TPLColor` record
-- CSS3 Parser fixes - still working
+- CSS3 Parser fixes - still needs work
 - Beginning of Direct2D support for drawing elements 
 
 #### Alpha - 03.2021
