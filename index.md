@@ -1,6 +1,6 @@
 ## Home
 
-PospoLiteHTML is a simple HTML viewer engine fully made in Free Pascal.
+PospoLite View is a simple HTML viewer engine fully made in Free Pascal.
 
 ### Contents
 
@@ -11,6 +11,18 @@ PospoLiteHTML is a simple HTML viewer engine fully made in Free Pascal.
 - [Wiki](wiki)
 
 ### Change Log
+
+#### Alpha - 04/05.2021
+
+- Improved `TPLColor` record
+- CSS3 Parser fixes - still working
+- Beginning of Direct2D support for drawing elements 
+
+#### Alpha - 03.2021
+
+- Renamed from `PospoLiteHTML` to `PospoliteView`
+- Changed all units
+- Optimized some records and classes
 
 #### Alpha - 02.2021
 
