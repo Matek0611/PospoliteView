@@ -35,6 +35,44 @@ begin
   end;
 end;
 
+function ScaleLengthToScreen(AValueInPx: TPLFloat; AHTMLObject: IPLHTMLObject): TPLFloat;
+var
+  k: TPLFloat = 1;
+begin
+  if Assigned(AHTMLObject) then k := AHTMLObject.Zoom;
+  Result := Screen.PixelsPerInch / 96 * k * AValueInPx;
+end;
+
+function AbsoluteLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: IPLHTMLObject): TPLFloat;
+begin
+  case AUnit.ToLower of
+    'px': Result := AValue;
+    'cm': Result := AValue * 37.795275590551181102362204724409;
+    'mm': Result := AValue * 3.7795275590551181102362204724409;
+    'q' : Result := AValue * 0.94488188976377952755905511811024;
+    'in': Result := AValue * 96;
+    'pc': Result := AValue * 16;
+    'pt': Result := AValue * 1.3333333333333333333333333333333;
+    else Result := 0;
+  end;
+
+  Result := ScaleLengthToScreen(Result, AHTMLObject);
+end;
+
+function RelativeLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: IPLHTMLObject): TPLFloat;
+begin
+
+end;
+
+function AutoLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: IPLHTMLObject): TPLFloat;
+begin
+  case AUnit.ToLower of
+    'px', 'cm', 'mm', 'q', 'in', 'pc', 'pt': Result := AbsoluteLengthToPx(AValue, AUnit, AHTMLObject);
+    '': Result := RelativeLengthToPx(AValue, AUnit, AHTMLObject);
+    else Result := 0;
+  end;
+end;
+
 operator := (a: TPLFloat) b: TPLString;
 begin
   b := FloatToStr(a, PLFormatSettingsDef);
@@ -76,3 +114,15 @@ operator mod (a, b: TPLFloat)r: TPLFloat;
 begin
   r := fmod(a, b);
 end;
+
+operator in (a: TPLString; tab: specialize TArray<TPLString>): TPLBool;
+var
+  i: TPLInt;
+begin
+  for i := Low(tab) to High(tab) do begin
+    if a = tab[i] then exit(true);
+  end;
+
+  Result := false;
+end;
+

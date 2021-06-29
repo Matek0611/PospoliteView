@@ -30,9 +30,14 @@ type
     property Kind: TPLCSSPropertyValuePartKind read FKind;
   end;
 
+  TPLCSSPropertyValuePartClass = class of TPLCSSPropertyValuePart;
+
   { TPLCSSPropertyValueParts }
 
-  TPLCSSPropertyValueParts = class(specialize TPLObjectList<TPLCSSPropertyValuePart>);
+  TPLCSSPropertyValueParts = class(specialize TPLObjectList<TPLCSSPropertyValuePart>)
+  public
+    function CountTypes(ATypes: array of TPLCSSPropertyValuePartClass; AFrom: TPLInt = 0): TPLInt;
+  end;
 
   { TPLCSSPropertyValuePartNumber }
 
@@ -116,9 +121,22 @@ type
     property Important: TPLBool read FImportant write FImportant;
   end;
 
+  { IPLCSSDeclarations }
+
+  IPLCSSDeclarations = interface
+    procedure SetDeclarations(AValue: TPLString);
+    function AsString: TPLString;
+
+    procedure Add(AItem: TPLCSSProperty);
+    function Find(AItem: TPLCSSProperty; AComparator: specialize TPLObjectListFindCompare<TPLCSSProperty>
+      = nil): SizeInt;
+    function Exists(AName: TPLString; out AProperty: TPLCSSProperty): TPLBool;
+    procedure Delete(AName: TPLString);
+  end;
+
   { TPLCSSDeclarations }
 
-  TPLCSSDeclarations = class(specialize TPLObjectList<TPLCSSProperty>)
+  TPLCSSDeclarations = class(specialize TPLObjectList<TPLCSSProperty>, IPLCSSDeclarations)
   private
     function Compare(a, b: T): TPLBool; inline;
     function CompareSort(a, b: T): TPLSign;
@@ -169,6 +187,25 @@ end;
 function TPLCSSPropertyValuePart.AsString: TPLString;
 begin
   Result := '';
+end;
+
+{ TPLCSSPropertyValueParts }
+
+function TPLCSSPropertyValueParts.CountTypes(
+  ATypes: array of TPLCSSPropertyValuePartClass; AFrom: TPLInt): TPLInt;
+var
+  i, j: TPLInt;
+begin
+  Result := 0;
+
+  for i := AFrom to Count-1 do begin
+    for j := Low(ATypes) to High(ATypes) do begin
+      if Item[i] is ATypes[j] then begin
+        Inc(Result);
+        break;
+      end;
+    end;
+  end;
 end;
 
 { TPLCSSPropertyValuePartNumber }
@@ -402,10 +439,11 @@ var
   bound: SizeInt = 1;
 begin
   Result := -1;
+  AName := AName.ToLower; // case in-sensitive
 
   if Count = 0 then exit;
 
-  while (bound < Count) and (Self[bound].Name < AName) do bound *= 2;
+  while (bound < Count) and (Self[bound].Name.ToLower < AName) do bound *= 2;
 
   Result := BinarySearch(AName, bound div 2, min(bound + 1, Count - 1));
 end;
@@ -566,10 +604,10 @@ begin
         Inc(i);
         j := i;
 
-        while IsNotEnd and not AValue[i].IsWhiteSpace do Inc(i);
+        while IsNotEnd and not (AValue[i].IsWhiteSpace or (AValue[i] = ',')) do Inc(i);
 
         f := TPLCSSPropertyValuePartFunction.Create('#()');
-        f.Arguments.Add(TPLCSSPropertyValuePartStringOrIdentifier.Create(AValue.SubStr(j, i - j + 1)));
+        f.Arguments.Add(TPLCSSPropertyValuePartStringOrIdentifier.Create(AValue.SubStr(j, i - j)));
         AParts.Add(f);
       end;
       '+', '-', '0'..'9', '.': begin
@@ -609,7 +647,7 @@ begin
         j := i;
 
         while IsNotEnd do begin
-          if AValue[i].IsWhiteSpace or (AValue[i] = '(') then break;
+          if AValue[i].IsWhiteSpace or (AValue[i] = '(') or (AValue[i] = ',') then break;
           Inc(i);
         end;
         if (AValue[i] = '(') then begin
@@ -632,7 +670,7 @@ begin
           Inc(i);
         end else begin
           k := i;
-          while IsNotEnd and not (AValue[k].IsWhiteSpace) do Inc(k);
+          while (k <= AValue.Length) and not (AValue[k].IsWhiteSpace) and (AValue[k] <> ',') do Inc(k);
           i := k;
 
           pom := AValue.SubStr(j, k - j + 1).Trim;

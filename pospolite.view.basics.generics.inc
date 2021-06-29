@@ -285,3 +285,23 @@ function TPLList.First: T;
 begin
   Result := GetItem(0);
 end;
+
+{ TPLFuncs }
+
+class procedure TPLFuncs.Swap(var a, b: T);
+var
+  tmp: T;
+begin
+  tmp := a;
+  a := b;
+  b := tmp;
+end;
+
+class function TPLFuncs.NewArray(tab: array of T): specialize TArray<T>;
+var
+  i: TPLInt;
+begin
+  SetLength(Result, Length(tab));
+  for i := Low(tab) to High(tab) do
+    Result[i] := tab[i];
+end;

@@ -27,7 +27,8 @@ type
     function GuessIfSpaceSeparated(AF: TPLCSSPropertyValuePartFunction): TPLBool; inline;
 
     procedure SetColor(AValue: TPLString);
-    procedure SetColorParsed(AFunction: TPLCSSPropertyValuePartFunction);
+    procedure SetColorParsed(AFunction: TPLCSSPropertyValuePartFunction;
+      AFree: TPLBool = true);
   public
     constructor Create(AValue: TPLString);
     constructor Create(ARed, AGreen, ABlue: Byte; AAlpha: Byte = 255);
@@ -66,6 +67,8 @@ type
     constructor Create(AX, AY: T);
     function Empty: TPLPoint; inline;
     function IsEmpty: TPLBool; inline;
+    function Rotate(APivot: TPLPoint; AAngleDeg: TPLFloat): TPLPoint;
+    function RotateClockwise(APivot: TPLPoint; AAngleDeg: TPLFloat): TPLPoint;
 
     class operator :=(p: TPoint) r: TPLPoint; inline;
     class operator :=(p: TPLPoint) r: TPoint; inline;
@@ -285,7 +288,8 @@ begin
   SetColorParsed(CSSExtract(AValue));
 end;
 
-procedure TPLColor.SetColorParsed(AFunction: TPLCSSPropertyValuePartFunction);
+procedure TPLColor.SetColorParsed(AFunction: TPLCSSPropertyValuePartFunction;
+  AFree: TPLBool);
 var
   func: TPLCSSPropertyValuePartFunction absolute AFunction;
   issep: TPLBool;
@@ -400,7 +404,7 @@ begin
       end;
     end;
   finally
-    func.Free;
+    if AFree then func.Free;
   end;
 end;
 
@@ -447,7 +451,7 @@ end;
 class operator TPLColor.:=(AValue: TPLCSSPropertyValuePartFunction) r: TPLColor;
 begin
   r := Default(TPLColor);
-  r.SetColorParsed(AValue);
+  r.SetColorParsed(AValue, false);
 end;
 
 class operator TPLColor.:=(AValue: TPLColor) r: TColor;
@@ -555,6 +559,32 @@ end;
 function TPLPoint.IsEmpty: TPLBool;
 begin
   Result := (FX = 0) and (FY = 0);
+end;
+
+function TPLPoint.Rotate(APivot: TPLPoint; AAngleDeg: TPLFloat): TPLPoint;
+var
+  s, c: TPLFloat;
+begin
+  AAngleDeg := degtorad(AAngleDeg);
+  s := sin(AAngleDeg);
+  c := cos(AAngleDeg);
+
+  Result := Self - APivot;
+  Result := TPLPoint.Create(Variant(Result.X * c - Result.Y * s), Variant(Result.X * s + Result.Y * c));
+  Result := Result + APivot;
+end;
+
+function TPLPoint.RotateClockwise(APivot: TPLPoint; AAngleDeg: TPLFloat): TPLPoint;
+var
+  s, c: TPLFloat;
+begin
+  AAngleDeg := degtorad(AAngleDeg);
+  s := sin(AAngleDeg);
+  c := cos(AAngleDeg);
+
+  Result := Self - APivot;
+  Result := TPLPoint.Create(Variant(Result.X * c + Result.Y * s), Variant(Result.X * s - Result.Y * c));
+  Result := Result + APivot;
 end;
 
 class operator TPLPoint.><(a, b: TPLPoint) r: TPLFloat;

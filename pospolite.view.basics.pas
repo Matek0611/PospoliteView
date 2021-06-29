@@ -30,6 +30,21 @@ type
   // Bool
   TPLBool = Boolean;
 
+  { IPLHTMLObject }
+
+  IPLHTMLObject = interface
+    ['{37CA6394-6FDE-4E4A-A44D-EBCEC2EBED34}']
+    function GetZoom: TPLFloat;
+    procedure SetZoom(AValue: TPLFloat);
+
+    function CSS_InheritValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
+    function CSS_InitialValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
+    function CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
+    function CSS_RevertValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
+
+    property Zoom: TPLFloat read GetZoom write SetZoom;
+  end;
+
   // - Generics - //
 
   { TPLNumberRange }
@@ -54,7 +69,7 @@ type
 
   { TPLObjectList }
 
-  generic TPLObjectList<T: class> = class(TObject)
+  generic TPLObjectList<T: class> = class(TInterfacedObject)
   private type
     TListOfT = array of T;
   private
@@ -125,6 +140,19 @@ type
 
     function Clone: T;
   end;
+
+  { TPLFuncs }
+
+  generic TPLFuncs<T> = class sealed
+  public
+    class procedure Swap(var a, b: T);
+    class function NewArray(tab: array of T): specialize TArray<T>;
+  end;
+
+  TPLStringFuncs = specialize TPLFuncs<TPLString>;
+  TPLIntFuncs = specialize TPLFuncs<TPLInt>;
+  TPLFloatFuncs = specialize TPLFuncs<TPLFloat>;
+  TPLPointerFuncs = specialize TPLFuncs<Pointer>;
 
   // - Helpers - //
 
@@ -250,6 +278,10 @@ const
   function InRanges(const AValue: TPLInt; const ARanges: array of TPLIntRange): TPLBool;
   function fmod(a, b: TPLFloat): TPLFloat;
   function AngleDeg(AAngle: TPLFloat; const AUnit: TPLString = 'deg'): TPLFloat;
+  function ScaleLengthToScreen(AValueInPx: TPLFloat; AHTMLObject: IPLHTMLObject = nil): TPLFloat;
+  function AbsoluteLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: IPLHTMLObject = nil): TPLFloat; // px, cm, mm, Q, in, pc, pt => px (scaled)
+  function RelativeLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: IPLHTMLObject = nil): TPLFloat; // => px (scaled)
+  function AutoLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: IPLHTMLObject = nil): TPLFloat; // auto detect absolute or relative value
 
   operator := (a: TPLFloat) b: TPLString;
   operator := (a: TPLString) b: TPLFloat;
@@ -258,8 +290,11 @@ const
   operator := (a: TPLFloat) b: TPLBool;
   operator * (a: TPLString; b: TPLInt) r: TPLString;
   operator mod (a, b: TPLFloat) r: TPLFloat;
+  operator in (a: TPLString; tab: specialize TArray<TPLString>): TPLBool;
 
 implementation
+
+uses Forms;
 
 // - Functions and operators - //
 {$I pospolite.view.basics.funcs.inc}

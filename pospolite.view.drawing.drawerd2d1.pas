@@ -688,6 +688,7 @@ begin
     I := Stops.Count;
   end;
   Gamma := D2D1_GAMMA_2_2;
+  //WriteLn(I);
   Target.CreateGradientStopCollection(S, I, Gamma, Wraps[Wrap], Collection);
   Target.CreateLinearGradientBrush(LineProp, @BrushProp, Collection, Result);
 end;
@@ -1263,6 +1264,7 @@ begin
 
   FCreated := True;
   FMidPoint := AMiddle;
+  FWrap := dbgwWrap;
   FStops := TPLDrawingGradientStopsD2D.Create;
 end;
 
@@ -2163,6 +2165,12 @@ procedure TPLD2D1Drawer.DrawBox(ARect: TPLRectF; ABackground: IPLDrawingBrush;
   var
     pen: IPLDrawingPen;
   begin
+    if Assigned(ABorders.Image) and (opts.Style <> dbsNone) then begin
+      pen := NewDrawingPenD2D(ABorders.Image, opts.Width);
+      FSurface.Stroke(pen);
+      exit;
+    end;
+
     case opts.Style of
       dbsNone: begin
         // nothing
@@ -2240,7 +2248,7 @@ var
         FSurface.ArcTo(TPLRectF.Create(cr.Right - 2 * r, cr.Bottom - 2 * r, r * 2, r * 2), 3*pi/4, pi/2);
 
         r := ABorders.Radius[2] * dr;
-        FSurface.LineTo(cr.Right, cr.Top + 2 * r);
+        if r = 0 then FSurface.LineTo(cr.Right, cr.Top + 2 * r);
         if r > 0 then
           FSurface.ArcTo(TPLRectF.Create(cr.Right - 2 * r, cr.Top, r * 2, r * 2), pi/2, pi/4)
         else
@@ -2253,7 +2261,7 @@ var
         FSurface.ArcTo(TPLRectF.Create(cr.Right - 2 * r, cr.Top, r * 2, r * 2), pi/4, 0);
 
         r := ABorders.Radius[1] * dr;
-        FSurface.LineTo(cr.Left + 2 * r, cr.Top);
+        if r = 0 then FSurface.LineTo(cr.Left + 2 * r, cr.Top);
         if r > 0 then
           FSurface.ArcTo(TPLRectF.Create(cr.Left, cr.Top, r * 2, r * 2), 0, -pi/4)
         else

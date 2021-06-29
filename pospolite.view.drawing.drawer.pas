@@ -6,7 +6,8 @@ unit Pospolite.View.Drawing.Drawer;
 interface
 
 uses
-  Classes, SysUtils, Graphics, Pospolite.View.Basics, Pospolite.View.Drawing.Basics;
+  Classes, SysUtils, Graphics, math, Pospolite.View.Basics,
+  Pospolite.View.Drawing.Basics;
 
 type
 
@@ -357,8 +358,10 @@ type
 
     constructor Create(const ALeft, ATop, ARight, ABottom: TPLDrawingBorder;
       ARadius: TPLBorderRadiusData; const AImage: IPLDrawingBrush = nil);
+    function AverageBorderSize: TPLFloat;
   end;
 
+  operator := (a: TPLString) r: TPLDrawingBorderStyle;
   function PLDrawingBordersDef: TPLDrawingBorders;
   function PLDrawingBordersRadiusData(b1, b2, b3, b4: TPLFloat): TPLDrawingBorders.TPLBorderRadiusData;
 
@@ -409,11 +412,28 @@ begin
   r.Multiply(b);
 end;
 
+operator := (a: TPLString) r: TPLDrawingBorderStyle;
+begin
+  case a.Trim.ToLower of
+    'none': r := dbsNone;
+    'dashed': r := dbsDashed;
+    'dotted': r := dbsDotted;
+    'double': r := dbsDouble;
+    'groove': r := dbsGroove;
+    'hidden': r := dbsHidden;
+    'inset': r := dbsInset;
+    'outset': r := dbsOutset;
+    'ridge': r := dbsRidge;
+    'solid': r := dbsSolid;
+    else r := dbsNone;
+  end;
+end;
+
 function PLDrawingBordersDef: TPLDrawingBorders;
 var
   b: TPLDrawingBorder;
 begin
-  b := TPLDrawingBorder.Create(2, TPLColor.Create(0, 0, 0), dbsSolid);
+  b := TPLDrawingBorder.Create(1, TPLColor.Create(0, 0, 0), dbsSolid);
   Result := TPLDrawingBorders.Create(b, b, b, b, PLDrawingBordersRadiusData(0, 0, 0, 0));
 end;
 
@@ -448,6 +468,11 @@ begin
   Bottom := ABottom;
   Radius := ARadius;
   Image := AImage;
+end;
+
+function TPLDrawingBorders.AverageBorderSize: TPLFloat;
+begin
+  Result := (Left.Width + Top.Width + Right.Width + Bottom.Width) / 4;
 end;
 
 { TPLDrawingInterfacedBitmap }
