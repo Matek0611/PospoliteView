@@ -14,7 +14,7 @@
         <SmartLinkUnit Value="True"/>
       </CodeGeneration>
     </CompilerOptions>
-    <Files Count="16">
+    <Files Count="18">
       <Item1>
         <Filename Value="pospolite.view.basics.pas"/>
         <UnitName Value="Pospolite.View.Basics"/>
@@ -77,8 +77,16 @@
       </Item15>
       <Item16>
         <Filename Value="pospolite.view.drawing.renderer.pas"/>
-        <UnitName Value="pospolite.view.drawing.renderer"/>
+        <UnitName Value="Pospolite.View.Drawing.Renderer"/>
       </Item16>
+      <Item17>
+        <Filename Value="pospolite.view.html.basics.pas"/>
+        <UnitName Value="Pospolite.View.HTML.Basics"/>
+      </Item17>
+      <Item18>
+        <Filename Value="pospolite.view.html.parser.pas"/>
+        <UnitName Value="pospolite.view.html.parser"/>
+      </Item18>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

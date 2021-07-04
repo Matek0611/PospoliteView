@@ -14,7 +14,7 @@ begin
   Result := abs(a);
   b := abs(b);
 
-  while Result >= b do Result := Result-b;
+  while Result >= b do Result := Result - b;
 
   if a < 0 then exit(-Result);
 end;
@@ -61,14 +61,25 @@ end;
 
 function RelativeLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: IPLHTMLObject): TPLFloat;
 begin
-
+  case AUnit.ToLower of
+    '%': ;
+    'ch': ;
+    'em': ;
+    'ex': ;
+    'rem': ;
+    'vh': ;
+    'vw': ;
+    'vmin': ;
+    'vmax': ;
+    else Result := 0;
+  end;
 end;
 
 function AutoLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: IPLHTMLObject): TPLFloat;
 begin
   case AUnit.ToLower of
     'px', 'cm', 'mm', 'q', 'in', 'pc', 'pt': Result := AbsoluteLengthToPx(AValue, AUnit, AHTMLObject);
-    '': Result := RelativeLengthToPx(AValue, AUnit, AHTMLObject);
+    '%', 'ch', 'em', 'ex', 'rem', 'vh', 'vw', 'vmin', 'vmax': Result := RelativeLengthToPx(AValue, AUnit, AHTMLObject);
     else Result := 0;
   end;
 end;
@@ -117,7 +128,18 @@ end;
 
 operator in (a: TPLString; tab: specialize TArray<TPLString>): TPLBool;
 var
-  i: TPLInt;
+  i: SizeInt;
+begin
+  for i := Low(tab) to High(tab) do begin
+    if a = tab[i] then exit(true);
+  end;
+
+  Result := false;
+end;
+
+operator in (a: TPLFloat; tab: specialize TArray<TPLFloat>): TPLBool;
+var
+  i: SizeInt;
 begin
   for i := Low(tab) to High(tab) do begin
     if a = tab[i] then exit(true);

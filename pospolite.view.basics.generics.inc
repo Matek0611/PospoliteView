@@ -25,6 +25,34 @@ begin
   Result := T(ANumber);
 end;
 
+{ TPLListEnumerator }
+
+function TPLListEnumerator.GetCurrent: E;
+begin
+  Result := FList[FIndex];
+end;
+
+constructor TPLListEnumerator.Create(const AList: L);
+begin
+  inherited Create;
+
+  FList := AList;
+  FIndex := 0;
+end;
+
+function TPLListEnumerator.MoveNext: TPLBool;
+begin
+  if FIndex+1 < FList.Count then begin
+    Result := true;
+    Inc(FIndex);
+  end else Result := false;
+end;
+
+procedure TPLListEnumerator.Reset;
+begin
+  FIndex := 0;
+end;
+
 { TPLObjectList }
 
 function TPLObjectList.GetItem(AIndex: SizeInt): T;
@@ -96,6 +124,11 @@ begin
   SortArray(AArray, ALeft, m, AComparator);
   SortArray(AArray, m + 1, ARight, AComparator);
   MergeArray(AArray, ALeft, m, m + 1, ARight, AComparator);
+end;
+
+function TPLObjectList.GetEnumerator: IObjectListEnumerator;
+begin
+  Result := TObjectListEnumerator.Create(Self);
 end;
 
 function TPLObjectList.Find(AItem: T; AComparator: specialize
@@ -212,6 +245,11 @@ begin
   FArray[AIndex] := AValue;
 end;
 
+function TPLList.GetEnumerator: IListEnumerator;
+begin
+  Result := TListEnumerator.Create(Self);
+end;
+
 constructor TPLList.Create;
 begin
   inherited Create;
@@ -305,3 +343,104 @@ begin
   for i := Low(tab) to High(tab) do
     Result[i] := tab[i];
 end;
+
+{ TPLParameter }
+
+class operator TPLParameter.=(a, b: TPLParameter) r: TPLBool;
+begin
+  r := (a.Key = b.Key) and (a.Value = b.Value);
+end;
+
+{ TPLHTMLObjectAttributes }
+
+function TPLHTMLObjectAttributes.GetCharset: PPLHTMLObjectAttribute;
+begin
+  Result := FPtrs[7];
+end;
+
+function TPLHTMLObjectAttributes.GetClass: PPLHTMLObjectAttribute;
+begin
+  Result := FPtrs[0];
+end;
+
+function TPLHTMLObjectAttributes.GetHref: PPLHTMLObjectAttribute;
+begin
+  Result := FPtrs[4];
+end;
+
+function TPLHTMLObjectAttributes.GetId: PPLHTMLObjectAttribute;
+begin
+  Result := FPtrs[2];
+end;
+
+function TPLHTMLObjectAttributes.GetName: PPLHTMLObjectAttribute;
+begin
+  Result := FPtrs[1];
+end;
+
+function TPLHTMLObjectAttributes.GetRel: PPLHTMLObjectAttribute;
+begin
+  Result := FPtrs[8];
+end;
+
+function TPLHTMLObjectAttributes.GetSrc: PPLHTMLObjectAttribute;
+begin
+  Result := FPtrs[5];
+end;
+
+function TPLHTMLObjectAttributes.GetStyle: PPLHTMLObjectAttribute;
+begin
+  Result := FPtrs[3];
+end;
+
+function TPLHTMLObjectAttributes.GetType: PPLHTMLObjectAttribute;
+begin
+  Result := FPtrs[6];
+end;
+
+procedure TPLHTMLObjectAttributes.UpdateConsts;
+begin
+  FPtrs[0] := Get('class');
+  FPtrs[1] := Get('name');
+  FPtrs[2] := Get('id');
+  FPtrs[3] := Get('style');
+  FPtrs[4] := Get('href');
+  FPtrs[5] := Get('src');
+  FPtrs[6] := Get('type');
+  FPtrs[7] := Get('charset');
+  FPtrs[8] := Get('rel');
+end;
+
+procedure TPLHTMLObjectAttributes.Add(AItem: T);
+begin
+  inherited Add(AItem);
+  UpdateConsts;
+end;
+
+procedure TPLHTMLObjectAttributes.Remove(AItem: T);
+begin
+  inherited Remove(AItem);
+  UpdateConsts;
+end;
+
+procedure TPLHTMLObjectAttributes.Clear;
+begin
+  inherited Clear;
+  UpdateConsts;
+end;
+
+function TPLHTMLObjectAttributes.Get(AName: TPLString): PPLHTMLObjectAttribute;
+var
+  a: TPLHTMLObjectAttribute;
+begin
+  AName := AName.Trim.ToLower;
+
+  if AName.IsEmpty then exit(nil);
+
+  for a in Self do
+    if a.Key.ToLower = AName then exit(PPLHTMLObjectAttribute(@a));
+
+  Result := nil;
+end;
+
+

@@ -6,346 +6,204 @@ unit Pospolite.View.JS.Basics;
 interface
 
 uses
-  Classes, SysUtils, strutils, Pospolite.View.Basics;
+  Classes, SysUtils, strutils, math, Pospolite.View.Basics;
 
-{type
+type
 
-  TPLJSGarbageCollectorState = (gstNone, gstBegin, gstMark, gstClean);
+  TPLJSAtom = TPLUInt;
 
-  TPLJSLoopSignal = (lsNone, lsNoOperation, lsBreak);
+  TPLJSMode = (jsmStrict, jsmStrip, jsmMath);
 
-  TPLJSValueType = (vtNumber = 1, vtString, vtBoolean, vtObject, vtNull, vtUndefined);
+  TPLJSObject = class;
 
-  TPLJSPropertyFlag = (pfNone, pfWrite, pfEnum, pfConfig, pfIgnore);
+  TPLJSObjectValueKind = (ovtrObject, ovtrBigDecimal, ovtrBigInt, ovtrBigFloat,
+    ovtrString, ovtrFunction, ovtrModule, ovtrSymbol, ovtNull, ovtUndefined,
+    ovtUninitialized, ovtException, ovtCatch, ovtInteger, ovtFloat, ovtBoolean);
+
+  { TPLJSObjectValue }
+
+  TPLJSObjectValue = packed record
+  private
+    FKind: TPLJSObjectValueKind;
+    FVPtr: Pointer;
+  public
+    constructor Create(AValue: Pointer; AKind: TPLJSObjectValueKind);
+
+    class function NewString(AValue: TPLString): TPLJSObjectValue; static; inline;
+    class function NewInteger(AValue: TPLInt): TPLJSObjectValue; static; inline;
+    class function NewFloat(AValue: TPLFloat): TPLJSObjectValue; static; inline;
+    class function NewBoolean(AValue: TPLBool): TPLJSObjectValue; static; inline;
+    class function NewObject(AValue: TPLJSObject): TPLJSObjectValue; static; inline;
+    class function NewNull: TPLJSObjectValue; static; inline;
+    class function NewUndefined: TPLJSObjectValue; static; inline;
+    class function NewUninitialized: TPLJSObjectValue; static; inline;
+    class function NewException: TPLJSObjectValue; static; inline;
+
+    function AsString: TPLString;
+    function AsNumber: TPLFloat;
+
+    property Kind: TPLJSObjectValueKind read FKind;
+  end;
+
+  PPLJSObjectValue = ^TPLJSObjectValue;
+
+  TPLJSPropertyFlag = (pfNormal, pfGetSet, pfVarRef, pfAutoInit, pfConfigurable,
+    pfWriteable, pfEnumerable, pfLength, pfHasGet, pfHasSet, pfHasValue, pfThrow,
+    pfThrowStrict, pfNoAdd, pfExotic);
   TPLJSPropertyFlags = set of TPLJSPropertyFlag;
 
- const
-   pfBuiltIn = [pfWrite, pfConfig];
-   pfDefault = pfBuiltIn + [pfEnum];
+const
+  CPLJSPropertyFlagFullAccess = [pfConfigurable, pfWriteable, pfEnumerable];
 
 type
 
-  TPLJSValue = class;
-  TPLJSArguments = class;
-  TPLJSASTNode = class;
-  TPLJSEvaluationState = class;
-  TPLJSGarbageCollectorPart = class;
+  TPLSJSEvalFlag = (efGlobal, efModule, efDirect, efIndirect, efStrict, efStrip,
+    efCompileOnly);
 
-  TPLJSGarbageCollectorParts = specialize TPLObjectList<TPLJSGarbageCollectorPart>;
+  TPLJSClassId = (ciObject, ciNumber, ciString, ciBoolean, ciBigInt, ciBigFloat,
+    ciFloatEnv, ciBigDecimal, ciOpertorSet, ciSet, ciWeakSet, ciMap, ciWeakMap,
+    ciDataView, ciSetIterator, ciMapIterator, ciArrayIterator, ciStringIterator,
+    ciRegularExpressionIterator, ciProxy, ciGenerator, ciPromise, ciPromiseResolveFunction,
+    ciPromiseRejectFunction, ciAsyncFunction, ciAsyncFunctionResolve, ciAsyncFunctionReject,
+    ciAsyncGeneratorFunction, ciAsyncGenerator, ciAsyncIterator, ciError, ciSymbol,
+    ciArguments, ciMappedArguments, ciDate, ciModule, ciFreePascalFunction,
+    ciFreePascalFunctionData, ciBytecodeFunction, ciBoundFunction, ciGeneratorFunction,
+    ciForInIterator, ciRegularExpression, ciArray, ciArrayBuffer, ciSharedArrayBuffer,
+    ciUnsignedIntegerArray, ciSignedIntegerArray, ciBigIntArray, ciBigFloatArray);
 
-  TPLJSStateOpts = packed record
-    Interactive, ShowTokens, ShowAST, KeepHistory: TPLBool;
-    History: TPLString;
-  end;
+  TPLJSErrorKind = (ekInternal, ekAggregate, ekType, ekSyntax, ekURI, ekReference,
+    ekRange, ekEval);
 
-  { TPLJSState }
+  { TPLJSClass }
 
-  TPLJSState = class
+  TPLJSClass = packed class
   private
-    FCallstack: TPLJSEvaluationState;
-    FGCLastStart: TDateTime;
-    FGCParts: TPLJSGarbageCollectorParts;
-    FGCRuns: TPLInt;
-    FGCState: TPLJSGarbageCollectorState;
-    FGCTime: TDateTime;
-    FGlobal: TPLJSValue;
-    FOptions: TPLJSStateOpts;
-    FPrototypeArray: TPLJSValue;
-    FPrototypeFunction: TPLJSValue;
-    FPrototypeObject: TPLJSValue;
-    FScriptName: TPLString;
+    FAtom: TPLJSAtom;
+    FId: TPLJSClassId;
   public
-    constructor Create;
-    destructor Destroy; override;
+    property Id: TPLJSClassId read FId write FId;
+    property Atom: TPLJSAtom read FAtom write FAtom;
 
-    property GCState: TPLJSGarbageCollectorState read FGCState write FGCState;
-    property GCParts: TPLJSGarbageCollectorParts read FGCParts write FGCParts;
-    property GCRuns: TPLInt read FGCRuns write FGCRuns;
-    property GCLastStart: TDateTime read FGCLastStart write FGCLastStart;
-    property GCTime: TDateTime read FGCTime write FGCTime;
-
-    property Options: TPLJSStateOpts read FOptions write FOptions;
-    property ScriptName: TPLString read FScriptName write FScriptName;
-    property Callstack: TPLJSEvaluationState read FCallstack write FCallstack;
-
-    property PrototypeFunction: TPLJSValue read FPrototypeFunction write FPrototypeFunction;
-    property PrototypeObject: TPLJSValue read FPrototypeObject write FPrototypeObject;
-    property PrototypeArray: TPLJSValue read FPrototypeArray write FPrototypeArray;
-    property Global: TPLJSValue read FGlobal write FGlobal;
   end;
 
-var
-  PLJSGlobalState: TPLJSState;
+  IPLJSRuntime = interface
 
-type
-
-  { TPLJSEvaluationState }
-
-  TPLJSEvaluationState = class
-  private
-    FCaller: TPLString;
-    FCatch: TPLBool;
-    FColumn: TPLInt;
-    FConstruct: TPLBool;
-    FContext: TPLJSValue;
-    FLine: TPLInt;
-    FParent: TPLJSEvaluationState;
-    FScope: TPLJSValue;
-    FScriptName: TPLString;
-    FThis: TPLJSValue;
-  public
-    constructor Create;
-
-    property Line: TPLInt read FLine write FLine;
-    property Column: TPLInt read FColumn write FColumn;
-
-    property ScriptName: TPLString read FScriptName write FScriptName;
-    property Caller: TPLString read FCaller write FCaller;
-    property Parent: TPLJSEvaluationState read FParent write FParent;
-
-    property Construct: TPLBool read FConstruct write FConstruct;
-    property Catch: TPLBool read FCatch write FCatch;
-
-    property Context: TPLJSValue read FContext write FContext;
-    property This: TPLJSValue read FThis write FThis;
-    property Scope: TPLJSValue read FScope write FScope;
   end;
 
-  { TPLJSProperty }
+  TPLJSRuntime = packed class(TInterfacedObject, IPLJSRuntime)
 
-  TPLJSProperty = packed class
-  private
-    FCanConfigure: TPLBool;
-    FCanEnumerate: TPLBool;
-    FCanWrite: TPLBool;
-    FCircular: TPLBool;
-    FName: TPLString;
-    FValue: TPLJSValue;
-  public
-    property Name: TPLString read FName write FName;
-    property Value: TPLJSValue read FValue write FValue;
-
-    property CanWrite: TPLBool read FCanWrite write FCanWrite;
-    property CanEnumerate: TPLBool read FCanEnumerate write FCanEnumerate;
-    property CanConfigure: TPLBool read FCanConfigure write FCanConfigure;
-    property Circular: TPLBool read FCircular write FCircular;
   end;
 
-  TPLJSNumber = TPLFloat;
-  TPLJSString = TPLString;
-  TPLJSBool = TPLBool;
+  TPLJSGarbageCollectorStage = (gcsNone, gcDecreaseReference, gcsDeleteCycles);
+  TPLJSGarbageCollectorObjectType = (gcotObject, gcotFunctionBytecode,
+    gcotFunctionAsync, gcotVariableReference, gcotShape, gcotContext);
 
-  TPLJSNativeFunction = function(AValue: TPLJSValue; AArgs: TPLJSArguments;
-    AEvalState: TPLJSEvaluationState): TPLJSValue;
+  TPLJSGarbageCollectorObjectHeader = packed record
+    ObjectType: TPLJSGarbageCollectorObjectType;
+  end;
+
+  TPLJSGarbageCollectorMarker = procedure (var ARuntime: IPLJSRuntime; AValue: TPLJSObjectValue);
+  TPLJSGarbageCollectorFinalizer = procedure (var ARuntime: IPLJSRuntime; const AFunction,
+    AThis: TPLJSObjectValue; const AArguments: array of TPLJSObjectValue);
 
   { TPLJSObject }
 
-  TPLJSObject = packed class
-  private
-    FBoundArgs: TPLJSArguments;
-    FBoundThis: TPLJSValue;
-    FClassName: TPLString;
-    FInstance: TPLJSValue;
-    FIsExtensible: TPLBool;
-    FIsGenerator: TPLBool;
-    FIsNative: TPLBool;
-    FIsThisSupplier: TPLBool;
-    FLength: TPLUInt;
-    FNativeFunction: TPLJSNativeFunction;
-    FNode: TPLJSASTNode;
-    FParent: TPLJSValue;
-    FPrimitive: TPLJSValue;
-    FScope: TPLJSValue;
+  TPLJSObject = class(TInterfacedObject, IPLJSBasicObject{, IPLJSEventTarget})
   public
-    property ClassName: TPLString read FClassName write FClassName;
-    property Length: TPLUInt read FLength write FLength;
-    property NativeFunction: TPLJSNativeFunction read FNativeFunction write FNativeFunction;
-
-    property IsGenerator: TPLBool read FIsGenerator write FIsGenerator;
-    property IsNative: TPLBool read FIsNative write FIsNative;
-    property IsExtensible: TPLBool read FIsExtensible write FIsExtensible;
-    property IsThisSupplier: TPLBool read FIsThisSupplier write FIsThisSupplier;
-
-    property Node: TPLJSASTNode read FNode write FNode;
-    property BoundArgs: TPLJSArguments read FBoundArgs write FBoundArgs;
-
-    property BoundThis: TPLJSValue read FBoundThis write FBoundThis;
-    property Primitive: TPLJSValue read FPrimitive write FPrimitive;
-    property Parent: TPLJSValue read FParent write FParent;
-    property Scope: TPLJSValue read FScope write FScope;
-    property Instance: TPLJSValue read FInstance write FInstance;
+    constructor Create(); virtual;
+    function AsString: TPLString; virtual;
   end;
 
-  { TPLJSValue }
-
-  TPLJSValue = class
-  private
-    FAsBoolean: TPLJSBool;
-    FAsNumber: TPLJSNumber;
-    FAsObject: TPLJSObject;
-    FAsString: TPLJSString;
-    FFlagged: TPLBool;
-    FKind: TPLJSValueType;
-    FMap: TPLJSProperty;
-    FMarked: TPLBool;
-    FPrototype: TPLJSValue;
-    FSignal: TPLJSLoopSignal;
-  public
-    constructor Create(AType: TPLJSValueType);
-    constructor CreateNumber(AValue: TPLJSNumber);
-    constructor CreateString(AValue: TPLJSString);
-    constructor CreateBoolean(AValue: TPLJSBool);
-    constructor CreateObject;
-    constructor CreateArray;
-    constructor CreateFunction(ANode: TPLJSASTNode);
-    constructor CreateNativeFunction(AValue: TPLJSNativeFunction; ALength: TPLUInt);
-    constructor CreateRegExp(AValue: TPLString);
-    constructor CreateError(AName, AFormat: TPLString; AArgs: array of const);
-    destructor Destroy; override;
-
-    function ToString: TPLJSString;
-    class function ToString(AValue: TPLJSValue): TPLJSValue;
-
-    property AsObject: TPLJSObject read FAsObject write FAsObject;
-    property AsNumber: TPLJSNumber read FAsNumber write FAsNumber;
-    property AsString: TPLJSString read FAsString write FAsString;
-    property AsBoolean: TPLJSBool read FAsBoolean write FAsBoolean;
-
-    property Kind: TPLJSValueType read FKind write FKind;
-    property Signal: TPLJSLoopSignal read FSignal write FSignal;
-    property Map: TPLJSProperty read FMap write FMap;
-    property Flagged: TPLBool read FFlagged write FFlagged;
-    property Marked: TPLBool read FMarked write FMarked;
-
-    property Prototype: TPLJSValue read FPrototype write FPrototype;
-  end;
-}
 implementation
-{
-{ TPLJSState }
 
-constructor TPLJSState.Create;
+{ TPLJSObjectValue }
+
+constructor TPLJSObjectValue.Create(AValue: Pointer; AKind: TPLJSObjectValueKind
+  );
 begin
-  inherited Create;
-
-  FGCParts := TPLJSGarbageCollectorParts.Create();
-  FOptions := Default(TPLJSStateOpts);
+  FVPtr := AValue;
+  FKind := AKind;
 end;
 
-destructor TPLJSState.Destroy;
+class function TPLJSObjectValue.NewString(AValue: TPLString): TPLJSObjectValue;
 begin
-  FGCParts.Free;
-
-  inherited Destroy;
+  Result := TPLJSObjectValue.Create(@AValue, ovtrString);
 end;
 
-{ TPLJSEvaluationState }
-
-constructor TPLJSEvaluationState.Create;
+class function TPLJSObjectValue.NewInteger(AValue: TPLInt): TPLJSObjectValue;
 begin
-  FParent := nil;
+  Result := TPLJSObjectValue.Create(@AValue, ovtInteger);
 end;
 
-{ TPLJSValue }
-
-constructor TPLJSValue.Create(AType: TPLJSValueType);
+class function TPLJSObjectValue.NewFloat(AValue: TPLFloat): TPLJSObjectValue;
 begin
-  inherited Create;
-
-  FKind := AType;
-  FSignal := lsNone;
-  FMap := nil;
-  FPrototype := nil;
-  FMarked := false;
-  FFlagged := false;
+  Result := TPLJSObjectValue.Create(@AValue, ovtFloat);
 end;
 
-constructor TPLJSValue.CreateNumber(AValue: TPLJSNumber);
+class function TPLJSObjectValue.NewBoolean(AValue: TPLBool): TPLJSObjectValue;
 begin
-  Create(vtNumber);
-
-  FAsNumber := AValue;
-  //FPrototype;
+  Result := TPLJSObjectValue.Create(@AValue, ovtBoolean);
 end;
 
-constructor TPLJSValue.CreateString(AValue: TPLJSString);
+class function TPLJSObjectValue.NewObject(AValue: TPLJSObject
+  ): TPLJSObjectValue;
 begin
-
+  Result := TPLJSObjectValue.Create(AValue, ovtrObject);
 end;
 
-constructor TPLJSValue.CreateBoolean(AValue: TPLJSBool);
+class function TPLJSObjectValue.NewNull: TPLJSObjectValue;
 begin
-
+  Result := TPLJSObjectValue.Create(nil, ovtNull);
 end;
 
-constructor TPLJSValue.CreateObject;
+class function TPLJSObjectValue.NewUndefined: TPLJSObjectValue;
 begin
-
+  Result := TPLJSObjectValue.Create(nil, ovtUndefined);
 end;
 
-constructor TPLJSValue.CreateArray;
+class function TPLJSObjectValue.NewUninitialized: TPLJSObjectValue;
 begin
-
+  Result := TPLJSObjectValue.Create(nil, ovtUninitialized);
 end;
 
-constructor TPLJSValue.CreateFunction(ANode: TPLJSASTNode);
+class function TPLJSObjectValue.NewException: TPLJSObjectValue;
 begin
-
+  Result := TPLJSObjectValue.Create(nil, ovtException);
 end;
 
-constructor TPLJSValue.CreateNativeFunction(AValue: TPLJSNativeFunction;
-  ALength: TPLUInt);
-begin
-
-end;
-
-constructor TPLJSValue.CreateRegExp(AValue: TPLString);
-begin
-
-end;
-
-constructor TPLJSValue.CreateError(AName, AFormat: TPLString;
-  AArgs: array of const);
-begin
-
-end;
-
-destructor TPLJSValue.Destroy;
-begin
-  if Assigned(FAsObject) then FAsObject.Free;
-
-  inherited Destroy;
-end;
-
-function TPLJSValue.ToString: TPLJSString;
+function TPLJSObjectValue.AsString: TPLString;
 begin
   case FKind of
-    vtUndefined: Result := 'undefined';
-    vtNull: Result := 'null';
-    vtBoolean: Result := ifthen(FAsBoolean, 'true', 'false');
-    vtNumber: begin
-      if FAsNumber.IsNan then Result := 'NaN'
-      else if FAsNumber.IsInfinity then Result := 'Infinity'
-      else Result := FAsNumber.ToString(PLFormatSettingsDef);
-    end;
-    vtObject: Result := '0x' + GetHashCode.ToString;
+    ovtNull: Result := 'null';
+    ovtUndefined: Result := 'undefined';
+    ovtUninitialized: Result := 'uninitialized';
+    ovtBoolean: Result := BoolToStr(TPLBool(FVPtr^), 'true', 'false');
+    ovtInteger: Result := TPLInt(FVPtr^);
+    ovtFloat: Result := TPLFloat(FVPtr^);
+    ovtrString: Result := TPLString(FVPtr^);
+    ovtrObject: Result := TPLJSObject(FVPtr).AsString;
+    ovtException: Result := 'exception'
+    else Result := '';
   end;
 end;
 
-class function TPLJSValue.ToString(AValue: TPLJSValue): TPLJSValue;
+function TPLJSObjectValue.AsNumber: TPLFloat;
 begin
-  Result := TPLJSValue.CreateString(AValue.ToString);
+  Result := 0;
+  TryStrToFloat(AsString, Result, PLFormatSettingsDef);
 end;
 
-initialization
-  PLJSGlobalState := TPLJSState.Create;
-  with PLJSGlobalState do begin
-    GCState := gstNone;
+{ TPLJSObject }
 
-  end;
+constructor TPLJSObject.Create();
+begin
+  inherited Create;
+end;
 
-finalization
-  PLJSGlobalState.Free;
-}
+function TPLJSObject.AsString: TPLString;
+begin
+  Result := 'object';
+end;
+
 end.
 

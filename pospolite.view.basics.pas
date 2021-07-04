@@ -23,27 +23,16 @@ type
   TPLInt = Int64;
   // Unsigned int
   TPLUInt = QWord;
-  // Short Int
+  // Short int
   TPLShortInt = ShortInt;
   // Sign value
   TPLSign = -1..1;
   // Bool
   TPLBool = Boolean;
 
-  { IPLHTMLObject }
+  // - Normal Types - //
 
-  IPLHTMLObject = interface
-    ['{37CA6394-6FDE-4E4A-A44D-EBCEC2EBED34}']
-    function GetZoom: TPLFloat;
-    procedure SetZoom(AValue: TPLFloat);
-
-    function CSS_InheritValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
-    function CSS_InitialValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
-    function CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
-    function CSS_RevertValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
-
-    property Zoom: TPLFloat read GetZoom write SetZoom;
-  end;
+  //
 
   // - Generics - //
 
@@ -64,12 +53,56 @@ type
   TPLFloatRange = specialize TPLNumberRange<TPLFloat>;
   TPLByteRange = specialize TPLNumberRange<Byte>;
 
+  { IPLListBase }
+
+  generic IPLListBase<T> = interface(specialize IEnumerable<T>)
+    ['{8523A611-1885-49FC-9DD3-6B104AC4ED59}']
+    function GetItem(AIndex: SizeInt): T;
+    procedure SetItem(AIndex: SizeInt; AValue: T);
+
+    procedure Add(AItem: T);
+    procedure Remove(AItem: T);
+    function Count: SizeInt;
+    function Empty: TPLBool;
+    procedure Clear;
+    function Last: T;
+    function First: T;
+
+    property Item[AIndex: SizeInt]: T read GetItem write SetItem; default;
+  end;
+
+  { TPLListEnumerator }
+
+  generic TPLListEnumerator<L, E> = class(TInterfacedObject, specialize IEnumerator<E>)
+  private
+    FList: L;
+    FIndex: SizeInt;
+  protected
+    function GetCurrent: E;
+  public
+    constructor Create(const AList: L);
+    function MoveNext: TPLBool;
+    procedure Reset;
+
+    property Current: E read GetCurrent;
+  end;
+
   generic TPLObjectListFindCompare<T> = function(a, b: T): TPLBool of object;
   generic TPLObjectListSortCompare<T> = function(a, b: T): TPLSign of object;
 
+  { IPLObjectList }
+
+  generic IPLObjectList<T: class> = interface(specialize IPLListBase<T>)
+    ['{5BA70B04-A7B1-45B6-852D-3EE2B0575121}']
+    function Find(AItem: T; AComparator: specialize TPLObjectListFindCompare<T> = nil): SizeInt;
+    procedure Sort(AComparator: specialize TPLObjectListSortCompare<T>);
+
+    property FreeObjects: TPLBool;
+  end;
+
   { TPLObjectList }
 
-  generic TPLObjectList<T: class> = class(TInterfacedObject)
+  generic TPLObjectList<T: class> = class(TInterfacedObject, specialize IPLObjectList<T>)
   private type
     TListOfT = array of T;
   private
@@ -84,6 +117,11 @@ type
     procedure SortArray(AArray: TListOfT; ALeft, ARight: TPLInt;
       AComparator: specialize TPLObjectListSortCompare<T>);
   public
+    type IObjectListEnumerator = specialize IEnumerator<T>;
+    type TObjectListEnumerator = class(specialize TPLListEnumerator<TPLObjectList, T>, IObjectListEnumerator);
+
+    function GetEnumerator: IObjectListEnumerator; reintroduce;
+  public
     constructor Create(AFreeObjects: TPLBool = true);
     destructor Destroy; override;
 
@@ -93,7 +131,7 @@ type
     procedure Sort(AComparator: specialize TPLObjectListSortCompare<T>); inline;
     function Count: SizeInt;
     function Empty: TPLBool;
-    procedure Clear;
+    procedure Clear; virtual;
     function Last: T;
     function First: T;
 
@@ -101,9 +139,20 @@ type
     property FreeObjects: TPLBool read FFreeObjects write FFreeObjects;
   end;
 
+  { IPLList }
+
+  generic IPLList<T> = interface(specialize IPLListBase<T>)
+    ['{6BA50AFC-7FCD-4D09-9465-73C942F78AA3}']
+    function GetData: Pointer;
+
+    function Find(AItem: T): SizeInt;
+
+    property Data: Pointer read GetData;
+  end;
+
   { TPLList }
 
-  generic TPLList<T> = class(TObject)
+  generic TPLList<T> = class(TInterfacedObject, specialize IPLList<T>)
   private type
     TListOfT = array of T;
   private
@@ -113,6 +162,11 @@ type
     function GetItem(AIndex: SizeInt): T;
     procedure SetItem(AIndex: SizeInt; AValue: T);
   public
+    type IListEnumerator = specialize IEnumerator<T>;
+    type TListEnumerator = class(specialize TPLListEnumerator<TPLList, T>, IListEnumerator);
+
+    function GetEnumerator: IListEnumerator; reintroduce;
+  public
     constructor Create;
     destructor Destroy; override;
 
@@ -121,7 +175,7 @@ type
     function Find(AItem: T): SizeInt; virtual;
     function Count: SizeInt;
     function Empty: TPLBool;
-    procedure Clear;
+    procedure Clear; virtual;
     function Last: T;
     function First: T;
 
@@ -153,6 +207,144 @@ type
   TPLIntFuncs = specialize TPLFuncs<TPLInt>;
   TPLFloatFuncs = specialize TPLFuncs<TPLFloat>;
   TPLPointerFuncs = specialize TPLFuncs<Pointer>;
+
+  { TPLParameter }
+
+  generic TPLParameter<K, V> = packed record
+  public
+    Key: K;
+    Value: V;
+
+    class operator =(a, b: TPLParameter) r: TPLBool; inline;
+  end;
+
+  // - HTML/CSS and JS Objects' Basics - //
+
+  { IPLJSBasicObject }
+
+  IPLJSBasicObject = interface
+    ['{215753F5-D90B-4F41-A39C-7CED096453AC}']
+    function AsString: TPLString;
+  end;
+
+  TPLCSSElementState = (esNormal, esActive, esFocus, esFocusWithin, esTarget,
+    esHover, esVisited, esFocusVisible);
+
+  TPLHTMLObjectAttribute = specialize TPLParameter<TPLString, TPLString>;
+  PPLHTMLObjectAttribute = ^TPLHTMLObjectAttribute;
+
+  { IPLHTMLObjectAttributes }
+
+  IPLHTMLObjectAttributes = interface(specialize IPLList<TPLHTMLObjectAttribute>)
+    ['{CA105FEA-CCFF-4192-B17F-45161C3BDF35}']
+    function GetCharset: PPLHTMLObjectAttribute;
+    function GetClass: PPLHTMLObjectAttribute;
+    function GetHref: PPLHTMLObjectAttribute;
+    function GetId: PPLHTMLObjectAttribute;
+    function GetName: PPLHTMLObjectAttribute;
+    function GetRel: PPLHTMLObjectAttribute;
+    function GetSrc: PPLHTMLObjectAttribute;
+    function GetStyle: PPLHTMLObjectAttribute;
+    function GetType: PPLHTMLObjectAttribute;
+
+    function Get(AName: TPLString): PPLHTMLObjectAttribute;
+
+    // Do not change the order of these properties!
+
+    property &Class: PPLHTMLObjectAttribute read GetClass;
+    property Name: PPLHTMLObjectAttribute read GetName;
+    property Id: PPLHTMLObjectAttribute read GetId;
+    property Style: PPLHTMLObjectAttribute read GetStyle;
+    property Href: PPLHTMLObjectAttribute read GetHref;
+    property Src: PPLHTMLObjectAttribute read GetSrc;
+    property &Type: PPLHTMLObjectAttribute read GetType;
+    property Charset: PPLHTMLObjectAttribute read GetCharset;
+    property Rel: PPLHTMLObjectAttribute read GetRel;
+  end;
+
+  { TPLHTMLObjectAttributes }
+
+  TPLHTMLObjectAttributes = class(specialize TPLList<TPLHTMLObjectAttribute>, IPLHTMLObjectAttributes)
+  private
+    FPtrs: array[0..8] of PPLHTMLObjectAttribute;
+
+    function GetCharset: PPLHTMLObjectAttribute;
+    function GetClass: PPLHTMLObjectAttribute;
+    function GetHref: PPLHTMLObjectAttribute;
+    function GetId: PPLHTMLObjectAttribute;
+    function GetName: PPLHTMLObjectAttribute;
+    function GetRel: PPLHTMLObjectAttribute;
+    function GetSrc: PPLHTMLObjectAttribute;
+    function GetStyle: PPLHTMLObjectAttribute;
+    function GetType: PPLHTMLObjectAttribute;
+
+    procedure UpdateConsts;
+  public
+    procedure Add(AItem: T); override;
+    procedure Remove(AItem: T); override;
+    procedure Clear; override;
+
+    function Get(AName: TPLString): PPLHTMLObjectAttribute;
+
+    property &Class: PPLHTMLObjectAttribute read GetClass;
+    property Name: PPLHTMLObjectAttribute read GetName;
+    property Id: PPLHTMLObjectAttribute read GetId;
+    property Style: PPLHTMLObjectAttribute read GetStyle;
+    property Href: PPLHTMLObjectAttribute read GetHref;
+    property Src: PPLHTMLObjectAttribute read GetSrc;
+    property &Type: PPLHTMLObjectAttribute read GetType;
+    property Charset: PPLHTMLObjectAttribute read GetCharset;
+    property Rel: PPLHTMLObjectAttribute read GetRel;
+  end;
+
+  // https://developer.mozilla.org/en-US/docs/Web/API/Node
+  TPLHTMLObjectNodeType = (ontElementNode = 1, ontTextNode = 3, ontCDataSectionNode,
+    ontProcessingInstructionNode = 7, ontCommentNode, ontDocumentNode, ontDocumentTypeNode,
+    ontDocumentFragmentNode);
+
+  IPLHTMLObject = interface;
+  IPLHTMLObjects = specialize IPLList<IPLHTMLObject>;
+  TPLHTMLObjects = class(specialize TPLList<IPLHTMLObject>, IPLHTMLObjects);
+
+  { IPLHTMLObject }
+
+  IPLHTMLObject = interface
+    ['{37CA6394-6FDE-4E4A-A44D-EBCEC2EBED34}']
+    function GetAttributes: IPLHTMLObjectAttributes;
+    function GetChildren: IPLHTMLObjects;
+    function GetJSObject: IPLJSBasicObject;
+    function GetName: TPLString;
+    function GetNodeType: TPLHTMLObjectNodeType;
+    function GetParent: IPLHTMLObject;
+    function GetState: TPLCSSElementState;
+    function GetText: TPLString;
+    function GetZoom: TPLFloat;
+    procedure SetName(AValue: TPLString);
+    procedure SetParent(AValue: IPLHTMLObject);
+    procedure SetState(AValue: TPLCSSElementState);
+    procedure SetText(AValue: TPLString);
+    procedure SetZoom(AValue: TPLFloat);
+
+    function CSS_InheritValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
+    function CSS_InitialValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
+    function CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
+    function CSS_RevertValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
+    function CSS_Get(APropName: TPLString): Pointer; // get as pointer to css property value part class
+    procedure CSS_Set(APropName: TPLString; const APropValue); // set value to css property
+
+    procedure UpdateScrollbars;
+    procedure Draw;
+
+    property Zoom: TPLFloat read GetZoom write SetZoom;
+    property State: TPLCSSElementState read GetState write SetState;
+    property JSObject: IPLJSBasicObject read GetJSObject;
+    property Attributes: IPLHTMLObjectAttributes read GetAttributes;
+    property Parent: IPLHTMLObject read GetParent write SetParent;
+    property Children: IPLHTMLObjects read GetChildren;
+    property Name: TPLString read GetName write SetName;
+    property Text: TPLString read GetText write SetText;
+    property NodeType: TPLHTMLObjectNodeType read GetNodeType;
+  end;
 
   // - Helpers - //
 
@@ -291,6 +483,7 @@ const
   operator * (a: TPLString; b: TPLInt) r: TPLString;
   operator mod (a, b: TPLFloat) r: TPLFloat;
   operator in (a: TPLString; tab: specialize TArray<TPLString>): TPLBool;
+  operator in (a: TPLFloat; tab: specialize TArray<TPLFloat>): TPLBool;
 
 implementation
 

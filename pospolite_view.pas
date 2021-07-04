@@ -15,7 +15,7 @@ uses
   Pospolite.View.Drawing.DrawerD2D1, 
   Pospolite.View.Drawing.DrawerD2D1.Definitions, 
   Pospolite.View.Drawing.ImageCodecs, Pospolite.View.Drawing.Renderer, 
-  LazarusPackageIntf;
+  Pospolite.View.HTML.Basics, Pospolite.View.HTML.Parser, LazarusPackageIntf;
 
 implementation
 

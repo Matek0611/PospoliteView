@@ -363,6 +363,7 @@ type
 
   operator := (a: TPLString) r: TPLDrawingBorderStyle;
   function PLDrawingBordersDef: TPLDrawingBorders;
+  function PLDrawingBordersOutlineDef: TPLDrawingBorders;
   function PLDrawingBordersRadiusData(b1, b2, b3, b4: TPLFloat): TPLDrawingBorders.TPLBorderRadiusData;
 
 type
@@ -433,7 +434,15 @@ function PLDrawingBordersDef: TPLDrawingBorders;
 var
   b: TPLDrawingBorder;
 begin
-  b := TPLDrawingBorder.Create(1, TPLColor.Create(0, 0, 0), dbsSolid);
+  b := TPLDrawingBorder.Create(1, TPLColor.Black, dbsSolid);
+  Result := TPLDrawingBorders.Create(b, b, b, b, PLDrawingBordersRadiusData(0, 0, 0, 0));
+end;
+
+function PLDrawingBordersOutlineDef: TPLDrawingBorders;
+var
+  b: TPLDrawingBorder;
+begin
+  b := TPLDrawingBorder.Create(3, TPLColor.Transparent, dbsNone);
   Result := TPLDrawingBorders.Create(b, b, b, b, PLDrawingBordersRadiusData(0, 0, 0, 0));
 end;
 

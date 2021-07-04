@@ -20,8 +20,14 @@ type
   { IPLDrawingRenderer }
 
   IPLDrawingRenderer = interface
+    ['{23939734-BAA9-459A-91D0-FC34700E3833}']
+    function GetDrawer: TPLDrawingDrawerDef;
+
     procedure DrawBox(ARect: TPLRectF; AProperties: TPLCSSDeclarations;
-      AHTMLObject: IPLHTMLObject = nil; AFreePropertiesAfterDrawing: TPLBool = False);
+      AHTMLObject: IPLHTMLObject = nil; ADrawOutline: TPLBool = False;
+      AFreePropertiesAfterDrawing: TPLBool = False);
+
+    property Drawer: TPLDrawingDrawerDef read GetDrawer;
   end;
 
   { TPLDrawingRenderer }
@@ -29,12 +35,16 @@ type
   TPLDrawingRenderer = class(TInterfacedObject, IPLDrawingRenderer)
   private
     FDrawer: TPLDrawingDrawerDef;
+    function GetDrawer: TPLDrawingDrawerDef;
   public
     constructor Create(ACanvas: TCanvas);
     destructor Destroy; override;
 
     procedure DrawBox(ARect: TPLRectF; AProperties: TPLCSSDeclarations;
-      AHTMLObject: IPLHTMLObject = nil; AFreePropertiesAfterDrawing: TPLBool = False);
+      AHTMLObject: IPLHTMLObject = nil; ADrawOutline: TPLBool = False;
+      AFreePropertiesAfterDrawing: TPLBool = False);
+
+    property Drawer: TPLDrawingDrawerDef read GetDrawer;
   end;
 
   function NewDrawingRenderer(ACanvas: TCanvas): IPLDrawingRenderer;
@@ -378,13 +388,11 @@ var
   prop: TPLCSSProperty;
   part: TPLCSSPropertyValuePartFunction;
   pom: array of Variant;
-  offset: TPLFloat;
 begin
-  Result := PLDrawingBordersDef;
-
-  if AType = 'outline' then begin
-    // offset ogarnąć
-  end;
+  if AType <> 'outline' then
+    Result := PLDrawingBordersDef
+  else
+    Result := PLDrawingBordersOutlineDef;
 
   if AStyles.Exists(AType, prop) then begin
     case prop.Value.Count of
@@ -399,158 +407,158 @@ begin
       end;
     end;
   end;
-                    // dalej to AType powkładać
+
   if AStyles.Exists(AType + '-radius', prop) then begin
     case prop.Value.Count of
-      1: Result.Radius := PLDrawingBordersRadiusData(GetLVal(prop.Value[0], 'border-radius'), GetLVal(prop.Value[0], 'border-radius'), GetLVal(prop.Value[0], 'border-radius'), GetLVal(prop.Value[0], 'border-radius'));
-      2: Result.Radius := PLDrawingBordersRadiusData(GetLVal(prop.Value[0], 'border-radius'), GetLVal(prop.Value[1], 'border-radius', 1), GetLVal(prop.Value[1], 'border-radius', 1), GetLVal(prop.Value[0], 'border-radius'));
-      3: Result.Radius := PLDrawingBordersRadiusData(GetLVal(prop.Value[0], 'border-radius'), GetLVal(prop.Value[1], 'border-radius', 1), GetLVal(prop.Value[1], 'border-radius', 1), GetLVal(prop.Value[2], 'border-radius', 2));
-      4: Result.Radius := PLDrawingBordersRadiusData(GetLVal(prop.Value[0], 'border-radius'), GetLVal(prop.Value[1], 'border-radius', 1), GetLVal(prop.Value[3], 'border-radius', 3), GetLVal(prop.Value[2], 'border-radius', 2));
+      1: Result.Radius := PLDrawingBordersRadiusData(GetLVal(prop.Value[0], AType + '-radius'), GetLVal(prop.Value[0], AType + '-radius'), GetLVal(prop.Value[0], AType + '-radius'), GetLVal(prop.Value[0], AType + '-radius'));
+      2: Result.Radius := PLDrawingBordersRadiusData(GetLVal(prop.Value[0], AType + '-radius'), GetLVal(prop.Value[1], AType + '-radius', 1), GetLVal(prop.Value[1], AType + '-radius', 1), GetLVal(prop.Value[0], AType + '-radius'));
+      3: Result.Radius := PLDrawingBordersRadiusData(GetLVal(prop.Value[0], AType + '-radius'), GetLVal(prop.Value[1], AType + '-radius', 1), GetLVal(prop.Value[1], AType + '-radius', 1), GetLVal(prop.Value[2], AType + '-radius', 2));
+      4: Result.Radius := PLDrawingBordersRadiusData(GetLVal(prop.Value[0], AType + '-radius'), GetLVal(prop.Value[1], AType + '-radius', 1), GetLVal(prop.Value[3], AType + '-radius', 3), GetLVal(prop.Value[2], AType + '-radius', 2));
     end;
   end;
 
-  if AStyles.Exists('border-top-left-radius', prop) then begin
-    if prop.Value.Count > 0 then Result.Radius[1] := GetLVal(prop.Value[0], 'border-top-left-radius');
+  if AStyles.Exists(AType + '-top-left-radius', prop) then begin
+    if prop.Value.Count > 0 then Result.Radius[1] := GetLVal(prop.Value[0], AType + '-top-left-radius');
   end;
-  if AStyles.Exists('border-top-right-radius', prop) then begin
-    if prop.Value.Count > 0 then Result.Radius[2] := GetLVal(prop.Value[0], 'border-top-right-radius');
+  if AStyles.Exists(AType + '-top-right-radius', prop) then begin
+    if prop.Value.Count > 0 then Result.Radius[2] := GetLVal(prop.Value[0], AType + '-top-right-radius');
   end;
-  if AStyles.Exists('border-bottom-left-radius', prop) then begin
-    if prop.Value.Count > 0 then Result.Radius[3] := GetLVal(prop.Value[0], 'border-bottom-left-radius');
+  if AStyles.Exists(AType + '-bottom-left-radius', prop) then begin
+    if prop.Value.Count > 0 then Result.Radius[3] := GetLVal(prop.Value[0], AType + '-bottom-left-radius');
   end;
-  if AStyles.Exists('border-bottom-right-radius', prop) then begin
-    if prop.Value.Count > 0 then Result.Radius[4] := GetLVal(prop.Value[0], 'border-bottom-right-radius');
+  if AStyles.Exists(AType + '-bottom-right-radius', prop) then begin
+    if prop.Value.Count > 0 then Result.Radius[4] := GetLVal(prop.Value[0], AType + '-bottom-right-radius');
   end;
 
-  if AStyles.Exists('border-width', prop) then begin
+  if AStyles.Exists(AType + '-width', prop) then begin
     case prop.Value.Count of
       1: begin
-        Result.Left.Width := GetLVal(prop.Value[0], 'border-width');
+        Result.Left.Width := GetLVal(prop.Value[0], AType + '-width');
         Result.Top.Width := Result.Left.Width;
         Result.Right.Width := Result.Left.Width;
         Result.Bottom.Width := Result.Left.Width;
       end;
       2: begin
-        Result.Left.Width := GetLVal(prop.Value[0], 'border-width');
-        Result.Top.Width := GetLVal(prop.Value[1], 'border-width', 1);
+        Result.Left.Width := GetLVal(prop.Value[0], AType + '-width');
+        Result.Top.Width := GetLVal(prop.Value[1], AType + '-width', 1);
         Result.Right.Width := Result.Left.Width;
         Result.Bottom.Width := Result.Top.Width;
       end;
       3: begin
-        Result.Left.Width := GetLVal(prop.Value[1], 'border-width', 1);
-        Result.Top.Width := GetLVal(prop.Value[0], 'border-width');
+        Result.Left.Width := GetLVal(prop.Value[1], AType + '-width', 1);
+        Result.Top.Width := GetLVal(prop.Value[0], AType + '-width');
         Result.Right.Width := Result.Left.Width;
-        Result.Bottom.Width := GetLVal(prop.Value[2], 'border-width', 2);
+        Result.Bottom.Width := GetLVal(prop.Value[2], AType + '-width', 2);
       end;
       4: begin
-        Result.Left.Width := GetLVal(prop.Value[3], 'border-width', 3);
-        Result.Top.Width := GetLVal(prop.Value[0], 'border-width');
-        Result.Right.Width := GetLVal(prop.Value[1], 'border-width', 1);
-        Result.Bottom.Width := GetLVal(prop.Value[2], 'border-width', 2);
+        Result.Left.Width := GetLVal(prop.Value[3], AType + '-width', 3);
+        Result.Top.Width := GetLVal(prop.Value[0], AType + '-width');
+        Result.Right.Width := GetLVal(prop.Value[1], AType + '-width', 1);
+        Result.Bottom.Width := GetLVal(prop.Value[2], AType + '-width', 2);
       end;
     end;
   end;
 
-  if AStyles.Exists('border-left-width', prop) then begin
-    if prop.Value.Count > 0 then Result.Left.Width := GetLVal(prop.Value[0], 'border-left-width');
+  if AStyles.Exists(AType + '-left-width', prop) then begin
+    if prop.Value.Count > 0 then Result.Left.Width := GetLVal(prop.Value[0], AType + '-left-width');
   end;
-  if AStyles.Exists('border-right-width', prop) then begin
-    if prop.Value.Count > 0 then Result.Right.Width := GetLVal(prop.Value[0], 'border-right-width');
+  if AStyles.Exists(AType + '-right-width', prop) then begin
+    if prop.Value.Count > 0 then Result.Right.Width := GetLVal(prop.Value[0], AType + '-right-width');
   end;
-  if AStyles.Exists('border-top-width', prop) then begin
-    if prop.Value.Count > 0 then Result.Top.Width := GetLVal(prop.Value[0], 'border-top-width');
+  if AStyles.Exists(AType + '-top-width', prop) then begin
+    if prop.Value.Count > 0 then Result.Top.Width := GetLVal(prop.Value[0], AType + '-top-width');
   end;
-  if AStyles.Exists('border-bottom-width', prop) then begin
-    if prop.Value.Count > 0 then Result.Bottom.Width := GetLVal(prop.Value[0], 'border-bottom-width');
+  if AStyles.Exists(AType + '-bottom-width', prop) then begin
+    if prop.Value.Count > 0 then Result.Bottom.Width := GetLVal(prop.Value[0], AType + '-bottom-width');
   end;
 
-  if AStyles.Exists('border-style', prop) then begin
+  if AStyles.Exists(AType + '-style', prop) then begin
     case prop.Value.Count of
       1: begin
-        Result.Top.Style := GetSVal(prop.Value[0], 'border-style');
+        Result.Top.Style := GetSVal(prop.Value[0], AType + '-style');
         Result.Right.Style := Result.Top.Style;
         Result.Bottom.Style := Result.Top.Style;
         Result.Left.Style := Result.Top.Style;
       end;
       2: begin
-        Result.Top.Style := GetSVal(prop.Value[0], 'border-style');
-        Result.Right.Style := GetSVal(prop.Value[1], 'border-style', 1);
+        Result.Top.Style := GetSVal(prop.Value[0], AType + '-style');
+        Result.Right.Style := GetSVal(prop.Value[1], AType + '-style', 1);
         Result.Bottom.Style := Result.Top.Style;
         Result.Left.Style := Result.Right.Style;
       end;
       3: begin
-        Result.Top.Style := GetSVal(prop.Value[0], 'border-style');
-        Result.Right.Style := GetSVal(prop.Value[1], 'border-style', 1);
-        Result.Bottom.Style := GetSVal(prop.Value[2], 'border-style', 2);
+        Result.Top.Style := GetSVal(prop.Value[0], AType + '-style');
+        Result.Right.Style := GetSVal(prop.Value[1], AType + '-style', 1);
+        Result.Bottom.Style := GetSVal(prop.Value[2], AType + '-style', 2);
         Result.Left.Style := Result.Right.Style;
       end;
       4: begin
-        Result.Top.Style := GetSVal(prop.Value[0], 'border-style');
-        Result.Right.Style := GetSVal(prop.Value[1], 'border-style', 1);
-        Result.Bottom.Style := GetSVal(prop.Value[2], 'border-style', 2);
-        Result.Left.Style := GetSVal(prop.Value[3], 'border-style', 3);
+        Result.Top.Style := GetSVal(prop.Value[0], AType + '-style');
+        Result.Right.Style := GetSVal(prop.Value[1], AType + '-style', 1);
+        Result.Bottom.Style := GetSVal(prop.Value[2], AType + '-style', 2);
+        Result.Left.Style := GetSVal(prop.Value[3], AType + '-style', 3);
       end;
     end;
   end;
 
-  if AStyles.Exists('border-left-style', prop) then begin
-    if prop.Value.Count > 0 then Result.Left.Style := GetSVal(prop.Value[0], 'border-left-style');
+  if AStyles.Exists(AType + '-left-style', prop) then begin
+    if prop.Value.Count > 0 then Result.Left.Style := GetSVal(prop.Value[0], AType + '-left-style');
   end;
-  if AStyles.Exists('border-right-style', prop) then begin
-    if prop.Value.Count > 0 then Result.Right.Style := GetSVal(prop.Value[0], 'border-right-style');
+  if AStyles.Exists(AType + '-right-style', prop) then begin
+    if prop.Value.Count > 0 then Result.Right.Style := GetSVal(prop.Value[0], AType + '-right-style');
   end;
-  if AStyles.Exists('border-top-style', prop) then begin
-    if prop.Value.Count > 0 then Result.Top.Style := GetSVal(prop.Value[0], 'border-top-style');
+  if AStyles.Exists(AType + '-top-style', prop) then begin
+    if prop.Value.Count > 0 then Result.Top.Style := GetSVal(prop.Value[0], AType + '-top-style');
   end;
-  if AStyles.Exists('border-bottom-style', prop) then begin
-    if prop.Value.Count > 0 then Result.Bottom.Style := GetSVal(prop.Value[0], 'border-bottom-style');
+  if AStyles.Exists(AType + '-bottom-style', prop) then begin
+    if prop.Value.Count > 0 then Result.Bottom.Style := GetSVal(prop.Value[0], AType + '-bottom-style');
   end;
 
-  if AStyles.Exists('border-color', prop) then begin
+  if AStyles.Exists(AType + '-color', prop) then begin
     case prop.Value.Count of
       1: begin
-        Result.Top.Color := GetCVal(prop.Value[0], 'border-color');
+        Result.Top.Color := GetCVal(prop.Value[0], AType + '-color');
         Result.Right.Color := Result.Top.Color;
         Result.Bottom.Color := Result.Top.Color;
         Result.Left.Color := Result.Top.Color;
       end;
       2: begin
-        Result.Top.Color := GetCVal(prop.Value[0], 'border-color');
-        Result.Right.Color := GetCVal(prop.Value[1], 'border-color', 1);
+        Result.Top.Color := GetCVal(prop.Value[0], AType + '-color');
+        Result.Right.Color := GetCVal(prop.Value[1], AType + '-color', 1);
         Result.Bottom.Color := Result.Top.Color;
         Result.Left.Color := Result.Right.Color;
       end;
       3: begin
-        Result.Top.Color := GetCVal(prop.Value[0], 'border-color');
-        Result.Right.Color := GetCVal(prop.Value[1], 'border-color', 1);
-        Result.Bottom.Color := GetCVal(prop.Value[2], 'border-color', 2);
+        Result.Top.Color := GetCVal(prop.Value[0], AType + '-color');
+        Result.Right.Color := GetCVal(prop.Value[1], AType + '-color', 1);
+        Result.Bottom.Color := GetCVal(prop.Value[2], AType + '-color', 2);
         Result.Left.Color := Result.Right.Color;
       end;
       4: begin
-        Result.Top.Color := GetCVal(prop.Value[0], 'border-color');
-        Result.Right.Color := GetCVal(prop.Value[1], 'border-color', 1);
-        Result.Bottom.Color := GetCVal(prop.Value[2], 'border-color', 2);
-        Result.Left.Color := GetCVal(prop.Value[3], 'border-color', 3);
+        Result.Top.Color := GetCVal(prop.Value[0], AType + '-color');
+        Result.Right.Color := GetCVal(prop.Value[1], AType + '-color', 1);
+        Result.Bottom.Color := GetCVal(prop.Value[2], AType + '-color', 2);
+        Result.Left.Color := GetCVal(prop.Value[3], AType + '-color', 3);
       end;
     end;
   end;
 
-  if AStyles.Exists('border-left-color', prop) then begin
-    if prop.Value.Count > 0 then Result.Left.Color := GetCVal(prop.Value[0], 'border-left-color');
+  if AStyles.Exists(AType + '-left-color', prop) then begin
+    if prop.Value.Count > 0 then Result.Left.Color := GetCVal(prop.Value[0], AType + '-left-color');
   end;
-  if AStyles.Exists('border-right-color', prop) then begin
-    if prop.Value.Count > 0 then Result.Right.Color := GetCVal(prop.Value[0], 'border-right-color');
+  if AStyles.Exists(AType + '-right-color', prop) then begin
+    if prop.Value.Count > 0 then Result.Right.Color := GetCVal(prop.Value[0], AType + '-right-color');
   end;
-  if AStyles.Exists('border-top-color', prop) then begin
-    if prop.Value.Count > 0 then Result.Top.Color := GetCVal(prop.Value[0], 'border-top-color');
+  if AStyles.Exists(AType + '-top-color', prop) then begin
+    if prop.Value.Count > 0 then Result.Top.Color := GetCVal(prop.Value[0], AType + '-top-color');
   end;
-  if AStyles.Exists('border-bottom-color', prop) then begin
-    if prop.Value.Count > 0 then Result.Bottom.Color := GetCVal(prop.Value[0], 'border-bottom-color');
+  if AStyles.Exists(AType + '-bottom-color', prop) then begin
+    if prop.Value.Count > 0 then Result.Bottom.Color := GetCVal(prop.Value[0], AType + '-bottom-color');
   end;
 
   // basic border-image support:
 
-  if AStyles.Exists('border-image', prop) then begin
+  if AStyles.Exists(AType + '-image', prop) then begin
     if (prop.Value.Count > 0) and (prop.Value[0] is TPLCSSPropertyValuePartFunction) then begin
       part := prop.Value[0] as TPLCSSPropertyValuePartFunction;
 
@@ -568,22 +576,22 @@ begin
   pom[1] := 1;
   pom[2] := false;
 
-  if AStyles.Exists('border-image-width', prop) then begin
+  if AStyles.Exists(AType + '-image-width', prop) then begin
     case prop.Value.Count of
       1: begin
-        pom[0] := GetBIWVal(prop.Value[0], Result.AverageBorderSize, 'border-image-width');
+        pom[0] := GetBIWVal(prop.Value[0], Result.AverageBorderSize, AType + '-image-width');
         pom[1] := pom[0];
       end;
       2: begin
-        pom[0] := GetBIWVal(prop.Value[0], Result.AverageBorderSize, 'border-image-width');
-        pom[1] := GetBIWVal(prop.Value[1], Result.AverageBorderSize, 'border-image-width', 1);
+        pom[0] := GetBIWVal(prop.Value[0], Result.AverageBorderSize, AType + '-image-width');
+        pom[1] := GetBIWVal(prop.Value[1], Result.AverageBorderSize, AType + '-image-width', 1);
       end;
     end;
   end;
 
   // border-image-slice & border-image-outset ignored, border-image-repeat always = repeat
 
-  if AStyles.Exists('border-image-source', prop) then begin
+  if AStyles.Exists(AType + '-image-source', prop) then begin
     if (prop.Value.Count > 0) and (prop.Value[0] is TPLCSSPropertyValuePartFunction) then pom[2] := true;
   end;
 
@@ -597,6 +605,11 @@ begin
 end;
 
 { TPLDrawingRenderer }
+
+function TPLDrawingRenderer.GetDrawer: TPLDrawingDrawerDef;
+begin
+  Result := FDrawer;
+end;
 
 constructor TPLDrawingRenderer.Create(ACanvas: TCanvas);
 begin
@@ -614,11 +627,12 @@ end;
 
 procedure TPLDrawingRenderer.DrawBox(ARect: TPLRectF;
   AProperties: TPLCSSDeclarations; AHTMLObject: IPLHTMLObject;
-  AFreePropertiesAfterDrawing: TPLBool);
+  ADrawOutline: TPLBool; AFreePropertiesAfterDrawing: TPLBool);
 var
   brd, brdn: TPLDrawingBorders;
   i: TPLInt;
   prop: TPLCSSProperty;
+  v: TPLFloat;
 begin
   brd := ExtractCSSBorder(AProperties, AHTMLObject);
   brdn := brd;
@@ -634,7 +648,19 @@ begin
   end;
 
   FDrawer.DrawBox(ARect, nil, brd);
-  // dodać tu outline jeszcze: FDrawer.DrawBox(ARect, nil, ExtractCSSBorder(AProperties, AHTMLObject, 'outline'));
+
+  if ADrawOutline then begin
+    if AProperties.Exists('outline-offset', prop) then begin
+      if prop.Value.Count > 0 then begin
+        v := 0;
+        if prop.Value[0] is TPLCSSPropertyValuePartNumber then v := TPLCSSPropertyValuePartNumber(prop.Value[0]).Value
+        else if prop.Value[0] is TPLCSSPropertyValuePartDimension then v := AutoLengthToPx(TPLCSSPropertyValuePartDimension(prop.Value[0]).Value, TPLCSSPropertyValuePartDimension(prop.Value[0]).&Unit);
+        ARect := ARect.Inflate(-v, -v);
+      end;
+    end;
+    ARect := ARect.Inflate(-brd.AverageBorderSize, -brd.AverageBorderSize);
+    FDrawer.DrawBox(ARect, nil, ExtractCSSBorder(AProperties, AHTMLObject, 'outline'));
+  end;
 
   if AFreePropertiesAfterDrawing then AProperties.Free;
 end;

@@ -7,11 +7,6 @@ interface
 uses
   Classes, SysUtils, Pospolite.View.Basics;
 
-type
-
-  TPLCSSElementState = (esNormal, esActive, esFocus, esFocusWithin, esTarget,
-    esHover, esVisited, esFocusVisible);
-
 procedure RemoveCSSComments(var ASource: TPLString);
 
 implementation
