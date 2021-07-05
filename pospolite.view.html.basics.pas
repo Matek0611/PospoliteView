@@ -55,6 +55,7 @@ type
 
     procedure UpdateScrollbars;
     procedure Draw; virtual;
+    function ToHTML: TPLString; virtual;
 
     function IsVisible: TPLBool;
     function Display: TPLString;
@@ -238,6 +239,11 @@ begin
   if not isVisible or (Display = 'none') then exit;
 
   // ...
+end;
+
+function TPLHTMLBasicObject.ToHTML: TPLString;
+begin
+  Result := '';
 end;
 
 function TPLHTMLBasicObject.IsVisible: TPLBool;

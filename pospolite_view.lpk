@@ -14,7 +14,8 @@
         <SmartLinkUnit Value="True"/>
       </CodeGeneration>
     </CompilerOptions>
-    <Files Count="18">
+    <Version Major="1"/>
+    <Files Count="22">
       <Item1>
         <Filename Value="pospolite.view.basics.pas"/>
         <UnitName Value="Pospolite.View.Basics"/>
@@ -85,8 +86,24 @@
       </Item17>
       <Item18>
         <Filename Value="pospolite.view.html.parser.pas"/>
-        <UnitName Value="pospolite.view.html.parser"/>
+        <UnitName Value="Pospolite.View.HTML.Parser"/>
       </Item18>
+      <Item19>
+        <Filename Value="pospolite.view.html.document.pas"/>
+        <UnitName Value="Pospolite.View.HTML.Document"/>
+      </Item19>
+      <Item20>
+        <Filename Value="pospolite.view.dom.document.pas"/>
+        <UnitName Value="Pospolite.View.DOM.Document"/>
+      </Item20>
+      <Item21>
+        <Filename Value="pospolite.view.internet.pas"/>
+        <UnitName Value="Pospolite.View.Internet"/>
+      </Item21>
+      <Item22>
+        <Filename Value="pospolite.view.version.pas"/>
+        <UnitName Value="Pospolite.View.Version"/>
+      </Item22>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

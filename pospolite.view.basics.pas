@@ -334,6 +334,7 @@ type
 
     procedure UpdateScrollbars;
     procedure Draw;
+    function ToHTML: TPLString;
 
     property Zoom: TPLFloat read GetZoom write SetZoom;
     property State: TPLCSSElementState read GetState write SetState;
@@ -344,6 +345,36 @@ type
     property Name: TPLString read GetName write SetName;
     property Text: TPLString read GetText write SetText;
     property NodeType: TPLHTMLObjectNodeType read GetNodeType;
+  end;
+
+  { IPLBasicDocument }
+
+  IPLBasicDocument = interface
+    ['{9060BA6C-72E2-4E7B-B0C2-1BC588DC802B}']
+    function GetContent: TPLString;
+    function GetMimeType: TPLString;
+    function GetTitle: TPLString;
+    procedure SetTitle(AValue: TPLString);
+
+    procedure LoadFromLocalFile(const AFileName: TPLString);
+    procedure LoadFromURL(const AFileName: TPLString);
+    procedure LoadFromString(const AText: TPLString); // HTML only
+    procedure SaveToLocalFile(const AFileName: TPLString);
+    procedure Reload; // reload page which is from the local file or URL
+    function IsLoaded: TPLBool;
+
+    property Title: TPLString read GetTitle write SetTitle;
+    property Content: TPLString read GetContent;
+    property MimeType: TPLString read GetMimeType;
+  end;
+
+  { IPLHTMLDocument }
+
+  IPLHTMLDocument = interface(IPLBasicDocument)
+    ['{760627BC-3E74-4CE4-AD3B-256BDDA722B0}']
+    function GetRoot: IPLHTMLObject;
+
+    property Root: IPLHTMLObject read GetRoot;
   end;
 
   // - Helpers - //
