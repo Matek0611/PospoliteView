@@ -100,6 +100,8 @@ procedure TPLHTMLDocument.LoadFromString(const AText: TPLString);
 begin
   FIsLocal := true;
   FFile := '<string>';
+  FMimeType := 'text/html';
+
 
 end;
 
@@ -117,7 +119,7 @@ end;
 
 function TPLHTMLDocument.IsLoaded: TPLBool;
 begin
-  Result := FFile.IsEmpty;
+  Result := not FFile.IsEmpty;
 end;
 
 end.

@@ -15,7 +15,7 @@
       </CodeGeneration>
     </CompilerOptions>
     <Version Major="1"/>
-    <Files Count="22">
+    <Files Count="23">
       <Item1>
         <Filename Value="pospolite.view.basics.pas"/>
         <UnitName Value="Pospolite.View.Basics"/>
@@ -104,6 +104,10 @@
         <Filename Value="pospolite.view.version.pas"/>
         <UnitName Value="Pospolite.View.Version"/>
       </Item22>
+      <Item23>
+        <Filename Value="pospolite.view.xpath.pas"/>
+        <UnitName Value="pospolite.view.xpath"/>
+      </Item23>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

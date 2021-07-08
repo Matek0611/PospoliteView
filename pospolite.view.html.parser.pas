@@ -35,6 +35,10 @@ type
 
   TPLHTMLParserErrors = class(specialize TPLList<TPLHTMLParserError>);
 
+  TPLHTMLParser = class
+
+  end;
+
 implementation
 
 { TPLHTMLParserPosition }

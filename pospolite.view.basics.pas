@@ -248,6 +248,7 @@ type
     function GetType: PPLHTMLObjectAttribute;
 
     function Get(AName: TPLString): PPLHTMLObjectAttribute;
+    function Has(AName: TPLString): TPLBool;
 
     // Do not change the order of these properties!
 
@@ -285,6 +286,7 @@ type
     procedure Clear; override;
 
     function Get(AName: TPLString): PPLHTMLObjectAttribute;
+    function Has(AName: TPLString): TPLBool;
 
     property &Class: PPLHTMLObjectAttribute read GetClass;
     property Name: PPLHTMLObjectAttribute read GetName;
@@ -311,11 +313,12 @@ type
   IPLHTMLObject = interface
     ['{37CA6394-6FDE-4E4A-A44D-EBCEC2EBED34}']
     function GetAttributes: IPLHTMLObjectAttributes;
+    function GetChild(const AName: TPLString): IPLHTMLObject;
     function GetChildren: IPLHTMLObjects;
     function GetJSObject: IPLJSBasicObject;
     function GetName: TPLString;
-    function GetNodeType: TPLHTMLObjectNodeType;
     function GetParent: IPLHTMLObject;
+    function GetPosition: SizeInt;
     function GetState: TPLCSSElementState;
     function GetText: TPLString;
     function GetZoom: TPLFloat;
@@ -337,14 +340,18 @@ type
     function ToHTML: TPLString;
 
     property Zoom: TPLFloat read GetZoom write SetZoom;
+
     property State: TPLCSSElementState read GetState write SetState;
+
     property JSObject: IPLJSBasicObject read GetJSObject;
+
     property Attributes: IPLHTMLObjectAttributes read GetAttributes;
     property Parent: IPLHTMLObject read GetParent write SetParent;
     property Children: IPLHTMLObjects read GetChildren;
+    property Child[const AName: TPLString]: IPLHTMLObject read GetChild;
     property Name: TPLString read GetName write SetName;
     property Text: TPLString read GetText write SetText;
-    property NodeType: TPLHTMLObjectNodeType read GetNodeType;
+    property Position: SizeInt read GetPosition;
   end;
 
   { IPLBasicDocument }

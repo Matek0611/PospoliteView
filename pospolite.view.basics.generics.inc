@@ -443,4 +443,9 @@ begin
   Result := nil;
 end;
 
+function TPLHTMLObjectAttributes.Has(AName: TPLString): TPLBool;
+begin
+  Result := Assigned(Get(AName));
+end;
+
 
