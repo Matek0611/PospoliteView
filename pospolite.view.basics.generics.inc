@@ -223,6 +223,15 @@ begin
   Result := GetItem(0);
 end;
 
+function TPLObjectList.Duplicate: specialize IPLObjectList<T>;
+var
+  x: T;
+begin
+  Result := TPLObjectList.Create(FFreeObjects);
+
+  for x in self do Result.Add(x);
+end;
+
 { TPLList }
 
 function TPLList.GetItem(AIndex: SizeInt): T;
@@ -324,6 +333,15 @@ begin
   Result := GetItem(0);
 end;
 
+function TPLList.Duplicate: specialize IPLList<T>;
+var
+  x: T;
+begin
+  Result := TPLList.Create;
+
+  for x in self do Result.Add(x);
+end;
+
 { TPLFuncs }
 
 class procedure TPLFuncs.Swap(var a, b: T);
@@ -349,6 +367,12 @@ end;
 class operator TPLParameter.=(a, b: TPLParameter) r: TPLBool;
 begin
   r := (a.Key = b.Key) and (a.Value = b.Value);
+end;
+
+constructor TPLParameter.Create(AKey: K; AValue: V);
+begin
+  Key := AKey;
+  Value := AValue;
 end;
 
 { TPLHTMLObjectAttributes }

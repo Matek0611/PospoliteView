@@ -121,6 +121,8 @@ type
     function ToHTMLObjects: IPLHTMLObjects;
 
     function CanCastTo(AValue: TPLXValue): TPLBool;
+    function IsNull: TPLBool;
+    class function Null: TPLXValue; static;
     class operator =(a, b: TPLXValue) r: TPLBool;
 
     property Kind: TPLXValueKind read FKind write FKind;
@@ -144,7 +146,12 @@ type
     property Position: SizeInt read FPosition write FPosition;
   end;
 
-  IPLXParameters = specialize IPLObjectList<TPLXExpression>;
+  { IPLXParameters }
+
+  IPLXParameters = interface(specialize IPLObjectList<TPLXExpression>)
+    ['{C84230A2-9C82-459B-8076-852C64FE0F8F}']
+    function Evaluate(AContext: TPLXContext): IPLXValues;
+  end;
 
   { TPLXParameters }
 
@@ -154,8 +161,8 @@ type
   end;
 
   TPLXOperator = (xoNone, xoPlus, xoMinus, xoMultiply, xoFloatDivide,
-    xoIntegerDivide, xoModulo, xoOr, xoAnd, xoNegate, xoStep, xoEqual,
-    xoNotEqual, xoLess, xoGreater, xoLessOrEqual, xoGreaterOrEqual);
+    xoIntegerDivide, xoModulo, xoOr, xoAnd, xoNegate, xoEqual, xoNotEqual,
+    xoLess, xoGreater, xoLessOrEqual, xoGreaterOrEqual, xoStep);
 
   { IPLXEvaluation }
 
@@ -171,15 +178,89 @@ type
   public
     function Operation(AOperator: TPLXOperator; const A, B: TPLXValue
       ): TPLXValue;
-    function Evaluate(AContext: TPLXContext): TPLXValue; virtual;
+    function Evaluate({%H-}AContext: TPLXContext): TPLXValue; virtual;
   end;
 
   IPLXEvaluations = specialize IPLList<IPLXEvaluation>;
   TPLXEvaluations = class(specialize TPLList<IPLXEvaluation>, IPLXEvaluations);
 
+  TPLXExpressionKind = (xekPath, xekExpression, xekNegation, xekRoot);
+  TPLXExpressionElement = specialize TPLParameter<TPLXOperator, IPLXEvaluation>;
+  IPLXExpressionElements = specialize IPLList<TPLXExpressionElement>;
+  TPLXExpressionElements = class(specialize TPLList<TPLXExpressionElement>, IPLXExpressionElements);
+
   { TPLXExpression }
 
   TPLXExpression = class(TPLXEvaluation)
+  private
+    FKind: TPLXExpressionKind;
+    FOperand: IPLXEvaluation;
+    FElements: IPLXExpressionElements;
+  public
+    constructor Create(const AKind: TPLXExpressionKind; AOperand: IPLXEvaluation);
+
+    function Evaluate(AContext: TPLXContext): TPLXValue; override;
+    procedure AddElement(const AOperator: TPLXOperator; AOperand: IPLXEvaluation);
+
+    property Kind: TPLXExpressionKind read FKind write FKind;
+  end;
+
+  TPLXPrimaryExpressionKind = (xpekExpression, xpekContext, xpekValue, xpekVariable,
+    xpekFunction);
+
+  { TPLXPrimaryExpression }
+
+  TPLXPrimaryExpression = class(TPLXEvaluation)
+  private
+    FKind: TPLXPrimaryExpressionKind;
+    FExpression: TPLXExpression;
+    FParameters: IPLXParameters;
+    FToken: IPLXToken;
+  public
+    constructor Create(AToken: IPLXToken);
+    constructor Create(AToken: IPLXToken; AParameters: IPLXParameters);
+    constructor Create(AExpression: TPLXExpression);
+    destructor Destroy; override;
+
+    function Evaluate(AContext: TPLXContext): TPLXValue; override;
+
+    property Kind: TPLXPrimaryExpressionKind read FKind write FKind;
+  end;
+
+  TPLXNodeTestKind = (xntIdentifier, xntKind, xntAny);
+
+  { TPLXNodeTest }
+
+  TPLXNodeTest = class(TPLXEvaluation)
+  private
+    FKind: TPLXNodeTestKind;
+    FToken: IPLXToken;
+    FTokenKind: TPLXTokenKind;
+  public
+    constructor CreateIdentifierTest(AToken: IPLXToken);
+    constructor CreateKindTest(AKind: TPLXTokenKind);
+    constructor CreateAnyTest;
+
+    function Evaluate(AContext: TPLXContext): TPLXValue; override;
+    function EvaluateAxis(AAxis: TPLXTokenKind; AContext: TPLXContext): TPLXValue;
+
+    property Kind: TPLXNodeTestKind read FKind write FKind;
+  end;
+
+  { TPLXStep }
+
+  TPLXStep = class(TPLXEvaluation)
+  private
+    FAxis: TPLXTokenKind;
+    FTest: TPLXNodeTest;
+  public
+    constructor Create(ATest: TPLXNodeTest; AAxis: TPLXTokenKind = xtkEOF);
+    destructor Destroy; override;
+
+    function Evaluate(AContext: TPLXContext): TPLXValue; override;
+  end;
+
+  TPLXStepExpression = class(TPLXEvaluation)
 
   end;
 
@@ -598,7 +679,7 @@ end;
 
 function TPLXValue.ToBoolean: TPLBool;
 begin
-  Result := ToFloat <> 0;
+  Result := (ToString <> '') or (ToFloat <> 0);
 end;
 
 function TPLXValue.ToHTMLObjects: IPLHTMLObjects;
@@ -617,9 +698,22 @@ begin
   end;
 end;
 
+function TPLXValue.IsNull: TPLBool;
+begin
+  Result := self = Null;
+end;
+
+class function TPLXValue.Null: TPLXValue;
+begin
+  Result.FKind := xvkString;
+  Result.FNumber := '<TPLXValue.Null:=nil>';
+  Result.FList := nil;
+end;
+
 class operator TPLXValue.=(a, b: TPLXValue) r: TPLBool;
 begin
-  r := a.CanCastTo(b) and (a.FKind = b.FKind) and (a.FNumber = b.FNumber);
+  r := a.CanCastTo(b) and (a.FKind = b.FKind) and (a.FNumber = b.FNumber)
+    and (a.FList = b.FList);
 end;
 
 { TPLXContext }
@@ -635,8 +729,11 @@ end;
 { TPLXParameters }
 
 function TPLXParameters.Evaluate(AContext: TPLXContext): IPLXValues;
+var
+  v: TPLXExpression;
 begin
-
+  Result := TPLXValues.Create;
+  for v in self do Result.Add(v.Evaluate(AContext));
 end;
 
 { TPLXEvaluation }
@@ -644,12 +741,416 @@ end;
 function TPLXEvaluation.Operation(AOperator: TPLXOperator; const A, B: TPLXValue
   ): TPLXValue;
 begin
+  Result := TPLXValue.Null;
 
+  case AOperator of
+    xoNone: Result := A;
+    xoPlus: begin
+      case A.Kind of
+        xvkInteger: Result := TPLXValue.NewInteger(A.ToInteger + B.ToInteger);
+        xvkFloat: Result := TPLXValue.NewFloat(A.ToFloat + B.ToFloat);
+        xvkString: Result := TPLXValue.NewString(A.ToString + B.ToString);
+        xvkBoolean: Result := TPLXValue.NewBoolean(A.ToFloat + B.ToFloat <> 0);
+      end;
+    end;
+    xoMinus: begin
+      case A.Kind of
+        xvkInteger: Result := TPLXValue.NewInteger(A.ToInteger - B.ToInteger);
+        xvkFloat: Result := TPLXValue.NewFloat(A.ToFloat - B.ToFloat);
+        xvkString: Result := TPLXValue.NewString(A.ToString.Replace(B.ToString, ''));
+        xvkBoolean: Result := TPLXValue.NewBoolean(A.ToFloat - B.ToFloat <> 0);
+      end;
+    end;
+    xoMultiply: begin
+      case A.Kind of
+        xvkInteger: Result := TPLXValue.NewInteger(A.ToInteger * B.ToInteger);
+        xvkFloat: Result := TPLXValue.NewFloat(A.ToFloat * B.ToFloat);
+        xvkBoolean: Result := TPLXValue.NewBoolean(A.ToFloat * B.ToFloat <> 0);
+      end;
+    end;
+    xoFloatDivide: begin
+      case A.Kind of
+        xvkInteger: Result := TPLXValue.NewFloat(A.ToInteger / B.ToInteger);
+        xvkFloat, xvkBoolean: Result := TPLXValue.NewFloat(A.ToFloat / B.ToFloat);
+      end;
+    end;
+    xoIntegerDivide: begin
+      case A.Kind of
+        xvkInteger: Result := TPLXValue.NewInteger(A.ToInteger div B.ToInteger);
+        xvkFloat, xvkBoolean: Result := TPLXValue.NewFloat(trunc(A.ToFloat / B.ToFloat));
+      end;
+    end;
+    xoModulo: begin
+      case A.Kind of
+        xvkInteger: Result := TPLXValue.NewFloat(A.ToInteger mod B.ToInteger);
+        xvkFloat, xvkBoolean: Result := TPLXValue.NewFloat(A.ToFloat mod B.ToFloat);
+      end;
+    end;
+    xoOr: Result := TPLXValue.NewBoolean(A.ToBoolean or B.ToBoolean);
+    xoAnd: Result := TPLXValue.NewBoolean(A.ToBoolean and B.ToBoolean);
+    xoNegate: begin
+      case A.Kind of
+        xvkInteger: Result := TPLXValue.NewInteger(-A.ToInteger);
+        xvkFloat: Result := TPLXValue.NewFloat(-A.ToFloat);
+        xvkString: Result := TPLXValue.NewString(ReverseString(A.ToString));
+        xvkBoolean: Result := TPLXValue.NewBoolean(not A.ToBoolean);
+      end;
+    end;
+    xoEqual: begin
+      if not A.CanCastTo(B) then Result := TPLXValue.NewBoolean(false) else
+      case A.Kind of
+        xvkInteger: Result := TPLXValue.NewBoolean(A.ToInteger = B.ToInteger);
+        xvkFloat: Result := TPLXValue.NewBoolean(A.ToFloat = B.ToFloat);
+        xvkString: Result := TPLXValue.NewBoolean(A.ToString = B.ToString);
+        xvkBoolean: Result := TPLXValue.NewBoolean(A.ToBoolean = B.ToBoolean);
+      end;
+    end;
+    xoNotEqual: begin
+      if not A.CanCastTo(B) then Result := TPLXValue.NewBoolean(true) else
+      case A.Kind of
+        xvkInteger: Result := TPLXValue.NewBoolean(A.ToInteger <> B.ToInteger);
+        xvkFloat: Result := TPLXValue.NewBoolean(A.ToFloat <> B.ToFloat);
+        xvkString: Result := TPLXValue.NewBoolean(A.ToString <> B.ToString);
+        xvkBoolean: Result := TPLXValue.NewBoolean(A.ToBoolean <> B.ToBoolean);
+      end;
+    end;
+    xoLess: begin
+      if not A.CanCastTo(B) then Result := TPLXValue.NewBoolean(false) else
+      case A.Kind of
+        xvkInteger: Result := TPLXValue.NewBoolean(A.ToInteger < B.ToInteger);
+        xvkFloat: Result := TPLXValue.NewBoolean(A.ToFloat < B.ToFloat);
+        xvkString: Result := TPLXValue.NewBoolean(A.ToString < B.ToString);
+        xvkBoolean: Result := TPLXValue.NewBoolean(A.ToBoolean < B.ToBoolean);
+      end;
+    end;
+    xoGreater: begin
+      if not A.CanCastTo(B) then Result := TPLXValue.NewBoolean(false) else
+      case A.Kind of
+        xvkInteger: Result := TPLXValue.NewBoolean(A.ToInteger > B.ToInteger);
+        xvkFloat: Result := TPLXValue.NewBoolean(A.ToFloat > B.ToFloat);
+        xvkString: Result := TPLXValue.NewBoolean(A.ToString > B.ToString);
+        xvkBoolean: Result := TPLXValue.NewBoolean(A.ToBoolean > B.ToBoolean);
+      end;
+    end;
+    xoLessOrEqual: begin
+      if not A.CanCastTo(B) then Result := TPLXValue.NewBoolean(false) else
+      case A.Kind of
+        xvkInteger: Result := TPLXValue.NewBoolean(A.ToInteger <= B.ToInteger);
+        xvkFloat: Result := TPLXValue.NewBoolean(A.ToFloat <= B.ToFloat);
+        xvkString: Result := TPLXValue.NewBoolean(A.ToString <= B.ToString);
+        xvkBoolean: Result := TPLXValue.NewBoolean(A.ToBoolean <= B.ToBoolean);
+      end;
+    end;
+    xoGreaterOrEqual: begin
+      if not A.CanCastTo(B) then Result := TPLXValue.NewBoolean(false) else
+      case A.Kind of
+        xvkInteger: Result := TPLXValue.NewBoolean(A.ToInteger >= B.ToInteger);
+        xvkFloat: Result := TPLXValue.NewBoolean(A.ToFloat >= B.ToFloat);
+        xvkString: Result := TPLXValue.NewBoolean(A.ToString >= B.ToString);
+        xvkBoolean: Result := TPLXValue.NewBoolean(A.ToBoolean >= B.ToBoolean);
+      end;
+    end;
+  end;
 end;
 
 function TPLXEvaluation.Evaluate(AContext: TPLXContext): TPLXValue;
 begin
-  //
+  Result := TPLXValue.Null;
+end;
+
+{ TPLXExpression }
+
+constructor TPLXExpression.Create(const AKind: TPLXExpressionKind;
+  AOperand: IPLXEvaluation);
+begin
+  inherited Create;
+
+  FKind := AKind;
+  FOperand := AOperand;
+  FElements := TPLXExpressionElements.Create;
+end;
+
+function TPLXExpression.Evaluate(AContext: TPLXContext): TPLXValue;
+
+  function Path: TPLXValue;
+  var
+    e: IPLXEvaluation;
+    obj, x: IPLHTMLObject;
+    objr: TPLXValue;
+    lin, lout: IPLHTMLObjects;
+    i: SizeInt = 0;
+  begin
+    lin := TPLHTMLObjects.Create;
+    lin.Add(AContext.HTMLObject);
+    lout := TPLHTMLObjects.Create;
+    e := FOperand;
+
+    while Assigned(e) do begin
+      for obj in lin do begin
+        objr := e.Evaluate(TPLXContext.Create(AContext.HTMLDocument, obj, 1));
+        if objr.Kind = xvkHTMLObjects then
+          for x in objr.ToHTMLObjects do lout.Add(x);
+      end;
+
+      e := nil;
+      if i < FElements.Count then begin
+        lin.Clear;
+        for x in lout do lin.Add(x);
+        lout.Clear;
+        e := FElements[i].Value;
+        i += 1;
+      end;
+    end;
+
+    Result := TPLXValue.NewHTMLObjects(lout);
+  end;
+
+  function Expr: TPLXValue;
+  var
+    e: TPLXExpressionElement;
+  begin
+    Result := FOperand.Evaluate(AContext);
+
+    for e in FElements do
+      Result := Operation(e.Key, Result, e.Value.Evaluate(AContext));
+  end;
+
+begin
+  case FKind of
+    xekPath: Result := Path;
+    xekExpression: Result := Expr;
+    xekNegation: Result := Operation(xoNegate, FOperand.Evaluate(AContext), TPLXValue.Null);
+    xekRoot: Result := FOperand.Evaluate(TPLXContext.Create(AContext.HTMLDocument, AContext.HTMLDocument.Root, 1));
+  end;
+end;
+
+procedure TPLXExpression.AddElement(const AOperator: TPLXOperator;
+  AOperand: IPLXEvaluation);
+begin
+  FElements.Add(TPLXExpressionElement.Create(AOperator, AOperand));
+end;
+
+{ TPLXPrimaryExpression }
+
+constructor TPLXPrimaryExpression.Create(AToken: IPLXToken);
+begin
+  inherited Create;
+
+  case AToken.Kind of
+    xtkIdentifier: FKind := xpekVariable;
+    xtkDot: FKind := xpekContext;
+    else FKind := xpekValue;
+  end;
+  FExpression := nil;
+  FParameters := nil;
+  FToken := AToken.Clone;
+end;
+
+constructor TPLXPrimaryExpression.Create(AToken: IPLXToken;
+  AParameters: IPLXParameters);
+begin
+  inherited Create;
+
+  FKind := xpekFunction;
+  FExpression := nil;
+  FParameters := AParameters;
+  FToken := AToken.Clone;
+end;
+
+constructor TPLXPrimaryExpression.Create(AExpression: TPLXExpression);
+begin
+  inherited Create;
+
+  FKind := xpekExpression;
+  FExpression := AExpression;
+  FParameters := nil;
+  FToken := nil;
+end;
+
+destructor TPLXPrimaryExpression.Destroy;
+begin
+  if Assigned(FExpression) then FreeAndNil(FExpression);
+
+  inherited Destroy;
+end;
+
+function TPLXPrimaryExpression.Evaluate(AContext: TPLXContext): TPLXValue;
+
+  function Func: TPLXValue;
+  var
+    cp: IPLXValues;
+  begin
+    Result := TPLXValue.Null;
+    cp := FParameters.Evaluate(AContext);
+
+    case FToken.Text of
+      'true': Result := TPLXValue.NewBoolean(true);
+      'false': Result := TPLXValue.NewBoolean(false);
+      'text': begin
+        if Assigned(AContext.HTMLObject) then Result := TPLXValue.NewString(AContext.HTMLObject.Text)
+        else Result := TPLXValue.NewString('');
+      end;
+      'position': Result := TPLXValue.NewInteger(AContext.Position);
+      'not': begin
+        if cp.Count > 0 then Result := TPLXValue.NewBoolean(not cp[0].ToBoolean);
+      end;
+      'count': begin
+        if (cp.Count > 0) and (cp[0].Kind = xvkHTMLObjects) then Result := TPLXValue.NewInteger(cp[0].ToHTMLObjects.Count);
+      end;
+    end;
+  end;
+
+begin
+  Result := TPLXValue.Null;
+
+  case FKind of
+    xpekExpression: Result := FExpression.Evaluate(AContext);
+    xpekValue: begin
+      case FToken.Kind of
+        xtkInteger: Result := TPLXValue.NewInteger(FToken.ToInteger);
+        xtkFloat: Result := TPLXValue.NewFloat(FToken.ToFloat);
+        xtkString: Result := TPLXValue.NewString(FToken.Text);
+      end;
+    end;
+    xpekFunction: Result := Func;
+  end;
+end;
+
+{ TPLXNodeTest }
+
+constructor TPLXNodeTest.CreateIdentifierTest(AToken: IPLXToken);
+begin
+  inherited Create;
+
+  FKind := xntIdentifier;
+  FToken := AToken.Clone;
+  FTokenKind := xtkIdentifier;
+end;
+
+constructor TPLXNodeTest.CreateKindTest(AKind: TPLXTokenKind);
+begin
+  inherited Create;
+
+  FKind := xntKind;
+  FToken := nil;
+  FTokenKind := AKind;
+end;
+
+constructor TPLXNodeTest.CreateAnyTest;
+begin
+  inherited Create;
+
+  FKind := xntAny;
+  FToken := nil;
+  FTokenKind := xtkMultiply;
+end;
+
+function TPLXNodeTest.Evaluate(AContext: TPLXContext): TPLXValue;
+var
+  objs: IPLHTMLObjects;
+begin
+  Result := TPLXValue.Null;
+
+  case FKind of
+    xntKind: begin
+      case FTokenKind of
+        xtkNode: begin
+          objs := TPLHTMLObjects.Create;
+          objs.Add(AContext.HTMLObject);
+          Result := TPLXValue.NewHTMLObjects(objs.Duplicate);
+        end;
+        xtkText: Result := TPLXValue.NewString(AContext.HTMLObject.Text);
+      end;
+    end;
+    xntAny: Result := TPLXValue.NewHTMLObjects(AContext.HTMLObject.Children.Duplicate);
+  end;
+end;
+
+function TPLXNodeTest.EvaluateAxis(AAxis: TPLXTokenKind; AContext: TPLXContext
+  ): TPLXValue;
+var
+  objs: IPLHTMLObjects;
+
+  procedure ProcessNode(A: IPLHTMLObject; B: IPLHTMLObjects);
+  begin
+    case FKind of
+      xntIdentifier: begin
+        if ((AAxis = xtkAttribute) and (A.Attributes.Has(FToken.Text))) or (A.Name = FToken.Text) then
+          B.Add(A);
+      end;
+      xntKind: begin
+        case FTokenKind of
+          xtkNode: B.Add(A);
+        end;
+      end;
+      xntAny: B.Add(A);
+    end;
+  end;
+
+  procedure ProcessAxis(A, B: IPLHTMLObjects);
+  var
+    obj: IPLHTMLObject;
+  begin
+    for obj in A do begin
+      ProcessNode(obj, B);
+      if AAxis in [xtkDescendant, xtkDescendantOrSelf] then
+        ProcessAxis(obj.Children, B);
+    end;
+  end;
+
+begin
+  objs := TPLHTMLObjects.Create;
+
+  case AAxis of
+    xtkAttribute: begin
+      if AContext.HTMLObject.Attributes.Has(FToken.Text) then
+        Result := TPLXValue.NewString(AContext.HTMLObject.Attributes[FToken.Text].Value)
+      else
+        Result := TPLXValue.NewBoolean(false);
+    end;
+    xtkSelf: begin
+      ProcessNode(AContext.HTMLObject, objs);
+      Result := TPLXValue.NewHTMLObjects(objs.Duplicate);
+    end;
+    xtkParent: begin
+      ProcessAxis(AContext.HTMLObject.Parent.Children.Duplicate, objs);
+      Result := TPLXValue.NewHTMLObjects(objs.Duplicate);
+    end;
+    xtkChild, xtkDescendant: begin
+      ProcessAxis(AContext.HTMLObject.Children.Duplicate, objs);
+      Result := TPLXValue.NewHTMLObjects(objs.Duplicate);
+    end;
+    xtkDescendantOrSelf: begin
+      ProcessNode(AContext.HTMLObject, objs);
+      ProcessAxis(AContext.HTMLObject.Children.Duplicate, objs);
+      Result := TPLXValue.NewHTMLObjects(objs.Duplicate);
+    end;
+  end;
+end;
+
+{ TPLXStep }
+
+constructor TPLXStep.Create(ATest: TPLXNodeTest; AAxis: TPLXTokenKind);
+begin
+  inherited Create;
+
+  FTest := ATest;
+  FAxis := AAxis;
+end;
+
+destructor TPLXStep.Destroy;
+begin
+  if Assigned(FTest) then FreeAndNil(FTest);
+
+  inherited Destroy;
+end;
+
+function TPLXStep.Evaluate(AContext: TPLXContext): TPLXValue;
+begin
+  if FAxis = xtkEOF then
+    Result := FTest.Evaluate(AContext)
+  else
+    Result := FTest.EvaluateAxis(FAxis, AContext);
 end;
 
 end.

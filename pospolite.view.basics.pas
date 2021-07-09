@@ -53,6 +53,14 @@ type
   TPLFloatRange = specialize TPLNumberRange<TPLFloat>;
   TPLByteRange = specialize TPLNumberRange<Byte>;
 
+  { IPLCloneable }
+
+  generic IPLCloneable<T> = interface
+    ['{9BA2FE16-9C98-462E-BE86-5C28A6D18228}']
+
+    function Clone: T;
+  end;
+
   { IPLListBase }
 
   generic IPLListBase<T> = interface(specialize IEnumerable<T>)
@@ -96,6 +104,7 @@ type
     ['{5BA70B04-A7B1-45B6-852D-3EE2B0575121}']
     function Find(AItem: T; AComparator: specialize TPLObjectListFindCompare<T> = nil): SizeInt;
     procedure Sort(AComparator: specialize TPLObjectListSortCompare<T>);
+    function Duplicate: specialize IPLObjectList<T>;
 
     property FreeObjects: TPLBool;
   end;
@@ -134,6 +143,7 @@ type
     procedure Clear; virtual;
     function Last: T;
     function First: T;
+    function Duplicate: specialize IPLObjectList<T>;
 
     property Item[AIndex: SizeInt]: T read GetItem write SetItem; default;
     property FreeObjects: TPLBool read FFreeObjects write FFreeObjects;
@@ -146,6 +156,7 @@ type
     function GetData: Pointer;
 
     function Find(AItem: T): SizeInt;
+    function Duplicate: specialize IPLList<T>;
 
     property Data: Pointer read GetData;
   end;
@@ -178,6 +189,7 @@ type
     procedure Clear; virtual;
     function Last: T;
     function First: T;
+    function Duplicate: specialize IPLList<T>;
 
     property Item[AIndex: SizeInt]: T read GetItem write SetItem; default;
     property Data: Pointer read GetData;
@@ -186,14 +198,6 @@ type
   { TPLInterfaceList }
 
   TPLInterfaceList = specialize TPLList<IInterface>;
-
-  { IPLCloneable }
-
-  generic IPLCloneable<T> = interface
-    ['{9BA2FE16-9C98-462E-BE86-5C28A6D18228}']
-
-    function Clone: T;
-  end;
 
   { TPLFuncs }
 
@@ -215,6 +219,7 @@ type
     Key: K;
     Value: V;
 
+    constructor Create(AKey: K; AValue: V);
     class operator =(a, b: TPLParameter) r: TPLBool; inline;
   end;
 
@@ -310,7 +315,7 @@ type
 
   { IPLHTMLObject }
 
-  IPLHTMLObject = interface
+  IPLHTMLObject = interface(specialize IPLCloneable<IPLHTMLObject>)
     ['{37CA6394-6FDE-4E4A-A44D-EBCEC2EBED34}']
     function GetAttributes: IPLHTMLObjectAttributes;
     function GetChild(const AName: TPLString): IPLHTMLObject;
