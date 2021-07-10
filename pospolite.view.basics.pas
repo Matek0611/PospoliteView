@@ -329,6 +329,7 @@ type
     function GetZoom: TPLFloat;
     procedure SetName(AValue: TPLString);
     procedure SetParent(AValue: IPLHTMLObject);
+    procedure SetPosition(AValue: SizeInt);
     procedure SetState(AValue: TPLCSSElementState);
     procedure SetText(AValue: TPLString);
     procedure SetZoom(AValue: TPLFloat);
@@ -356,7 +357,7 @@ type
     property Child[const AName: TPLString]: IPLHTMLObject read GetChild;
     property Name: TPLString read GetName write SetName;
     property Text: TPLString read GetText write SetText;
-    property Position: SizeInt read GetPosition;
+    property Position: SizeInt read GetPosition write SetPosition;
   end;
 
   { IPLBasicDocument }
@@ -523,6 +524,8 @@ const
   operator := (a: TPLInt) b: TPLString;
   operator := (a: TPLString) b: TPLInt;
   operator := (a: TPLFloat) b: TPLBool;
+  operator := (a: TPLCSSElementState) b: TPLString;
+  operator := (a: TPLString) b: TPLCSSElementState;
   operator * (a: TPLString; b: TPLInt) r: TPLString;
   operator mod (a, b: TPLFloat) r: TPLFloat;
   operator in (a: TPLString; tab: specialize TArray<TPLString>): TPLBool;

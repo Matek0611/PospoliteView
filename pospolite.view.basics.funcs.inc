@@ -111,6 +111,34 @@ begin
   b := a <> 0;
 end;
 
+operator := (a: TPLCSSElementState) b: TPLString;
+begin
+  case a of
+    esActive: b := 'active';
+    esFocus: b := 'focus';
+    esFocusWithin: b := 'focus-within';
+    esFocusVisible: b := 'focus-visible';
+    esHover: b := 'hover';
+    esTarget: b := 'target';
+    esVisited: b := 'visited';
+    else b := 'normal';
+  end;
+end;
+
+operator := (a: TPLString) b: TPLCSSElementState;
+begin
+  case a.ToLower.Trim of
+    'active': b := esActive;
+    'focus': b := esFocus;
+    'focus-within': b := esFocusWithin;
+    'focus-visible': b := esFocusVisible;
+    'hover': b := esHover;
+    'target': b := esTarget;
+    'visited': b := esVisited;
+    else b := esNormal;
+  end;
+end;
+
 operator * (a: TPLString; b: TPLInt) r: TPLString;
 var
   i: TPLInt;

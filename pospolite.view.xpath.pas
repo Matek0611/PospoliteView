@@ -96,6 +96,7 @@ type
     procedure MoveForward;
 
     property LastError: TPLString read FLastError;
+    property Token: IPLXToken read FToken;
   end;
 
   TPLXValueKind = (xvkInteger, xvkFloat, xvkString, xvkBoolean, xvkHTMLObjects);
@@ -205,6 +206,9 @@ type
     property Kind: TPLXExpressionKind read FKind write FKind;
   end;
 
+  IPLXExpressions = specialize IPLObjectList<TPLXExpression>;
+  TPLXExpressions = class(specialize TPLObjectList<TPLXExpression>, IPLXExpressions);
+
   TPLXPrimaryExpressionKind = (xpekExpression, xpekContext, xpekValue, xpekVariable,
     xpekFunction);
 
@@ -260,8 +264,41 @@ type
     function Evaluate(AContext: TPLXContext): TPLXValue; override;
   end;
 
-  TPLXStepExpression = class(TPLXEvaluation)
+  { TPLXStepExpression }
 
+  TPLXStepExpression = class(TPLXEvaluation)
+  private
+    FStep: IPLXEvaluation;
+    FPredicates: IPLXExpressions;
+  public
+    constructor Create(AStep: IPLXEvaluation);
+
+    function Evaluate(AContext: TPLXContext): TPLXValue; override;
+    procedure AddPredicate(APredicate: TPLXExpression);
+  end;
+
+  { TPLXPath }
+
+  TPLXPath = packed class sealed
+  private
+    class function ConvertCSSToXPath(ACSS: TPLString): TPLString;
+    class function ParseXPath(AXPath: TPLString): TPLXEvaluation;
+    class function ParseExpression(ALexer: TPLXLexer): TPLXExpression;
+    class function ParseAnd(ALexer: TPLXLexer): TPLXExpression;
+    class function ParseComparison(ALexer: TPLXLexer): TPLXExpression;
+    class function ParsePlusMinus(ALexer: TPLXLexer): TPLXExpression;
+    class function ParseMultiplicative(ALexer: TPLXLexer): TPLXExpression;
+    class function ParseUnary(ALexer: TPLXLexer): TPLXExpression;
+    class function ParsePath(ALexer: TPLXLexer): TPLXExpression;
+    class function ParseRelativePath(ALexer: TPLXLexer): TPLXExpression;
+    class function ParseStep(ALexer: TPLXLexer): TPLXEvaluation;
+    class function ParseStepExpression(ALexer: TPLXLexer): TPLXEvaluation;
+    class function ParsePrimary(ALexer: TPLXLexer): TPLXPrimaryExpression;
+    class function ParseNodeTest(ALexer: TPLXLexer): TPLXNodeTest;
+    class function ParseParameters(ALexer: TPLXLexer): TPLXParameters;
+  public
+    class function EvaluateXPath(ADocument: IPLHTMLDocument; AXPath: TPLString): TPLXValue;
+    class function EvaluateCSS(ADocument: IPLHTMLDocument; ACSS: TPLString): TPLXValue; inline;
   end;
 
 implementation
@@ -321,7 +358,7 @@ begin
     xtkSchemaElement: r := 'schema-element';
     xtkSchemaAttribute: r := 'schema-attribute';
     xtkProcessingInstruction: r := 'processing-instruction';
-    xtkElementState: r := 'element-state';
+    xtkElementState: r := 'state';
   end;
 end;
 
@@ -380,7 +417,7 @@ begin
     'schema-element': r := xtkSchemaElement;
     'schema-attribute': r := xtkSchemaAttribute;
     'processing-instruction': r := xtkProcessingInstruction;
-    'element-state': r := xtkElementState;
+    'state': r := xtkElementState;
     else r := xtkEOF;
   end;
 end;
@@ -391,6 +428,10 @@ begin
     'single': Result := [xtkBracketStart..xtkParenthesisEnd, xtkDot, xtkSlash, xtkDollar..xtkEquals, xtkLess, xtkGreater];
     'double': Result := [xtkDoubleColon, xtkDoubleDot, xtkDoubleSlash, xtkLessEqual, xtkGreaterEqual];
     'word': Result := [xtkText, xtkComment, xtkOr..xtkElementState];
+    'compare': Result := [xtkEquals..xtkGreaterEqual];
+    '+/-': Result := [xtkPlus, xtkMinus];
+    'slashes': Result := [xtkSlash, xtkDoubleSlash];
+    'multi': Result := [xtkMultiply, xtkDivF, xtkDivI, xtkMod];
     'other': Result := [xtkEOF, xtkIdentifier, xtkString..xtkFloat];
     'all': Result := [xtkEOF..xtkElementState];
     else Result := [];
@@ -997,6 +1038,10 @@ function TPLXPrimaryExpression.Evaluate(AContext: TPLXContext): TPLXValue;
       'count': begin
         if (cp.Count > 0) and (cp[0].Kind = xvkHTMLObjects) then Result := TPLXValue.NewInteger(cp[0].ToHTMLObjects.Count);
       end;
+      'state': begin
+        if Assigned(AContext.HTMLObject) then Result := TPLXValue.NewString(AContext.HTMLObject.State)
+        else Result := TPLXValue.NewString(esNormal);
+      end;
     end;
   end;
 
@@ -1151,6 +1196,379 @@ begin
     Result := FTest.Evaluate(AContext)
   else
     Result := FTest.EvaluateAxis(FAxis, AContext);
+end;
+
+{ TPLXStepExpression }
+
+constructor TPLXStepExpression.Create(AStep: IPLXEvaluation);
+begin
+  inherited Create;
+
+  FStep := AStep;
+  FPredicates := TPLXExpressions.Create(true);
+end;
+
+function TPLXStepExpression.Evaluate(AContext: TPLXContext): TPLXValue;
+var
+  obj: IPLHTMLObject;
+  objs: IPLHTMLObjects;
+  pos: SizeInt = 1;
+  inc: TPLBool;
+  pr: TPLXExpression;
+  prr: TPLXValue;
+begin
+  Result := FStep.Evaluate(AContext);
+
+  if FPredicates.Count > 0 then begin
+    objs := TPLHTMLObjects.Create;
+
+    for obj in Result.ToHTMLObjects do begin
+      inc := true;
+
+      for pr in FPredicates do begin
+        prr := pr.Evaluate(TPLXContext.Create(AContext.HTMLDocument, obj, pos));
+        if prr.Kind = xvkInteger then
+          inc := inc and (prr.ToInteger = pos)
+        else
+          inc := inc and prr.ToBoolean;
+      end;
+
+      pos += 1;
+      if inc then objs.Add(obj);
+    end;
+
+    Result := TPLXValue.NewHTMLObjects(objs.Duplicate);
+  end;
+end;
+
+procedure TPLXStepExpression.AddPredicate(APredicate: TPLXExpression);
+begin
+  FPredicates.Add(APredicate);
+end;
+
+{ TPLXPath }
+
+class function TPLXPath.ConvertCSSToXPath(ACSS: TPLString): TPLString;
+begin
+  Result := '';
+end;
+
+class function TPLXPath.ParseXPath(AXPath: TPLString): TPLXEvaluation;
+var
+  lex: TPLXLexer;
+begin
+  lex := TPLXLexer.Create(AXPath);
+  try
+    Result := ParseExpression(lex);
+  finally
+    lex.Free;
+  end;
+end;
+
+class function TPLXPath.ParseExpression(ALexer: TPLXLexer): TPLXExpression;
+var
+  op: TPLXEvaluation;
+begin
+  Result := ParseAnd(ALexer);
+
+  if ALexer.Token.Kind = xtkOr then begin
+    Result := TPLXExpression.Create(xekExpression, Result);
+
+    while ALexer.Token.Kind = xtkOr do begin
+      ALexer.MoveForward;
+      op := ParseAnd(ALexer);
+      Result.AddElement(xoOr, op);
+    end;
+  end;
+end;
+
+class function TPLXPath.ParseAnd(ALexer: TPLXLexer): TPLXExpression;
+var
+  op: TPLXEvaluation;
+begin
+  Result := ParseComparison(ALexer);
+
+  if ALexer.Token.Kind = xtkAnd then begin
+    Result := TPLXExpression.Create(xekExpression, Result);
+
+    while ALexer.Token.Kind = xtkAnd do begin
+      ALexer.MoveForward;
+      op := ParseAnd(ALexer);
+      Result.AddElement(xoAnd, op);
+    end;
+  end;
+end;
+
+class function TPLXPath.ParseComparison(ALexer: TPLXLexer): TPLXExpression;
+var
+  op: TPLXEvaluation;
+  xop: TPLXOperator;
+begin
+  Result := ParsePlusMinus(ALexer);
+
+  if ALexer.Token.Kind in XTokenKindCategory('compare') then begin
+    Result := TPLXExpression.Create(xekExpression, Result);
+
+    while ALexer.Token.Kind in XTokenKindCategory('compare') do begin
+      case ALexer.Token.Kind of
+        xtkEquals: xop := xoEqual;
+        xtkNotEquals: xop := xoNotEqual;
+        xtkLess: xop := xoLess;
+        xtkGreater: xop := xoGreater;
+        xtkLessEqual: xop := xoLessOrEqual;
+        xtkGreaterEqual: xop := xoGreaterOrEqual;
+      end;
+      ALexer.MoveForward;
+      op := ParsePlusMinus(ALexer);
+      Result.AddElement(xop, op);
+    end;
+  end;
+end;
+
+class function TPLXPath.ParsePlusMinus(ALexer: TPLXLexer): TPLXExpression;
+var
+  op: TPLXEvaluation;
+  xop: TPLXOperator;
+begin
+  Result := ParseMultiplicative(ALexer);
+
+  if ALexer.Token.Kind in XTokenKindCategory('+/-') then begin
+    Result := TPLXExpression.Create(xekExpression, Result);
+
+    while ALexer.Token.Kind in XTokenKindCategory('+/-') do begin
+      case ALexer.Token.Kind of
+        xtkPlus: xop := xoPlus;
+        xtkMinus: xop := xoMinus;
+      end;
+      ALexer.MoveForward;
+      op := ParseMultiplicative(ALexer);
+      Result.AddElement(xop, op);
+    end;
+  end;
+end;
+
+class function TPLXPath.ParseMultiplicative(ALexer: TPLXLexer): TPLXExpression;
+var
+  op: TPLXEvaluation;
+  xop: TPLXOperator;
+begin
+  Result := ParseUnary(ALexer);
+
+  if ALexer.Token.Kind in XTokenKindCategory('multi') then begin
+    Result := TPLXExpression.Create(xekExpression, Result);
+
+    while ALexer.Token.Kind in XTokenKindCategory('multi') do begin
+      case ALexer.Token.Kind of
+        xtkMultiply: xop := xoMultiply;
+        xtkDivF: xop := xoFloatDivide;
+        xtkDivI: xop := xoIntegerDivide;
+        xtkMod: xop := xoModulo;
+      end;
+      ALexer.MoveForward;
+      op := ParseUnary(ALexer);
+      Result.AddElement(xop, op);
+    end;
+  end;
+end;
+
+class function TPLXPath.ParseUnary(ALexer: TPLXLexer): TPLXExpression;
+var
+  neg: TPLBool = false;
+begin
+  while ALexer.Token.Kind in XTokenKindCategory('+/-') do begin
+    if ALexer.Token.Kind = xtkMinus then neg := not neg;
+    ALexer.MoveForward;
+  end;
+
+  Result := ParsePath(ALexer);
+
+  if neg then begin
+    Result := TPLXExpression.Create(xekNegation, Result);
+    Result.AddElement(xoNegate, nil);
+  end;
+end;
+
+class function TPLXPath.ParsePath(ALexer: TPLXLexer): TPLXExpression;
+var
+  cs, p: TPLXExpression;
+  s: TPLXStep;
+begin
+  case ALexer.Token.Kind of
+    xtkSlash: begin
+      ALexer.MoveForward;
+      Result := TPLXExpression.Create(xekRoot, ParseRelativePath(ALexer));
+    end;
+    xtkDoubleSlash: begin
+      ALexer.MoveForward;
+      cs := ParseRelativePath(ALexer);
+      s := TPLXStep.Create(TPLXNodeTest.CreateKindTest(xtkNode), xtkDescendantOrSelf);
+      p := TPLXExpression.Create(xekPath, s);
+      p.AddElement(xoStep, cs);
+      Result := TPLXExpression.Create(xekRoot, p);
+    end;
+    else Result := ParseRelativePath(ALexer);
+  end;
+end;
+
+class function TPLXPath.ParseRelativePath(ALexer: TPLXLexer): TPLXExpression;
+begin
+  Result := TPLXExpression.Create(xekExpression, ParseStepExpression(ALexer));
+
+  while ALexer.Token.Kind in XTokenKindCategory('slashes') do begin
+    Result.Kind := xekPath;
+    ALexer.MoveForward;
+
+    case ALexer.Token.Kind of
+      xtkSlash: Result.AddElement(xoStep, ParseStepExpression(ALexer));
+      xtkDoubleSlash: begin
+        Result.AddElement(xoStep, TPLXExpression.Create(xekPath, TPLXStep.Create(TPLXNodeTest.CreateKindTest(xtkNode), xtkDescendantOrSelf)));
+        Result.AddElement(xoStep, ParseRelativePath(ALexer));
+      end;
+    end;
+  end;
+end;
+
+class function TPLXPath.ParseStep(ALexer: TPLXLexer): TPLXEvaluation;
+var
+  tk: IPLXToken;
+  tkk: TPLXTokenKind;
+  nt: TPLXNodeTest;
+begin
+  case ALexer.Token.Kind of
+    xtkDoubleDot: begin
+      ALexer.MoveForward;
+      tk := TPLXToken.Create(xtkNode, 'node', -1, -1);
+      Result := TPLXStep.Create(TPLXNodeTest.CreateKindTest(tk.Kind), xtkParent);
+    end;
+    xtkAt: begin
+      ALexer.MoveForward;
+      Result := TPLXStep.Create(ParseNodeTest(ALexer), xtkAttribute);
+    end;
+    xtkParent..xtkDescendantOrSelf: begin
+      tkk := ALexer.Token.Kind;
+      ALexer.MoveForward;
+      ALexer.Consume(xtkDoubleColon);
+      Result := TPLXStep.Create(ParseNodeTest(ALexer), tkk);
+    end;
+    else begin
+      nt := ParseNodeTest(ALexer);
+      if nt.Kind = xntIdentifier then
+        Result := TPLXStep.Create(nt, xtkChild)
+      else
+        Result := TPLXStep.Create(nt);
+    end;
+  end;
+end;
+
+class function TPLXPath.ParseStepExpression(ALexer: TPLXLexer): TPLXEvaluation;
+begin
+  if ((ALexer.Token.Kind = xtkIdentifier) and (ALexer.Peek.Kind <> xtkParenthesisStart))
+    or (ALexer.Token.Kind in [xtkText, xtkComment, xtkAt, xtkMultiply, xtkNamespace, xtkParent..xtkProcessingInstruction]) then
+    Result := ParseStep(ALexer)
+  else Result := ParsePrimary(ALexer);
+
+  Result := TPLXStepExpression.Create(Result);
+  while ALexer.Token.Kind = xtkBracketStart do begin
+    ALexer.Consume(xtkBracketStart);
+    TPLXStepExpression(Result).AddPredicate(ParseExpression(ALexer));
+    ALexer.Consume(xtkBracketEnd);
+  end;
+end;
+
+class function TPLXPath.ParsePrimary(ALexer: TPLXLexer): TPLXPrimaryExpression;
+var
+  e: TPLXExpression;
+  t: IPLXToken;
+  p: TPLXParameters;
+  r: TPLBool = true;
+begin
+  case ALexer.Token.Kind of
+    xtkInteger, xtkFloat, xtkString: begin
+      Result := TPLXPrimaryExpression.Create(ALexer.Token);
+      ALexer.MoveForward;
+    end;
+    xtkIdentifier: begin
+      if ALexer.Peek.Kind = xtkParenthesisStart then begin
+        t := ALexer.Token;
+        ALexer.MoveForward;
+        ALexer.Consume(xtkParenthesisStart);
+        p := ParseParameters(ALexer);
+        ALexer.Consume(xtkParenthesisEnd);
+        Result := TPLXPrimaryExpression.Create(t, p);
+      end else r := false;
+    end;
+    xtkDollar: begin
+      ALexer.MoveForward;
+      if ALexer.Token.Kind = xtkIdentifier then
+        Result := TPLXPrimaryExpression.Create(ALexer.Token)
+      else r := false;
+      ALexer.MoveForward;
+    end;
+    xtkDot: begin
+      ALexer.MoveForward;
+      Result := TPLXPrimaryExpression.Create(TPLXExpression.Create(xekExpression, TPLXStep.Create(TPLXNodeTest.CreateKindTest(xtkNode), xtkSelf)));
+    end;
+    xtkParenthesisStart: begin
+      ALexer.MoveForward;
+      e := ParseExpression(ALexer);
+      ALexer.Consume(xtkParenthesisEnd);
+      Result := TPLXPrimaryExpression.Create(e);
+    end;
+    else ALexer.MoveForward;
+  end;
+
+  if not r then begin
+    t := TPLXToken.Create(xtkEOF, ALexer.Token.Text, ALexer.Token.Line, ALexer.Token.LineIndex);
+    Result := TPLXPrimaryExpression.Create(t);
+  end;
+end;
+
+class function TPLXPath.ParseNodeTest(ALexer: TPLXLexer): TPLXNodeTest;
+begin
+  case ALexer.Token.Kind of
+    xtkIdentifier: begin
+      Result := TPLXNodeTest.CreateIdentifierTest(ALexer.Token);
+      ALexer.MoveForward;
+    end;
+    xtkMultiply: begin
+      Result := TPLXNodeTest.CreateAnyTest;
+      ALexer.MoveForward;
+    end;
+    else begin
+      Result := TPLXNodeTest.CreateKindTest(ALexer.Token.Kind);
+      ALexer.MoveForward;
+      ALexer.Consume(xtkParenthesisStart);
+      ALexer.Consume(xtkParenthesisEnd);
+    end;
+  end;
+end;
+
+class function TPLXPath.ParseParameters(ALexer: TPLXLexer): TPLXParameters;
+begin
+  Result := TPLXParameters.Create;
+
+  if not (ALexer.Token.Kind in [xtkParenthesisEnd, xtkEOF]) then
+    Result.Add(ParseExpression(ALexer));
+
+  while ALexer.Token.Kind = xtkComma do begin
+    ALexer.Consume(xtkComma);
+    Result.Add(ParseExpression(ALexer));
+  end;
+end;
+
+class function TPLXPath.EvaluateXPath(ADocument: IPLHTMLDocument;
+  AXPath: TPLString): TPLXValue;
+var
+  p: IPLXEvaluation;
+begin
+  p := ParseXPath(AXPath);
+  Result := p.Evaluate(TPLXContext.Create(ADocument, ADocument.Root, 1));
+end;
+
+class function TPLXPath.EvaluateCSS(ADocument: IPLHTMLDocument; ACSS: TPLString
+  ): TPLXValue;
+begin
+  Result := EvaluateXPath(ADocument, ConvertCSSToXPath(ACSS));
 end;
 
 end.

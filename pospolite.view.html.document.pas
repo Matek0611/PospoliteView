@@ -6,7 +6,8 @@ interface
 
 uses
   Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.HTML.Parser,
-  Pospolite.View.Internet;
+  Pospolite.View.HTML.Basics, Pospolite.View.Internet,
+  Pospolite.View.Drawing.Renderer;
 
 type
 
@@ -18,6 +19,7 @@ type
     FIsLocal: TPLBool;
     FRoot: IPLHTMLObject;
     FMimeType: TPLString;
+    FRenderer: TPLDrawingRenderer;
     function GetContent: TPLString;
     function GetMimeType: TPLString;
     function GetTitle: TPLString;
@@ -38,6 +40,7 @@ type
     property Content: TPLString read GetContent;
     property MimeType: TPLString read GetMimeType;
     property Root: IPLHTMLObject read GetRoot;
+    property Renderer: TPLDrawingRenderer read FRenderer write FRenderer;
   end;
 
 implementation
@@ -46,7 +49,7 @@ implementation
 
 function TPLHTMLDocument.GetContent: TPLString;
 begin
-
+  if Assigned(FRoot) then Result := FRoot.ToHTML else Result := '';
 end;
 
 function TPLHTMLDocument.GetMimeType: TPLString;
@@ -97,12 +100,17 @@ begin
 end;
 
 procedure TPLHTMLDocument.LoadFromString(const AText: TPLString);
+var
+  p: IPLHTMLParser;
 begin
   FIsLocal := true;
   FFile := '<string>';
   FMimeType := 'text/html';
+  FRoot := TPLHTMLBasicObject.Create(nil, FRenderer);
+  FRoot.Name := 'root_object';
 
-
+  p := TPLHTMLParser.Create;
+  p.Parse(AText, FRoot);
 end;
 
 procedure TPLHTMLDocument.SaveToLocalFile(const AFileName: TPLString);
