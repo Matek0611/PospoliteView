@@ -472,4 +472,16 @@ begin
   Result := Assigned(Get(AName));
 end;
 
+function TPLHTMLObjectAttributes.ToString: TPLString;
+var
+  attr: TPLHTMLObjectAttribute;
+begin
+  Result := '';
+
+  for attr in self do
+    Result += attr.Key + '="' + attr.Value + '" ';
+
+  Result := Result.Trim;
+end;
+
 

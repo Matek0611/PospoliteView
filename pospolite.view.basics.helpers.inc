@@ -26,6 +26,20 @@ begin
   Result := Find(AWhat, ASearchFrom) > 0;
 end;
 
+function TPLStringHelper.Exists(AWhat: array of TPLString; ASearchFrom: SizeInt
+  ): TPLBool;
+var
+  s: TPLString;
+begin
+  if System.Length(AWhat) < 1 then exit(false);
+  Result := false;
+
+  for s in AWhat do begin
+    Result := Result or (Find(s, ASearchFrom) > 0);
+    if Result then exit;
+  end;
+end;
+
 function TPLStringHelper.FromC: TPLString;
 begin
   Result := Utf8EscapeControlChars(Utf8EscapeControlChars(Self, emC), emHexC);
@@ -36,7 +50,7 @@ begin
   if (APos < 0) or (APos > Length) then
     Result := false
   else
-    Result := Self[APos] in [' ', #9, #10, #13, #12];
+    Result := Self[APos] in Whitespaces;
 end;
 
 function TPLStringHelper.At(AIndex: SizeInt): TPLString;

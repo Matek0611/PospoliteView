@@ -254,6 +254,7 @@ type
 
     function Get(AName: TPLString): PPLHTMLObjectAttribute;
     function Has(AName: TPLString): TPLBool;
+    function ToString: TPLString;
 
     // Do not change the order of these properties!
 
@@ -292,6 +293,7 @@ type
 
     function Get(AName: TPLString): PPLHTMLObjectAttribute;
     function Has(AName: TPLString): TPLBool;
+    function ToString: TPLString;
 
     property &Class: PPLHTMLObjectAttribute read GetClass;
     property Name: PPLHTMLObjectAttribute read GetName;
@@ -395,12 +397,18 @@ type
   { TPLStringHelper }
 
   TPLStringHelper = type helper(TStringHelper) for TPLString
+  public const
+    WhitespacesSet = [' ', #9, #10, #12, #13];
+    WhitespacesArrayString: array[0..4] of TPLString = (' ', #9, #10, #12, #13);
+    WhitespacesArrayChar: array[0..4] of TPLChar = (' ', #9, #10, #12, #13);
+    Whitespaces = WhitespacesSet;
   public
     function SubStr(AFrom, ACount: SizeInt): TPLString; overload;
     function SubStr(AFrom: SizeInt): TPLString; overload;
     function Length: SizeInt;
     function Find(AWhat: TPLString; AFrom: SizeInt = 1): SizeInt;
     function Exists(AWhat: TPLString; ASearchFrom: SizeInt = 1): TPLBool;
+    function Exists(AWhat: array of TPLString; ASearchFrom: SizeInt = 1): TPLBool;
     function FromC: TPLString;
     function IsWhiteSpaceAt(APos: SizeInt = 1): TPLBool;
     function At(AIndex: SizeInt): TPLString;
@@ -530,6 +538,7 @@ const
   operator mod (a, b: TPLFloat) r: TPLFloat;
   operator in (a: TPLString; tab: specialize TArray<TPLString>): TPLBool;
   operator in (a: TPLFloat; tab: specialize TArray<TPLFloat>): TPLBool;
+  operator + (a, b: specialize TArray<TPLString>): specialize TArray<TPLString>;
 
 implementation
 

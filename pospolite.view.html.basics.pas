@@ -14,7 +14,7 @@ type
 
   TPLHTMLBasicObject = class(TInterfacedObject, IPLHTMLObject)
   private
-    FParent: TPLHTMLBasicObject;
+    FParent: IPLHTMLObject;
     FRenderer: TPLDrawingRenderer;
     FJSObject: IPLJSBasicObject;
     FState: TPLCSSElementState;
@@ -30,13 +30,13 @@ type
     function GetChildren: IPLHTMLObjects;
     function GetJSObject: IPLJSBasicObject;
     function GetName: TPLString;
-    function GetParent: TPLHTMLBasicObject;
+    function GetParent: IPLHTMLObject;
     function GetPosition: SizeInt;
     function GetState: TPLCSSElementState;
     function GetText: TPLString;
     function GetZoom: TPLFloat;
     procedure SetName(AValue: TPLString);
-    procedure SetParent(AValue: TPLHTMLBasicObject);
+    procedure SetParent(AValue: IPLHTMLObject);
     procedure SetPosition(AValue: SizeInt);
     procedure SetState(AValue: TPLCSSElementState);
     procedure SetText(AValue: TPLString);
@@ -44,9 +44,10 @@ type
     procedure InitStates;
     procedure DoneStates;
   protected
-    procedure DoDraw;
+    procedure DoDraw; virtual;
+    function DoToHTMLChildren: TPLString;
   public
-    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
+    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer); virtual;
     destructor Destroy; override;
 
     function Clone: IPLHTMLObject; virtual;
@@ -70,12 +71,55 @@ type
     property State: TPLCSSElementState read GetState write SetState;
     property JSObject: IPLJSBasicObject read GetJSObject;
     property Attributes: IPLHTMLObjectAttributes read GetAttributes;
-    property Parent: TPLHTMLBasicObject read GetParent write SetParent;
+    property Parent: IPLHTMLObject read GetParent write SetParent;
     property Children: IPLHTMLObjects read GetChildren;
     property Child[const AName: TPLString]: IPLHTMLObject read GetChild;
     property Name: TPLString read GetName write SetName;
     property Text: TPLString read GetText write SetText;
     property Position: SizeInt read GetPosition write SetPosition;
+  end;
+
+  { TPLHTMLRootObject }
+
+  TPLHTMLRootObject = class(TPLHTMLBasicObject)
+  public
+    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
+      override;
+  end;
+
+  { TPLHTMLVoidObject }
+
+  TPLHTMLVoidObject = class(TPLHTMLBasicObject)
+  public
+    function ToHTML: TPLString; override;
+  end;
+
+  { TPLHTMLNormalObject }
+
+  TPLHTMLNormalObject = class(TPLHTMLBasicObject)
+  public
+    function ToHTML: TPLString; override;
+  end;
+
+  { TPLHTMLObjectDIV }
+
+  TPLHTMLObjectDIV = class(TPLHTMLNormalObject)
+  public
+    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
+      override;
+  end;
+
+  { TPLHTMLObjectFactory }
+
+  TPLHTMLObjectFactory = packed class sealed
+  public const
+    VoidElements: array[0..16] of string = (
+      '!', 'area', 'base', 'br', 'col', 'command', 'embed', 'hr', 'img',
+      'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr'
+    );
+  public
+    class function CreateObjectByTagName(const ATagName: TPLString; AParent: TPLHTMLBasicObject;
+      ARenderer: TPLDrawingRenderer = nil): TPLHTMLBasicObject;
   end;
 
 implementation
@@ -88,8 +132,14 @@ begin
 end;
 
 function TPLHTMLBasicObject.GetChild(const AName: TPLString): IPLHTMLObject;
+var
+  c: IPLHTMLObject;
 begin
+  for c in FChildren do begin
+    if c.Name.ToLower = AName.ToLower then exit(c);
+  end;
 
+  Result := nil;
 end;
 
 function TPLHTMLBasicObject.GetChildren: IPLHTMLObjects;
@@ -107,7 +157,7 @@ begin
   Result := FName;
 end;
 
-function TPLHTMLBasicObject.GetParent: TPLHTMLBasicObject;
+function TPLHTMLBasicObject.GetParent: IPLHTMLObject;
 begin
   Result := FParent;
 end;
@@ -139,7 +189,7 @@ begin
   FName := AValue;
 end;
 
-procedure TPLHTMLBasicObject.SetParent(AValue: TPLHTMLBasicObject);
+procedure TPLHTMLBasicObject.SetParent(AValue: IPLHTMLObject);
 begin
   FParent := AValue;
 end;
@@ -189,12 +239,20 @@ begin
   // ...
 end;
 
+function TPLHTMLBasicObject.DoToHTMLChildren: TPLString;
+var
+  obj: IPLHTMLObject;
+begin
+  for obj in FChildren do
+    Result += obj.ToHTML + LineEnding;
+end;
+
 constructor TPLHTMLBasicObject.Create(AParent: TPLHTMLBasicObject;
   ARenderer: TPLDrawingRenderer);
 begin
   inherited Create;
 
-  FName := 'base_object';
+  FName := 'basic_object';
   FText := '';
   FState := esNormal;
   FZoom := 1;
@@ -218,7 +276,7 @@ end;
 
 function TPLHTMLBasicObject.Clone: IPLHTMLObject;
 begin
-  Result := TPLHTMLBasicObject.Create(FParent, FRenderer);
+  Result := TPLHTMLBasicObject.Create(FParent as TPLHTMLBasicObject, FRenderer);
 end;
 
 function TPLHTMLBasicObject.CSS_InheritValueOf(APropName: TPLString; AId: TPLInt
@@ -269,7 +327,7 @@ end;
 
 function TPLHTMLBasicObject.ToHTML: TPLString;
 begin
-  Result := '';
+  Result := DoToHTMLChildren;
 end;
 
 function TPLHTMLBasicObject.IsVisible: TPLBool;
@@ -290,6 +348,80 @@ begin
   if not Assigned(p) then exit('block');
 
   Result := TPLCSSProperty(@p).AsString.ToLower;
+end;
+
+{ TPLHTMLRootObject }
+
+constructor TPLHTMLRootObject.Create(AParent: TPLHTMLBasicObject;
+  ARenderer: TPLDrawingRenderer);
+begin
+  inherited Create(AParent, ARenderer);
+
+  FName := 'root_object';
+end;
+
+{ TPLHTMLVoidObject }
+
+function TPLHTMLVoidObject.ToHTML: TPLString;
+var
+  ts, te: TPLString;
+begin
+  ts := '';
+  te := '';
+
+  case Name of
+    'comment': begin
+      ts := '--';
+      te := '--';
+    end;
+    'DOCTYPE': begin
+      ts := 'DOCTYPE';
+      te := '';
+    end;
+    'CDATA': begin
+      ts := 'CDATA[';
+      te := ']]';
+    end;
+  end;
+
+  Result := '<!' + ts + Text + te + '>';
+end;
+
+{ TPLHTMLObjectDIV }
+
+constructor TPLHTMLObjectDIV.Create(AParent: TPLHTMLBasicObject;
+  ARenderer: TPLDrawingRenderer);
+begin
+  inherited Create(AParent, ARenderer);
+
+  FName := 'div';
+end;
+
+{ TPLHTMLNormalObject }
+
+function TPLHTMLNormalObject.ToHTML: TPLString;
+begin
+  Result := '<' + Name + ' ' + FAttributes.ToString + '>' + LineEnding;
+
+  if not (Name in TPLHTMLObjectFactory.VoidElements) then
+    Result += DoToHTMLChildren + LineEnding + '<' + Name + '/>' + LineEnding;
+end;
+
+{ TPLHTMLObjectFactory }
+
+class function TPLHTMLObjectFactory.CreateObjectByTagName(const ATagName: TPLString;
+  AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer
+  ): TPLHTMLBasicObject;
+begin
+  if not Assigned(ARenderer) then ARenderer := AParent.Renderer;
+
+  case ATagName.ToLower of
+    'div': Result := TPLHTMLObjectDIV.Create(AParent, ARenderer);
+    else begin
+      Result := TPLHTMLBasicObject.Create(AParent, ARenderer);
+      Result.Text := ATagName;
+    end;
+  end;
 end;
 
 end.

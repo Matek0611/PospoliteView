@@ -176,3 +176,12 @@ begin
   Result := false;
 end;
 
+operator + (a, b: specialize TArray<TPLString>): specialize TArray<TPLString>;
+var
+  i: SizeInt;
+begin
+  SetLength(Result, Length(a) + Length(b));
+  for i := Low(a) to High(a) do Result[i] := a[i];
+  for i := Low(b) to High(b) do Result[High(a)+i+1] := b[i];
+end;
+
