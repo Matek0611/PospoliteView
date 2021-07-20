@@ -64,6 +64,15 @@ type
     function ToHTML: TPLString; override;
   end;
 
+  { TPLHTMLTextObject }
+
+  TPLHTMLTextObject = class(TPLHTMLBasicObject)
+  public
+    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
+      override;
+    function ToHTML: TPLString; override;
+  end;
+
   { TPLHTMLObjectDIV }
 
   TPLHTMLObjectDIV = class(TPLHTMLNormalObject)
@@ -188,7 +197,7 @@ constructor TPLHTMLRootObject.Create(AParent: TPLHTMLBasicObject;
 begin
   inherited Create(AParent, ARenderer);
 
-  FName := 'root_object';
+  FName := '__root_object';
 end;
 
 { TPLHTMLVoidObject }
@@ -198,7 +207,7 @@ constructor TPLHTMLVoidObject.Create(AParent: TPLHTMLBasicObject;
 begin
   inherited Create(AParent, ARenderer);
 
-  FName := 'void_object';
+  FName := '__void_object';
 end;
 
 function TPLHTMLVoidObject.ToHTML: TPLString;
@@ -226,14 +235,19 @@ begin
   Result := '<!' + ts + Text + te + '>';
 end;
 
-{ TPLHTMLObjectDIV }
+{ TPLHTMLTextObject }
 
-constructor TPLHTMLObjectDIV.Create(AParent: TPLHTMLBasicObject;
+constructor TPLHTMLTextObject.Create(AParent: TPLHTMLBasicObject;
   ARenderer: TPLDrawingRenderer);
 begin
   inherited Create(AParent, ARenderer);
 
-  FName := 'div';
+  FName := '__text_object';
+end;
+
+function TPLHTMLTextObject.ToHTML: TPLString;
+begin
+  Result := Text;
 end;
 
 { TPLHTMLNormalObject }
@@ -243,15 +257,25 @@ constructor TPLHTMLNormalObject.Create(AParent: TPLHTMLBasicObject;
 begin
   inherited Create(AParent, ARenderer);
 
-  FName := 'normal_object';
+  FName := '__normal_object';
 end;
 
 function TPLHTMLNormalObject.ToHTML: TPLString;
 begin
-  Result := '<' + Name + ' ' + FAttributes.ToString + '>' + LineEnding;
+  Result := '<' + Trim(Name + ' ' + FAttributes.ToString) + '>' + LineEnding;
 
   if not (Name in TPLHTMLObjectFactory.VoidElements) then
-    Result += DoToHTMLChildren + LineEnding + '<' + Name + '/>' + LineEnding;
+    Result += Text + DoToHTMLChildren + '</' + Name + '>';
+end;
+
+{ TPLHTMLObjectDIV }
+
+constructor TPLHTMLObjectDIV.Create(AParent: TPLHTMLBasicObject;
+  ARenderer: TPLDrawingRenderer);
+begin
+  inherited Create(AParent, ARenderer);
+
+  FName := 'div';
 end;
 
 { TPLHTMLObjectFactory }
@@ -263,10 +287,11 @@ begin
   if not Assigned(ARenderer) then ARenderer := AParent.Renderer;
 
   case ATagName.ToLower of
+    '__text_object': Result := TPLHTMLTextObject.Create(AParent, ARenderer);
     'div': Result := TPLHTMLObjectDIV.Create(AParent, ARenderer);
     else begin
-      Result := TPLHTMLBasicObject.Create(AParent, ARenderer);
-      Result.Text := ATagName;
+      Result := TPLHTMLNormalObject.Create(AParent, ARenderer);
+      Result.Name := ATagName;
     end;
   end;
 end;

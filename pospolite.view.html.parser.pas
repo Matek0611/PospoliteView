@@ -168,6 +168,7 @@ end;
 
 procedure TPLHTMLParser.MovePosForward;
 begin
+  //Write(FCurrent^);
   if FCurrent^ = #13 then MovePosToNextRow else FPos.Column += 1;
   Inc(FCurrent);
 end;
@@ -193,7 +194,8 @@ begin
 
   if FCurrent^ <> AChar then begin
     FErrors.Add(TPLHTMLParserError.Create(FPos, '"%s" expected but "%s" found.'.Format([AChar, FCurrent^])));
-
+    //Write('[^]');
+    FCurrent := FEnd;
     //p := FSource.Find(AChar, Position);
     //if p > 0 then begin
     //  while FCurrent^ <> AChar do MovePosForward;
@@ -252,7 +254,7 @@ begin
   if FSource.SubStr(Position, l) = AEnd then begin
     Result := TPLHTMLVoidObject.Create(AParent, AParent.Renderer);
     Result.Position := s;
-    Result.Text := FSource.SubStr(s, Position - s - 1).Trim;
+    Result.Text := FSource.SubStr(s, Position - s).Trim;
     Result.Name := AName;
     Inc(FCurrent, l);
   end else FErrors.Add(TPLHTMLParserError.Create(FPos, '"%s" tag ending expected but "%s" found.'.Format([AEnd, FSource.SubStr(Position, l)])));
@@ -264,9 +266,11 @@ var
   obj: TPLHTMLBasicObject;
   un: TPLBool = false;
   eof: TPLBool;
-  n: TPLString;
+  n, x: TPLString;
   s: ^TPLChar;
+  p: SizeInt;
   arrc: specialize TArray<TPLString>;
+  txt: TPLHTMLTextObject;
 begin
   Result := nil;
   arrc := TPLStringFuncs.NewArray(TPLString.WhitespacesArrayString) + TPLStringFuncs.NewArray(['/', '>']);
@@ -278,20 +282,38 @@ begin
 
   try
     Result := TPLHTMLObjectFactory.CreateObjectByTagName(n, AParent);
+    Result.Position := Position;
 
     while not IsEOF and not (FCurrent^ in ['/', '>']) do begin
       ReadObjectAttribute(Result);
       ConsumeWhitespace;
     end;
 
-    if IsVoidElement(n) then begin
+    {if n in TPLStringFuncs.NewArray(['script', 'style', 'code', 'pre', 'svg']) then begin
+      Consume('>');
+      p := Position;
+      while not IsEOF and (FSource.SubStr(Position, n.Length+2).ToLower <> '</'+n) do MovePosForward;
+      Result.Text := FSource.SubStr(p, Position - p - 1);
+      Inc(FCurrent, n.Length+2);
+    end else} if IsVoidElement(n) then begin
       while not IsEOF and (FCurrent^ in arrc) do MovePosForward;
     end else begin
       if FCurrent^ = '>' then begin
         Consume('>');
 
         repeat
-          while not IsEOF and (FCurrent^ <> '/') do MovePosForward;
+          if IsEOF then break;
+          x := '';
+          while (FCurrent < FEnd) and (FCurrent^ <> '<') do begin
+            x += FCurrent^;
+            MovePosForward;
+          end;
+          x := x.Trim;
+          if not x.IsEmpty then begin
+            txt := TPLHTMLObjectFactory.CreateObjectByTagName('__text_object', Result) as TPLHTMLTextObject;
+            txt.Text := x;
+            Result.Children.Add(txt);
+          end;
 
           s := FCurrent;
           Consume('<');

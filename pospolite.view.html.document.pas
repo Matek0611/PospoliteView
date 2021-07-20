@@ -76,7 +76,7 @@ begin
 end;
 
 const
-  HTML_ERROR_TEMPLATE: TPLString = '<html><head><title>%s</title></head><body><h1>%s</h1><p>%s</p></body></html>';
+  HTML_ERROR_TEMPLATE: TPLString = '<html><head><title>%s</title></head><body><h1>%s</h1><pre>%s</pre></body></html>';
 
 procedure TPLHTMLDocument.InternalLoad(ASource: TPLString);
 var
@@ -121,6 +121,8 @@ end;
 
 destructor TPLHTMLDocument.Destroy;
 begin
+  //if Assigned(FRoot) then FRoot.Free;
+
   inherited Destroy;
 end;
 
