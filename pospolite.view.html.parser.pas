@@ -47,7 +47,7 @@ type
     function GetStrict: TPLBool;
     procedure SetStrict(AValue: TPLBool);
 
-    procedure Parse(const ASource: TPLString; var ARoot: IPLHTMLObject);
+    procedure Parse(const ASource: TPLString; var ARoot: TPLHTMLRootObject);
     procedure CleanUp;
 
     property Strict: TPLBool read GetStrict write SetStrict;
@@ -63,7 +63,7 @@ type
     FCurrent, FEnd: ^TPLChar;
     FPos: TPLHTMLParserPosition;
     FStrict: TPLBool;
-    FRoot: IPLHTMLObject;
+    FRoot: TPLHTMLRootObject;
     FErrors: TPLHTMLParserErrors;
     function GetErrors: TPLHTMLParserErrors;
     function GetHasCriticalError: TPLBool;
@@ -85,7 +85,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure Parse(const ASource: TPLString; var ARoot: IPLHTMLObject);
+    procedure Parse(const ASource: TPLString; var ARoot: TPLHTMLRootObject);
     procedure CleanUp;
 
     property Strict: TPLBool read GetStrict write SetStrict;
@@ -250,9 +250,10 @@ begin
   while not IsEOF and (FSource.SubStr(Position, l) <> AEnd) do MovePosForward;
 
   if FSource.SubStr(Position, l) = AEnd then begin
-    Result := TPLHTMLVoidObject.Create(AParent, TPLHTMLBasicObject(FRoot).Renderer);
-    Result.Position := Position;
-    Result.Text := FSource.SubStr(s, Position - 1);
+    Result := TPLHTMLVoidObject.Create(AParent, AParent.Renderer);
+    Result.Position := s;
+    Result.Text := FSource.SubStr(s, Position - s - 1).Trim;
+    Result.Name := AName;
     Inc(FCurrent, l);
   end else FErrors.Add(TPLHTMLParserError.Create(FPos, '"%s" tag ending expected but "%s" found.'.Format([AEnd, FSource.SubStr(Position, l)])));
 end;
@@ -390,7 +391,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TPLHTMLParser.Parse(const ASource: TPLString; var ARoot: IPLHTMLObject
+procedure TPLHTMLParser.Parse(const ASource: TPLString; var ARoot: TPLHTMLRootObject
   );
 var
   obj: TPLHTMLBasicObject;
@@ -407,8 +408,9 @@ begin
 
   ConsumeWhitespace;
   while not IsEOF do begin
-    obj := ReadObject(FRoot as TPLHTMLBasicObject);
-    if Assigned(obj) then FRoot.Children.Add(obj);
+    obj := ReadObject(FRoot);
+    if Assigned(obj) then
+      FRoot.Children.Add(obj);
     ConsumeWhitespace;
   end;
 end;

@@ -37,7 +37,7 @@ begin
   inherited Create;
 
   FList := AList;
-  FIndex := 0;
+  FIndex := -1;
 end;
 
 function TPLListEnumerator.MoveNext: TPLBool;
@@ -342,6 +342,39 @@ begin
   for x in self do Result.Add(x);
 end;
 
+{ TPLInterfaceList }
+
+procedure TPLInterfaceList.Add(AItem: T);
+begin
+  AItem._AddRef;
+  inherited Add(AItem);
+end;
+
+procedure TPLInterfaceList.Remove(AItem: T);
+begin
+  AItem._Release;
+  inherited Remove(AItem);
+end;
+
+procedure TPLInterfaceList.Clear;
+var
+  x: SizeInt;
+begin
+  for x := Low(FArray) to High(FArray) do
+    FArray[x]._Release;
+
+  inherited Clear;
+end;
+
+function TPLInterfaceList.Duplicate: specialize IPLInterfaceList<T>;
+var
+  x: I;
+begin
+  Result := TPLInterfaceList.Create;
+
+  for x in self do Result.Add(x);
+end;
+
 { TPLFuncs }
 
 class procedure TPLFuncs.Swap(var a, b: T);
@@ -484,4 +517,224 @@ begin
   Result := Result.Trim;
 end;
 
+{ TPLHTMLObject }
+
+function TPLHTMLObject.GetAttributes: TPLHTMLObjectAttributes;
+begin
+  Result := FAttributes;
+end;
+
+function TPLHTMLObject.GetChild(const AName: TPLString): TPLHTMLObject;
+var
+  c: TPLHTMLObject;
+begin
+  for c in FChildren do begin
+    if c.Name.ToLower = AName.ToLower then exit(c);
+  end;
+
+  Result := nil;
+end;
+
+function TPLHTMLObject.GetChildren: TPLHTMLObjects;
+begin
+  Result := FChildren;
+end;
+
+function TPLHTMLObject.GetJSObject: IPLJSBasicObject;
+begin
+  Result := FJSObject;
+end;
+
+function TPLHTMLObject.GetName: TPLString;
+begin
+  Result := FName;
+end;
+
+function TPLHTMLObject.GetParent: TPLHTMLObject;
+begin
+  Result := FParent;
+end;
+
+function TPLHTMLObject.GetPosition: SizeInt;
+begin
+  Result := FPosition;
+end;
+
+function TPLHTMLObject.GetState: TPLCSSElementState;
+begin
+  Result := FState;
+end;
+
+function TPLHTMLObject.GetText: TPLString;
+begin
+  Result := FText;
+end;
+
+function TPLHTMLObject.GetZoom: TPLFloat;
+begin
+  Result := FZoom;
+end;
+
+procedure TPLHTMLObject.SetName(AValue: TPLString);
+begin
+  AValue := AValue.Trim;
+  if (FName = AValue) or (AValue.IsEmpty) then exit;
+  FName := AValue;
+end;
+
+procedure TPLHTMLObject.SetParent(AValue: TPLHTMLObject);
+begin
+  FParent := AValue;
+end;
+
+procedure TPLHTMLObject.SetPosition(AValue: SizeInt);
+begin
+  FPosition := AValue;
+end;
+
+procedure TPLHTMLObject.SetState(AValue: TPLCSSElementState);
+begin
+  FState := AValue;
+end;
+
+procedure TPLHTMLObject.SetText(AValue: TPLString);
+begin
+  FText := AValue;
+end;
+
+procedure TPLHTMLObject.SetZoom(AValue: TPLFloat);
+begin
+  if (AValue = FZoom) or (AValue <= 0) or (AValue > 10) then exit;
+
+  FZoom := AValue;
+end;
+
+procedure TPLHTMLObject.DoDraw;
+begin
+  // ...
+end;
+
+function TPLHTMLObject.DoToHTMLChildren: TPLString;
+var
+  obj: TPLHTMLObject;
+begin
+  Result := '';
+
+  for obj in FChildren do
+    Result += obj.ToHTML + LineEnding;
+end;
+
+procedure TPLHTMLObject.InitStates;
+begin
+  // ...
+end;
+
+procedure TPLHTMLObject.DoneStates;
+begin
+  // ...
+end;
+
+constructor TPLHTMLObject.Create(AParent: TPLHTMLObject);
+begin
+  inherited Create;
+
+  FName := 'basic_object';
+  FText := '';
+  FState := esNormal;
+  FZoom := 1;
+  FPosition := 0;
+
+  FParent := AParent;
+  FAttributes := TPLHTMLObjectAttributes.Create;
+  FChildren := TPLHTMLObjects.Create;
+
+  InitStates;
+end;
+
+destructor TPLHTMLObject.Destroy;
+begin
+  DoneStates;
+  FAttributes.Free;
+  FChildren.Free;
+
+  inherited Destroy;
+end;
+
+function TPLHTMLObject.Clone: IPLHTMLObject;
+begin
+  Result := TPLHTMLObject.Create(FParent as TPLHTMLObject);
+end;
+
+function TPLHTMLObject.CSS_InheritValueOf(APropName: TPLString; AId: TPLInt
+  ): TPLString;
+begin
+  Result := '';
+  // ...
+end;
+
+function TPLHTMLObject.CSS_InitialValueOf(APropName: TPLString; AId: TPLInt
+  ): TPLString;
+begin
+  Result := '';
+  // ...
+end;
+
+function TPLHTMLObject.CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt
+  ): TPLString;
+begin
+  Result := '';
+  // ...
+end;
+
+function TPLHTMLObject.CSS_RevertValueOf(APropName: TPLString; AId: TPLInt
+  ): TPLString;
+begin
+  Result := '';
+  // ...
+end;
+
+function TPLHTMLObject.CSS_Get(APropName: TPLString): Pointer;
+begin
+  Result := nil;
+  // ...
+end;
+
+procedure TPLHTMLObject.CSS_Set(APropName: TPLString; const APropValue);
+begin
+  // ...
+end;
+
+procedure TPLHTMLObject.UpdateScrollbars;
+begin
+  // ...
+end;
+
+procedure TPLHTMLObject.Draw;
+begin
+  if not isVisible or (Display = 'none') then exit;
+
+  DoDraw;
+end;
+
+function TPLHTMLObject.ToHTML: TPLString;
+begin
+  Result := DoToHTMLChildren;
+end;
+
+function TPLHTMLObject.ToObject: TPLHTMLObject;
+begin
+  Result := self;
+end;
+
+function TPLHTMLObject.IsVisible: TPLBool;
+begin
+  Result := false;
+  // ...
+end;
+
+function TPLHTMLObject.Display: TPLString;
+begin
+  Result := '';
+  // ...
+end;
 

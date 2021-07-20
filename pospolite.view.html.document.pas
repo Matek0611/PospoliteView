@@ -17,7 +17,7 @@ type
   private
     FFile: TPLString;
     FIsLocal: TPLBool;
-    FRoot: IPLHTMLObject;
+    FRoot: TPLHTMLRootObject;
     FMimeType: TPLString;
     FRenderer: TPLDrawingRenderer;
     function GetContent: TPLString;
@@ -84,6 +84,7 @@ var
 begin
   if not IsLoaded then exit;
 
+  if Assigned(FRoot) then FRoot.Free;
   FRoot := TPLHTMLRootObject.Create(nil, FRenderer);
 
   if not FMimeType.Exists('html') then begin

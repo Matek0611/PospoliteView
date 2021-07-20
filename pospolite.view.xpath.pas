@@ -137,13 +137,13 @@ type
   TPLXContext = packed record
   strict private
     FHTMLDocument: IPLHTMLDocument;
-    FHTMLObject: IPLHTMLObject;
+    FHTMLObject: TPLHTMLObject;
     FPosition: SizeInt;
   public
-    constructor Create(ADoc: IPLHTMLDocument; AObj: IPLHTMLObject; APos: SizeInt);
+    constructor Create(ADoc: IPLHTMLDocument; AObj: TPLHTMLObject; APos: SizeInt);
 
     property HTMLDocument: IPLHTMLDocument read FHTMLDocument write FHTMLDocument;
-    property HTMLObject: IPLHTMLObject read FHTMLObject write FHTMLObject;
+    property HTMLObject: TPLHTMLObject read FHTMLObject write FHTMLObject;
     property Position: SizeInt read FPosition write FPosition;
   end;
 
@@ -759,7 +759,7 @@ end;
 
 { TPLXContext }
 
-constructor TPLXContext.Create(ADoc: IPLHTMLDocument; AObj: IPLHTMLObject;
+constructor TPLXContext.Create(ADoc: IPLHTMLDocument; AObj: TPLHTMLObject;
   APos: SizeInt);
 begin
   FHTMLDocument := ADoc;
@@ -916,7 +916,7 @@ function TPLXExpression.Evaluate(AContext: TPLXContext): TPLXValue;
   function Path: TPLXValue;
   var
     e: IPLXEvaluation;
-    obj, x: IPLHTMLObject;
+    obj, x: TPLHTMLObject;
     objr: TPLXValue;
     lin, lout: IPLHTMLObjects;
     i: SizeInt = 0;
@@ -961,7 +961,7 @@ begin
     xekPath: Result := Path;
     xekExpression: Result := Expr;
     xekNegation: Result := Operation(xoNegate, FOperand.Evaluate(AContext), TPLXValue.Null);
-    xekRoot: Result := FOperand.Evaluate(TPLXContext.Create(AContext.HTMLDocument, AContext.HTMLDocument.Root, 1));
+    xekRoot: Result := FOperand.Evaluate(TPLXContext.Create(AContext.HTMLDocument, AContext.HTMLDocument.Root.ToObject, 1));
   end;
 end;
 
@@ -1116,7 +1116,7 @@ function TPLXNodeTest.EvaluateAxis(AAxis: TPLXTokenKind; AContext: TPLXContext
 var
   objs: IPLHTMLObjects;
 
-  procedure ProcessNode(A: IPLHTMLObject; B: IPLHTMLObjects);
+  procedure ProcessNode(A: TPLHTMLObject; B: IPLHTMLObjects);
   begin
     case FKind of
       xntIdentifier: begin
@@ -1134,7 +1134,7 @@ var
 
   procedure ProcessAxis(A, B: IPLHTMLObjects);
   var
-    obj: IPLHTMLObject;
+    obj: TPLHTMLObject;
   begin
     for obj in A do begin
       ProcessNode(obj, B);
@@ -1210,7 +1210,7 @@ end;
 
 function TPLXStepExpression.Evaluate(AContext: TPLXContext): TPLXValue;
 var
-  obj: IPLHTMLObject;
+  obj: TPLHTMLObject;
   objs: IPLHTMLObjects;
   pos: SizeInt = 1;
   inc: TPLBool;
@@ -1562,7 +1562,7 @@ var
   p: IPLXEvaluation;
 begin
   p := ParseXPath(AXPath);
-  Result := p.Evaluate(TPLXContext.Create(ADocument, ADocument.Root, 1));
+  Result := p.Evaluate(TPLXContext.Create(ADocument, ADocument.Root.ToObject, 1));
 end;
 
 class function TPLXPath.EvaluateCSS(ADocument: IPLHTMLDocument; ACSS: TPLString

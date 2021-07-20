@@ -123,3 +123,4 @@ function TPLCharHelper.FromC: TPLString;
 begin
   Result := TPLString('\' + Self).FromC;
 end;
+

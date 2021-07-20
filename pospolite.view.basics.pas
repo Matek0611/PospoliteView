@@ -164,9 +164,9 @@ type
   { TPLList }
 
   generic TPLList<T> = class(TInterfacedObject, specialize IPLList<T>)
-  private type
+  protected type
     TListOfT = array of T;
-  private
+  protected
     FArray: TListOfT;
     FSize: SizeInt;
     function GetData: Pointer;
@@ -189,19 +189,32 @@ type
     procedure Clear; virtual;
     function Last: T;
     function First: T;
-    function Duplicate: specialize IPLList<T>;
+    function Duplicate: specialize IPLList<T>; virtual;
 
     property Item[AIndex: SizeInt]: T read GetItem write SetItem; default;
     property Data: Pointer read GetData;
   end;
 
+  { IPLInterfaceList }
+
+  generic IPLInterfaceList<I> = interface(specialize IPLList<I>)
+    ['{34A068B1-7410-420A-9B7E-90968F924C0D}']
+    function {%H-}Duplicate: specialize IPLInterfaceList<T>;
+  end;
+
   { TPLInterfaceList }
 
-  TPLInterfaceList = specialize TPLList<IInterface>;
+  generic TPLInterfaceList<I> = class(specialize TPLList<I>, specialize IPLInterfaceList<I>)
+  public
+    procedure Add(AItem: T); override;
+    procedure Remove(AItem: T); override;
+    procedure Clear; override;
+    function Duplicate: specialize IPLInterfaceList<T>; reintroduce;
+  end;
 
   { TPLFuncs }
 
-  generic TPLFuncs<T> = class sealed
+  generic TPLFuncs<T> = packed class sealed
   public
     class procedure Swap(var a, b: T);
     class function NewArray(tab: array of T): specialize TArray<T>;
@@ -312,25 +325,26 @@ type
     ontDocumentFragmentNode);
 
   IPLHTMLObject = interface;
-  IPLHTMLObjects = specialize IPLList<IPLHTMLObject>;
-  TPLHTMLObjects = class(specialize TPLList<IPLHTMLObject>, IPLHTMLObjects);
+  TPLHTMLObject = class;
+  IPLHTMLObjects = specialize IPLObjectList<TPLHTMLObject>;
+  TPLHTMLObjects = class(specialize TPLObjectList<TPLHTMLObject>, IPLHTMLObjects);
 
   { IPLHTMLObject }
 
   IPLHTMLObject = interface(specialize IPLCloneable<IPLHTMLObject>)
     ['{37CA6394-6FDE-4E4A-A44D-EBCEC2EBED34}']
-    function GetAttributes: IPLHTMLObjectAttributes;
-    function GetChild(const AName: TPLString): IPLHTMLObject;
-    function GetChildren: IPLHTMLObjects;
+    function GetAttributes: TPLHTMLObjectAttributes;
+    function GetChild(const AName: TPLString): TPLHTMLObject;
+    function GetChildren: TPLHTMLObjects;
     function GetJSObject: IPLJSBasicObject;
     function GetName: TPLString;
-    function GetParent: IPLHTMLObject;
+    function GetParent: TPLHTMLObject;
     function GetPosition: SizeInt;
     function GetState: TPLCSSElementState;
     function GetText: TPLString;
     function GetZoom: TPLFloat;
     procedure SetName(AValue: TPLString);
-    procedure SetParent(AValue: IPLHTMLObject);
+    procedure SetParent(AValue: TPLHTMLObject);
     procedure SetPosition(AValue: SizeInt);
     procedure SetState(AValue: TPLCSSElementState);
     procedure SetText(AValue: TPLString);
@@ -346,6 +360,7 @@ type
     procedure UpdateScrollbars;
     procedure Draw;
     function ToHTML: TPLString;
+    function ToObject: TPLHTMLObject;
 
     property Zoom: TPLFloat read GetZoom write SetZoom;
 
@@ -353,10 +368,79 @@ type
 
     property JSObject: IPLJSBasicObject read GetJSObject;
 
-    property Attributes: IPLHTMLObjectAttributes read GetAttributes;
-    property Parent: IPLHTMLObject read GetParent write SetParent;
-    property Children: IPLHTMLObjects read GetChildren;
-    property Child[const AName: TPLString]: IPLHTMLObject read GetChild;
+    property Attributes: TPLHTMLObjectAttributes read GetAttributes;
+    property Parent: TPLHTMLObject read GetParent write SetParent;
+    property Children: TPLHTMLObjects read GetChildren;
+    property Child[const AName: TPLString]: TPLHTMLObject read GetChild;
+    property Name: TPLString read GetName write SetName;
+    property Text: TPLString read GetText write SetText;
+    property Position: SizeInt read GetPosition write SetPosition;
+  end;
+
+  { TPLHTMLObject }
+
+  TPLHTMLObject = class(TInterfacedObject, IPLHTMLObject)
+  protected
+    FParent: TPLHTMLObject;
+    FJSObject: IPLJSBasicObject;
+    FState: TPLCSSElementState;
+    FZoom: TPLFloat;
+    FStates: array[TPLCSSElementState] of Pointer;
+    FAttributes: TPLHTMLObjectAttributes;
+    FChildren: TPLHTMLObjects;
+    FName: TPLString;
+    FText: TPLString;
+    FPosition: SizeInt;
+  private
+    function GetAttributes: TPLHTMLObjectAttributes;
+    function GetChild(const AName: TPLString): TPLHTMLObject;
+    function GetChildren: TPLHTMLObjects;
+    function GetJSObject: IPLJSBasicObject;
+    function GetName: TPLString;
+    function GetParent: TPLHTMLObject;
+    function GetPosition: SizeInt;
+    function GetState: TPLCSSElementState;
+    function GetText: TPLString;
+    function GetZoom: TPLFloat;
+    procedure SetName(AValue: TPLString);
+    procedure SetParent(AValue: TPLHTMLObject);
+    procedure SetPosition(AValue: SizeInt);
+    procedure SetState(AValue: TPLCSSElementState);
+    procedure SetText(AValue: TPLString);
+    procedure SetZoom(AValue: TPLFloat);
+  protected
+    procedure DoDraw; virtual;
+    function DoToHTMLChildren: TPLString;
+    procedure InitStates; virtual;
+    procedure DoneStates; virtual;
+  public
+    constructor Create(AParent: TPLHTMLObject); virtual;
+    destructor Destroy; override;
+
+    function Clone: IPLHTMLObject; virtual;
+
+    function CSS_InheritValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual;
+    function CSS_InitialValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual;
+    function CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual;
+    function CSS_RevertValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual;
+    function CSS_Get(APropName: TPLString): Pointer; virtual;
+    procedure CSS_Set(APropName: TPLString; const APropValue); virtual;
+
+    procedure UpdateScrollbars; virtual;
+    procedure Draw;
+    function ToHTML: TPLString; virtual;
+    function ToObject: TPLHTMLObject;
+
+    function IsVisible: TPLBool; virtual;
+    function Display: TPLString; virtual;
+
+    property Zoom: TPLFloat read GetZoom write SetZoom;
+    property State: TPLCSSElementState read GetState write SetState;
+    property JSObject: IPLJSBasicObject read GetJSObject;
+    property Attributes: TPLHTMLObjectAttributes read GetAttributes;
+    property Parent: TPLHTMLObject read GetParent write SetParent;
+    property Children: TPLHTMLObjects read GetChildren;
+    property Child[const AName: TPLString]: TPLHTMLObject read GetChild;
     property Name: TPLString read GetName write SetName;
     property Text: TPLString read GetText write SetText;
     property Position: SizeInt read GetPosition write SetPosition;

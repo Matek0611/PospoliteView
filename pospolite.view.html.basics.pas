@@ -12,71 +12,30 @@ type
 
   { TPLHTMLBasicObject }
 
-  TPLHTMLBasicObject = class(TInterfacedObject, IPLHTMLObject)
+  TPLHTMLBasicObject = class(TPLHTMLObject)
   private
-    FParent: IPLHTMLObject;
     FRenderer: TPLDrawingRenderer;
-    FJSObject: IPLJSBasicObject;
-    FState: TPLCSSElementState;
-    FZoom: TPLFloat;
-    FStates: array[TPLCSSElementState] of TPLCSSDeclarations;
-    FAttributes: IPLHTMLObjectAttributes;
-    FChildren: IPLHTMLObjects;
-    FName: TPLString;
-    FText: TPLString;
-    FPosition: SizeInt;
-    function GetAttributes: IPLHTMLObjectAttributes;
-    function GetChild(const AName: TPLString): IPLHTMLObject;
-    function GetChildren: IPLHTMLObjects;
-    function GetJSObject: IPLJSBasicObject;
-    function GetName: TPLString;
-    function GetParent: IPLHTMLObject;
-    function GetPosition: SizeInt;
-    function GetState: TPLCSSElementState;
-    function GetText: TPLString;
-    function GetZoom: TPLFloat;
-    procedure SetName(AValue: TPLString);
-    procedure SetParent(AValue: IPLHTMLObject);
-    procedure SetPosition(AValue: SizeInt);
-    procedure SetState(AValue: TPLCSSElementState);
-    procedure SetText(AValue: TPLString);
-    procedure SetZoom(AValue: TPLFloat);
-    procedure InitStates;
-    procedure DoneStates;
   protected
-    procedure DoDraw; virtual;
-    function DoToHTMLChildren: TPLString;
+    procedure InitStates; override;
+    procedure DoneStates; override;
   public
     constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer); virtual;
-    destructor Destroy; override;
 
-    function Clone: IPLHTMLObject; virtual;
+    function Clone: IPLHTMLObject; override;
 
-    function CSS_InheritValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
-    function CSS_InitialValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
-    function CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
-    function CSS_RevertValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
-    function CSS_Get(APropName: TPLString): Pointer;
-    procedure CSS_Set(APropName: TPLString; const APropValue);
+    function CSS_InheritValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; override;
+    function CSS_InitialValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; override;
+    function CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; override;
+    function CSS_RevertValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; override;
+    function CSS_Get(APropName: TPLString): Pointer; override;
+    procedure CSS_Set(APropName: TPLString; const APropValue); override;
 
-    procedure UpdateScrollbars;
-    procedure Draw;
-    function ToHTML: TPLString; virtual;
+    procedure Draw; reintroduce;
 
-    function IsVisible: TPLBool;
-    function Display: TPLString;
+    function IsVisible: TPLBool; override;
+    function Display: TPLString; override;
 
     property Renderer: TPLDrawingRenderer read FRenderer;
-    property Zoom: TPLFloat read GetZoom write SetZoom;
-    property State: TPLCSSElementState read GetState write SetState;
-    property JSObject: IPLJSBasicObject read GetJSObject;
-    property Attributes: IPLHTMLObjectAttributes read GetAttributes;
-    property Parent: IPLHTMLObject read GetParent write SetParent;
-    property Children: IPLHTMLObjects read GetChildren;
-    property Child[const AName: TPLString]: IPLHTMLObject read GetChild;
-    property Name: TPLString read GetName write SetName;
-    property Text: TPLString read GetText write SetText;
-    property Position: SizeInt read GetPosition write SetPosition;
   end;
 
   { TPLHTMLRootObject }
@@ -91,6 +50,8 @@ type
 
   TPLHTMLVoidObject = class(TPLHTMLBasicObject)
   public
+    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
+      override;
     function ToHTML: TPLString; override;
   end;
 
@@ -98,6 +59,8 @@ type
 
   TPLHTMLNormalObject = class(TPLHTMLBasicObject)
   public
+    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
+      override;
     function ToHTML: TPLString; override;
   end;
 
@@ -126,103 +89,13 @@ implementation
 
 { TPLHTMLBasicObject }
 
-function TPLHTMLBasicObject.GetAttributes: IPLHTMLObjectAttributes;
-begin
-  Result := FAttributes;
-end;
-
-function TPLHTMLBasicObject.GetChild(const AName: TPLString): IPLHTMLObject;
-var
-  c: IPLHTMLObject;
-begin
-  for c in FChildren do begin
-    if c.Name.ToLower = AName.ToLower then exit(c);
-  end;
-
-  Result := nil;
-end;
-
-function TPLHTMLBasicObject.GetChildren: IPLHTMLObjects;
-begin
-  Result := FChildren;
-end;
-
-function TPLHTMLBasicObject.GetJSObject: IPLJSBasicObject;
-begin
-  Result := FJSObject;
-end;
-
-function TPLHTMLBasicObject.GetName: TPLString;
-begin
-  Result := FName;
-end;
-
-function TPLHTMLBasicObject.GetParent: IPLHTMLObject;
-begin
-  Result := FParent;
-end;
-
-function TPLHTMLBasicObject.GetPosition: SizeInt;
-begin
-  Result := FPosition;
-end;
-
-function TPLHTMLBasicObject.GetState: TPLCSSElementState;
-begin
-  Result := FState;
-end;
-
-function TPLHTMLBasicObject.GetText: TPLString;
-begin
-  Result := FText;
-end;
-
-function TPLHTMLBasicObject.GetZoom: TPLFloat;
-begin
-  Result := FZoom;
-end;
-
-procedure TPLHTMLBasicObject.SetName(AValue: TPLString);
-begin
-  AValue := AValue.Trim.ToLower;
-  if (FName = AValue) or (AValue.IsEmpty) then exit;
-  FName := AValue;
-end;
-
-procedure TPLHTMLBasicObject.SetParent(AValue: IPLHTMLObject);
-begin
-  FParent := AValue;
-end;
-
-procedure TPLHTMLBasicObject.SetPosition(AValue: SizeInt);
-begin
-  FPosition := AValue;
-end;
-
-procedure TPLHTMLBasicObject.SetState(AValue: TPLCSSElementState);
-begin
-  FState := AValue;
-end;
-
-procedure TPLHTMLBasicObject.SetText(AValue: TPLString);
-begin
-  FText := AValue;
-end;
-
-procedure TPLHTMLBasicObject.SetZoom(AValue: TPLFloat);
-begin
-  if (AValue = FZoom) or (AValue <= 0) or (AValue > 10) then exit;
-
-  FZoom := AValue;
-end;
-
 procedure TPLHTMLBasicObject.InitStates;
 var
   s: TPLCSSElementState;
 begin
   for s in TPLCSSElementState do begin
     FStates[s] := TPLCSSDeclarations.Create();
-    FStates[s].FreeObjects := false;
+    TPLCSSDeclarations(FStates[s]).FreeObjects := false;
   end;
 end;
 
@@ -231,52 +104,20 @@ var
   s: TPLCSSElementState;
 begin
   for s in TPLCSSElementState do
-    FStates[s].Free;
-end;
-
-procedure TPLHTMLBasicObject.DoDraw;
-begin
-  // ...
-end;
-
-function TPLHTMLBasicObject.DoToHTMLChildren: TPLString;
-var
-  obj: IPLHTMLObject;
-begin
-  for obj in FChildren do
-    Result += obj.ToHTML + LineEnding;
+    TPLCSSDeclarations(FStates[s]).Free;
 end;
 
 constructor TPLHTMLBasicObject.Create(AParent: TPLHTMLBasicObject;
   ARenderer: TPLDrawingRenderer);
 begin
-  inherited Create;
+  inherited Create(AParent);
 
-  FName := 'basic_object';
-  FText := '';
-  FState := esNormal;
-  FZoom := 1;
-  FPosition := 0;
-
-  FParent := AParent;
   FRenderer := ARenderer;
-  //FJSObject := jsbasicobject.create(self);
-  FAttributes := TPLHTMLObjectAttributes.Create;
-  FChildren := TPLHTMLObjects.Create;
-
-  InitStates;
-end;
-
-destructor TPLHTMLBasicObject.Destroy;
-begin
-  DoneStates;
-
-  inherited Destroy;
 end;
 
 function TPLHTMLBasicObject.Clone: IPLHTMLObject;
 begin
-  Result := TPLHTMLBasicObject.Create(FParent as TPLHTMLBasicObject, FRenderer);
+  Result := TPLHTMLBasicObject.Create(Parent as TPLHTMLBasicObject, FRenderer);
 end;
 
 function TPLHTMLBasicObject.CSS_InheritValueOf(APropName: TPLString; AId: TPLInt
@@ -305,7 +146,7 @@ end;
 
 function TPLHTMLBasicObject.CSS_Get(APropName: TPLString): Pointer;
 begin
-  if not Assigned(FStates[FState]) then ;
+
 end;
 
 procedure TPLHTMLBasicObject.CSS_Set(APropName: TPLString; const APropValue);
@@ -313,21 +154,11 @@ begin
 
 end;
 
-procedure TPLHTMLBasicObject.UpdateScrollbars;
-begin
-
-end;
-
 procedure TPLHTMLBasicObject.Draw;
 begin
-  if not Assigned(FRenderer) or not isVisible or (Display = 'none') then exit;
+  if not Assigned(FRenderer) then exit;
 
-  DoDraw;
-end;
-
-function TPLHTMLBasicObject.ToHTML: TPLString;
-begin
-  Result := DoToHTMLChildren;
+  inherited Draw;
 end;
 
 function TPLHTMLBasicObject.IsVisible: TPLBool;
@@ -362,6 +193,14 @@ end;
 
 { TPLHTMLVoidObject }
 
+constructor TPLHTMLVoidObject.Create(AParent: TPLHTMLBasicObject;
+  ARenderer: TPLDrawingRenderer);
+begin
+  inherited Create(AParent, ARenderer);
+
+  FName := 'void_object';
+end;
+
 function TPLHTMLVoidObject.ToHTML: TPLString;
 var
   ts, te: TPLString;
@@ -371,16 +210,16 @@ begin
 
   case Name of
     'comment': begin
-      ts := '--';
-      te := '--';
+      ts := '-- ';
+      te := ' --';
     end;
     'DOCTYPE': begin
-      ts := 'DOCTYPE';
+      ts := 'DOCTYPE ';
       te := '';
     end;
     'CDATA': begin
-      ts := 'CDATA[';
-      te := ']]';
+      ts := 'CDATA[ ';
+      te := ' ]]';
     end;
   end;
 
@@ -398,6 +237,14 @@ begin
 end;
 
 { TPLHTMLNormalObject }
+
+constructor TPLHTMLNormalObject.Create(AParent: TPLHTMLBasicObject;
+  ARenderer: TPLDrawingRenderer);
+begin
+  inherited Create(AParent, ARenderer);
+
+  FName := 'normal_object';
+end;
 
 function TPLHTMLNormalObject.ToHTML: TPLString;
 begin
