@@ -6,7 +6,7 @@ unit Pospolite.View.HTML.Parser;
 interface
 
 uses
-  Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.HTML.Basics;
+  Classes, SysUtils, math, Pospolite.View.Basics, Pospolite.View.HTML.Basics;
 
 type
 
@@ -168,8 +168,7 @@ end;
 
 procedure TPLHTMLParser.MovePosForward;
 begin
-  //Write(FCurrent^);
-  if FCurrent^ = #13 then MovePosToNextRow else FPos.Column += 1;
+  if FCurrent^ = #10 then MovePosToNextRow else FPos.Column += 1;
   Inc(FCurrent);
 end;
 
@@ -195,7 +194,7 @@ begin
   if FCurrent^ <> AChar then begin
     FErrors.Add(TPLHTMLParserError.Create(FPos, '"%s" expected but "%s" found.'.Format([AChar, FCurrent^])));
     //Write('[^]');
-    FCurrent := FEnd;
+    //FCurrent := FEnd;
     //p := FSource.Find(AChar, Position);
     //if p > 0 then begin
     //  while FCurrent^ <> AChar do MovePosForward;
@@ -246,7 +245,7 @@ var
 begin
   for pom in AStart do Consume(pom);
   s := Position;
-  l := AEnd.Length;
+  l := Length(AEnd);
   Result := nil;
 
   while not IsEOF and (FSource.SubStr(Position, l) <> AEnd) do MovePosForward;
@@ -289,14 +288,24 @@ begin
       ConsumeWhitespace;
     end;
 
-    {if n in TPLStringFuncs.NewArray(['script', 'style', 'code', 'pre', 'svg']) then begin
+    if n in TPLStringFuncs.NewArray(['script', 'style', 'code', 'pre', 'svg']) then begin
       Consume('>');
-      p := Position;
-      while not IsEOF and (FSource.SubStr(Position, n.Length+2).ToLower <> '</'+n) do MovePosForward;
-      Result.Text := FSource.SubStr(p, Position - p - 1);
-      Inc(FCurrent, n.Length+2);
-    end else} if IsVoidElement(n) then begin
-      while not IsEOF and (FCurrent^ in arrc) do MovePosForward;
+      Result.Text := '';
+      while not IsEOF and (FSource.SubStr(Position, Length(n)+2).ToLower <> '</'+n) do begin
+        Result.Text := Result.Text + FCurrent^;
+        MovePosForward;
+      end;
+      FCurrent := FCurrent + Length('</'+n);
+      ConsumeWhitespace;
+      while FCurrent^ <> '>' do MovePosForward;
+      Consume('>');
+      ConsumeWhitespace;
+    end else if IsVoidElement(n) then begin
+      ConsumeWhitespace;
+      if FCurrent^ = '/' then Consume('/');
+      ConsumeWhitespace;
+      Consume('>');
+      ConsumeWhitespace;
     end else begin
       if FCurrent^ = '>' then begin
         Consume('>');
@@ -315,9 +324,13 @@ begin
             Result.Children.Add(txt);
           end;
 
+          //ConsumeWhitespace;
           s := FCurrent;
+          //ConsumeWhitespace;
           Consume('<');
+          //ConsumeWhitespace;
           eof := FCurrent^ = '/';
+          //ConsumeWhitespace;
 
           if eof then begin
             Consume('/');
@@ -348,12 +361,14 @@ function TPLHTMLParser.ReadText(AChars: array of TPLString): TPLString;
 var
   s: SizeInt;
 begin
+  Result := '';
   s := Position;
-  while not IsEOF and not (FCurrent^ in TPLStringFuncs.NewArray(AChars)) do MovePosForward;
+  while not IsEOF and not (FCurrent^ in TPLStringFuncs.NewArray(AChars)) do begin
+    Result += FCurrent^;
+    MovePosForward;
+  end;
 
-  if not IsEOF and (FCurrent^ in TPLStringFuncs.NewArray(AChars)) then
-    Result := FSource.SubStr(s, Position - s)
-  else
+  if IsEOF or not (FCurrent^ in TPLStringFuncs.NewArray(AChars)) then
     Result := '';
 end;
 
@@ -420,11 +435,11 @@ var
 begin
   CleanUp;
 
-  if ASource.Length < 2 then exit;
+  if Length(ASource) < 2 then exit;
 
   FSource := ASource;
-  FCurrent := @ASource[1];
-  FEnd := @ASource[ASource.Length];
+  FCurrent := @FSource[1];
+  FEnd := @FSource[Length(FSource)];
   FPos := TPLHTMLParserPosition.Create(1, 1);
   FRoot := ARoot;
 

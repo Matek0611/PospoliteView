@@ -106,20 +106,20 @@ type
   TPLXValue = packed record
   strict private
     FNumber: TPLString;
-    FList: IPLHTMLObjects;
+    FList: TPLHTMLObjects;
     FKind: TPLXValueKind;
   public
     constructor NewInteger(const AValue: TPLInt);
     constructor NewFloat(const AValue: TPLFloat);
     constructor NewString(const AValue: TPLString);
     constructor NewBoolean(const AValue: TPLBool);
-    constructor NewHTMLObjects(const AValue: IPLHTMLObjects);
+    constructor NewHTMLObjects(const AValue: TPLHTMLObjects);
 
     function ToInteger: TPLInt;
     function ToFloat: TPLFloat;
     function ToString: TPLString;
     function ToBoolean: TPLBool;
-    function ToHTMLObjects: IPLHTMLObjects;
+    function ToHTMLObjects: TPLHTMLObjects;
 
     function CanCastTo(AValue: TPLXValue): TPLBool;
     function IsNull: TPLBool;
@@ -182,8 +182,8 @@ type
     function Evaluate({%H-}AContext: TPLXContext): TPLXValue; virtual;
   end;
 
-  IPLXEvaluations = specialize IPLList<IPLXEvaluation>;
-  TPLXEvaluations = class(specialize TPLList<IPLXEvaluation>, IPLXEvaluations);
+  IPLXEvaluations = specialize IPLObjectList<TPLXEvaluation>;
+  TPLXEvaluations = class(specialize TPLObjectList<TPLXEvaluation>, IPLXEvaluations);
 
   TPLXExpressionKind = (xekPath, xekExpression, xekNegation, xekRoot);
   TPLXExpressionElement = specialize TPLParameter<TPLXOperator, IPLXEvaluation>;
@@ -195,13 +195,13 @@ type
   TPLXExpression = class(TPLXEvaluation)
   private
     FKind: TPLXExpressionKind;
-    FOperand: IPLXEvaluation;
-    FElements: IPLXExpressionElements;
+    FOperand: TPLXEvaluation;
+    FElements: TPLXExpressionElements;
   public
-    constructor Create(const AKind: TPLXExpressionKind; AOperand: IPLXEvaluation);
+    constructor Create(const AKind: TPLXExpressionKind; AOperand: TPLXEvaluation);
 
     function Evaluate(AContext: TPLXContext): TPLXValue; override;
-    procedure AddElement(const AOperator: TPLXOperator; AOperand: IPLXEvaluation);
+    procedure AddElement(const AOperator: TPLXOperator; AOperand: TPLXEvaluation);
 
     property Kind: TPLXExpressionKind read FKind write FKind;
   end;
@@ -696,7 +696,7 @@ begin
   FList := nil;
 end;
 
-constructor TPLXValue.NewHTMLObjects(const AValue: IPLHTMLObjects);
+constructor TPLXValue.NewHTMLObjects(const AValue: TPLHTMLObjects);
 begin
   FKind := xvkHTMLObjects;
   FNumber := '';
@@ -714,8 +714,14 @@ begin
 end;
 
 function TPLXValue.ToString: TPLString;
+var
+  obj: TPLHTMLObject;
 begin
-  Result := FNumber;
+  if FKind = xvkHTMLObjects then begin
+    Result := '';
+    for obj in FList do
+      Result += obj.ToHTML;
+  end else Result := FNumber;
 end;
 
 function TPLXValue.ToBoolean: TPLBool;
@@ -723,7 +729,7 @@ begin
   Result := (ToString <> '') or (ToFloat <> 0);
 end;
 
-function TPLXValue.ToHTMLObjects: IPLHTMLObjects;
+function TPLXValue.ToHTMLObjects: TPLHTMLObjects;
 begin
   Result := FList;
 end;
@@ -902,7 +908,7 @@ end;
 { TPLXExpression }
 
 constructor TPLXExpression.Create(const AKind: TPLXExpressionKind;
-  AOperand: IPLXEvaluation);
+  AOperand: TPLXEvaluation);
 begin
   inherited Create;
 
@@ -918,12 +924,12 @@ function TPLXExpression.Evaluate(AContext: TPLXContext): TPLXValue;
     e: IPLXEvaluation;
     obj, x: TPLHTMLObject;
     objr: TPLXValue;
-    lin, lout: IPLHTMLObjects;
+    lin, lout: TPLHTMLObjects;
     i: SizeInt = 0;
   begin
-    lin := TPLHTMLObjects.Create;
+    lin := TPLHTMLObjects.Create(false);
     lin.Add(AContext.HTMLObject);
-    lout := TPLHTMLObjects.Create;
+    lout := TPLHTMLObjects.Create(false);
     e := FOperand;
 
     while Assigned(e) do begin
@@ -943,6 +949,7 @@ function TPLXExpression.Evaluate(AContext: TPLXContext): TPLXValue;
       end;
     end;
 
+    lin.Free;
     Result := TPLXValue.NewHTMLObjects(lout);
   end;
 
@@ -966,7 +973,7 @@ begin
 end;
 
 procedure TPLXExpression.AddElement(const AOperator: TPLXOperator;
-  AOperand: IPLXEvaluation);
+  AOperand: TPLXEvaluation);
 begin
   FElements.Add(TPLXExpressionElement.Create(AOperator, AOperand));
 end;
@@ -1092,7 +1099,7 @@ end;
 
 function TPLXNodeTest.Evaluate(AContext: TPLXContext): TPLXValue;
 var
-  objs: IPLHTMLObjects;
+  objs: TPLHTMLObjects;
 begin
   Result := TPLXValue.Null;
 
@@ -1100,23 +1107,23 @@ begin
     xntKind: begin
       case FTokenKind of
         xtkNode: begin
-          objs := TPLHTMLObjects.Create;
+          objs := TPLHTMLObjects.Create(false);
           objs.Add(AContext.HTMLObject);
-          Result := TPLXValue.NewHTMLObjects(objs.Duplicate);
+          Result := TPLXValue.NewHTMLObjects(objs);
         end;
         xtkText: Result := TPLXValue.NewString(AContext.HTMLObject.Text);
       end;
     end;
-    xntAny: Result := TPLXValue.NewHTMLObjects(AContext.HTMLObject.Children.Duplicate);
+    xntAny: Result := TPLXValue.NewHTMLObjects(AContext.HTMLObject.Children);
   end;
 end;
 
 function TPLXNodeTest.EvaluateAxis(AAxis: TPLXTokenKind; AContext: TPLXContext
   ): TPLXValue;
 var
-  objs: IPLHTMLObjects;
+  objs: TPLHTMLObjects;
 
-  procedure ProcessNode(A: TPLHTMLObject; B: IPLHTMLObjects);
+  procedure ProcessNode(A: TPLHTMLObject; B: TPLHTMLObjects);
   begin
     case FKind of
       xntIdentifier: begin
@@ -1132,7 +1139,7 @@ var
     end;
   end;
 
-  procedure ProcessAxis(A, B: IPLHTMLObjects);
+  procedure ProcessAxis(A, B: TPLHTMLObjects);
   var
     obj: TPLHTMLObject;
   begin
@@ -1144,7 +1151,7 @@ var
   end;
 
 begin
-  objs := TPLHTMLObjects.Create;
+  objs := TPLHTMLObjects.Create(false);
 
   case AAxis of
     xtkAttribute: begin
@@ -1155,20 +1162,20 @@ begin
     end;
     xtkSelf: begin
       ProcessNode(AContext.HTMLObject, objs);
-      Result := TPLXValue.NewHTMLObjects(objs.Duplicate);
+      Result := TPLXValue.NewHTMLObjects(objs);
     end;
     xtkParent: begin
-      ProcessAxis(AContext.HTMLObject.Parent.Children.Duplicate, objs);
-      Result := TPLXValue.NewHTMLObjects(objs.Duplicate);
+      ProcessAxis(AContext.HTMLObject.Parent.Children, objs);
+      Result := TPLXValue.NewHTMLObjects(objs);
     end;
     xtkChild, xtkDescendant: begin
-      ProcessAxis(AContext.HTMLObject.Children.Duplicate, objs);
-      Result := TPLXValue.NewHTMLObjects(objs.Duplicate);
+      ProcessAxis(AContext.HTMLObject.Children, objs);
+      Result := TPLXValue.NewHTMLObjects(objs);
     end;
     xtkDescendantOrSelf: begin
       ProcessNode(AContext.HTMLObject, objs);
-      ProcessAxis(AContext.HTMLObject.Children.Duplicate, objs);
-      Result := TPLXValue.NewHTMLObjects(objs.Duplicate);
+      ProcessAxis(AContext.HTMLObject.Children, objs);
+      Result := TPLXValue.NewHTMLObjects(objs);
     end;
   end;
 end;
@@ -1211,7 +1218,7 @@ end;
 function TPLXStepExpression.Evaluate(AContext: TPLXContext): TPLXValue;
 var
   obj: TPLHTMLObject;
-  objs: IPLHTMLObjects;
+  objs: TPLHTMLObjects;
   pos: SizeInt = 1;
   inc: TPLBool;
   pr: TPLXExpression;
@@ -1220,7 +1227,7 @@ begin
   Result := FStep.Evaluate(AContext);
 
   if FPredicates.Count > 0 then begin
-    objs := TPLHTMLObjects.Create;
+    objs := TPLHTMLObjects.Create(false);
 
     for obj in Result.ToHTMLObjects do begin
       inc := true;
@@ -1237,7 +1244,7 @@ begin
       if inc then objs.Add(obj);
     end;
 
-    Result := TPLXValue.NewHTMLObjects(objs.Duplicate);
+    Result := TPLXValue.NewHTMLObjects(objs);
   end;
 end;
 

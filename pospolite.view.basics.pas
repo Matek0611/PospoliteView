@@ -30,11 +30,7 @@ type
   // Bool
   TPLBool = Boolean;
 
-  // - Normal Types - //
-
-  //
-
-  // - Generics - //
+  // - Generics and normal types - //
 
   { TPLNumberRange }
 
@@ -75,6 +71,7 @@ type
     procedure Clear;
     function Last: T;
     function First: T;
+    function Poll: T;
 
     property Item[AIndex: SizeInt]: T read GetItem write SetItem; default;
   end;
@@ -105,6 +102,7 @@ type
     function Find(AItem: T; AComparator: specialize TPLObjectListFindCompare<T> = nil): SizeInt;
     procedure Sort(AComparator: specialize TPLObjectListSortCompare<T>);
     function Duplicate: specialize IPLObjectList<T>;
+    procedure SetObjectsFreeing(const AValue: TPLBool);
 
     property FreeObjects: TPLBool;
   end;
@@ -143,7 +141,9 @@ type
     procedure Clear; virtual;
     function Last: T;
     function First: T;
+    function Poll: T;
     function Duplicate: specialize IPLObjectList<T>;
+    procedure SetObjectsFreeing(const AValue: TPLBool);
 
     property Item[AIndex: SizeInt]: T read GetItem write SetItem; default;
     property FreeObjects: TPLBool read FFreeObjects write FFreeObjects;
@@ -189,6 +189,7 @@ type
     procedure Clear; virtual;
     function Last: T;
     function First: T;
+    function Poll: T;
     function Duplicate: specialize IPLList<T>; virtual;
 
     property Item[AIndex: SizeInt]: T read GetItem write SetItem; default;
@@ -215,9 +216,12 @@ type
   { TPLFuncs }
 
   generic TPLFuncs<T> = packed class sealed
+  private type
+    ListHelper = specialize TPLList<T>;
   public
     class procedure Swap(var a, b: T);
     class function NewArray(tab: array of T): specialize TArray<T>;
+    class function NewList(tab: array of T): specialize TPLList<T>;
   end;
 
   TPLStringFuncs = specialize TPLFuncs<TPLString>;

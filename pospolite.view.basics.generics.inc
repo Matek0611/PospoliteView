@@ -223,6 +223,13 @@ begin
   Result := GetItem(0);
 end;
 
+function TPLObjectList.Poll: T;
+begin
+  Result := First;
+
+  if not Empty then Remove(First);
+end;
+
 function TPLObjectList.Duplicate: specialize IPLObjectList<T>;
 var
   x: T;
@@ -230,6 +237,11 @@ begin
   Result := TPLObjectList.Create(FFreeObjects);
 
   for x in self do Result.Add(x);
+end;
+
+procedure TPLObjectList.SetObjectsFreeing(const AValue: TPLBool);
+begin
+  FFreeObjects := AValue;
 end;
 
 { TPLList }
@@ -333,6 +345,13 @@ begin
   Result := GetItem(0);
 end;
 
+function TPLList.Poll: T;
+begin
+  Result := First;
+
+  if not Empty then Remove(First);
+end;
+
 function TPLList.Duplicate: specialize IPLList<T>;
 var
   x: T;
@@ -393,6 +412,16 @@ begin
   SetLength(Result, Length(tab));
   for i := Low(tab) to High(tab) do
     Result[i] := tab[i];
+end;
+
+class function TPLFuncs.NewList(tab: array of T): specialize TPLList<T>;
+var
+  i: SizeInt;
+begin
+  Result := ListHelper.Create;
+
+  for i := Low(tab) to High(tab) do
+    Result.Add(tab[i]);
 end;
 
 { TPLParameter }

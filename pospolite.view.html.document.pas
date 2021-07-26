@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.HTML.Parser,
   Pospolite.View.HTML.Basics, Pospolite.View.Internet,
-  Pospolite.View.Drawing.Renderer;
+  Pospolite.View.Drawing.Renderer, Pospolite.View.DOM.Document;
 
 type
 
@@ -37,7 +37,10 @@ type
     procedure LoadFromString(const AText: TPLString);
     procedure SaveToLocalFile(const AFileName: TPLString);
     procedure Reload;
-    function IsLoaded: TPLBool;
+    function IsLoaded: TPLBool; inline;
+
+    function querySelector(const AQuery: TPLString; AObject: TPLHTMLObject = nil): TPLHTMLObject; // if AObject = nil, then AObject = Root
+    function querySelectorAll(const AQuery: TPLString; AObject: TPLHTMLObject = nil): TPLHTMLObjects;
 
     property Title: TPLString read GetTitle write SetTitle;
     property Content: TPLString read GetContent;
@@ -237,6 +240,22 @@ end;
 function TPLHTMLDocument.IsLoaded: TPLBool;
 begin
   Result := not FFile.IsEmpty and not FMimeType.IsEmpty;
+end;
+
+function TPLHTMLDocument.querySelector(const AQuery: TPLString;
+  AObject: TPLHTMLObject): TPLHTMLObject;
+begin
+  if not Assigned(AObject) then AObject := FRoot;
+
+  Result := TPLHTMLDocumentQueries.querySelector(AQuery, AObject);
+end;
+
+function TPLHTMLDocument.querySelectorAll(const AQuery: TPLString;
+  AObject: TPLHTMLObject): TPLHTMLObjects;
+begin
+  if not Assigned(AObject) then AObject := FRoot;
+
+  Result := TPLHTMLDocumentQueries.querySelectorAll(AQuery, AObject);
 end;
 
 end.
