@@ -52,6 +52,8 @@ type
     constructor Create(const AContext: TPLCSSSelectorContext); override;
     destructor Destroy; override;
 
+    function AppliesTo(constref AObject: TPLHTMLObject): TPLBool;
+
     property SimpleSelectors: TPLCSSSimpleSelectors read FSimpleSelectors;
   end;
 
@@ -92,8 +94,8 @@ type
 
     function IsValidAsGroup: TPLBool; inline;
 
-    property Text: TPLString read FText;
-    property Evaluation: TPLCSSSelectorExpression read FEvaluation;
+    property Text: TPLString read FText write FText;
+    property Evaluation: TPLCSSSelectorExpression read FEvaluation write FEvaluation;
     property Items: TPLCSSSelectorExpressionItems read FItems;
   end;
 
@@ -183,7 +185,8 @@ type
 
   TPLCSSSelectorCombinator = (scUndefined = 0, scDescendant = ' ', scChild = '>',
     scGeneralSibling = '~', scAdjascentSibling = '+');
-  TPLCSSSelectorCombinators = packed class(specialize TPLList<TPLCSSSelectorCombinator>);
+  TPLCSSSelectorCombinatorItem = specialize TPLParameter<SizeInt, TPLCSSSelectorCombinator>;
+  TPLCSSSelectorCombinators = packed class(specialize TPLList<TPLCSSSelectorCombinatorItem>);
 
   { TPLCSSSelector }
 
@@ -249,6 +252,64 @@ begin
   FSimpleSelectors.Free;
 
   inherited Destroy;
+end;
+
+function TPLCSSSimpleSelectorPattern.AppliesTo(constref AObject: TPLHTMLObject
+  ): TPLBool;
+var
+  i: SizeInt = 0;
+  attr: TPLHTMLObjectAttribute;
+  p1, p2: TPLString;
+begin
+  Result := false;
+  if FSimpleSelectors.Empty then exit;
+
+  if (FSimpleSelectors.First is TPLCSSSelectorType and
+    TPLCSSSelectorType(FSimpleSelectors.First).IsUniversal) then Inc(i);
+
+  while i < FSimpleSelectors.Count do begin
+    if FSimpleSelectors[i] is TPLCSSSelectorType then begin
+      if AObject.Name.ToLower <> TPLCSSSelectorType(FSimpleSelectors[i]).Name.ToLower then exit;
+    end else if FSimpleSelectors[i] is TPLCSSSelectorHash then begin
+      if AObject.Attributes.Id = Default(TPLHTMLObjectAttribute) then exit;
+      if AObject.Attributes.Id.Value.ToLower <> TPLCSSSelectorHash(FSimpleSelectors[i]).Name.ToLower then exit;
+    end else if FSimpleSelectors[i] is TPLCSSSelectorAttribute then begin
+      if AObject.Attributes.Empty then exit;
+      attr := AObject.Attributes.Get(TPLCSSSelectorAttribute(FSimpleSelectors[i]).Name);
+      if (attr = Default(TPLHTMLObjectAttribute)) or TPLCSSSelectorAttribute(FSimpleSelectors[i]).Name.IsEmpty then exit;
+
+      if TPLCSSSelectorAttribute(FSimpleSelectors[i]).Comparator.IsEmpty
+        or not Assigned(TPLCSSSelectorAttribute(FSimpleSelectors[i]).Value) then begin
+        Inc(i);
+        continue;
+      end;
+
+      p1 := TPLCSSSelectorAttribute(FSimpleSelectors[i]).Value.Value;
+      p2 := attr.Value;
+      if not TPLCSSSelectorAttribute(FSimpleSelectors[i]).CaseSensitive then begin
+        p1 := p1.ToLower;
+        p2 := p2.ToLower;
+      end;
+
+      case TPLCSSSelectorAttribute(FSimpleSelectors[i]).Comparator of
+        '=': if p1 <> p2 then exit;
+        '~=': if (p2 <> p1) and not (p1 in p2.Split(' ')) then exit;
+        '|=': if not ((p2 = p1) or (p2.StartsWith(p1+'-'))) then exit;
+        '^=': if not p2.StartsWith(p1) then exit;
+        '$=': if not p2.EndsWith(p1) then exit;
+        '*=': if not p2.Exists(p1) then exit;
+      end;
+    end else if FSimpleSelectors[i] is TPLCSSSelectorPseudo then begin
+      //...
+    end else if FSimpleSelectors[i] is TPLCSSSelectorClass then begin
+      if AObject.Attributes.&Class = Default(TPLHTMLObjectAttribute) then exit;
+      if not (TPLCSSSelectorClass(FSimpleSelectors[i]).Name.ToLower in AObject.Attributes.&Class.Value.ToLower.Split(' ')) then exit;
+    end;
+
+    Inc(i);
+  end;
+
+  Result := true;
 end;
 
 { TPLCSSSelectorExpression }
@@ -591,6 +652,11 @@ var
     Result := TPLCSSSelectorAttribute.Create(TPLCSSSelectorContext.Create(ASelector, sub + ']', p, pos), pom, op, v, cs);
   end;
 
+  function NewPseudoExpression: TPLCSSSelectorPseudoExpression;
+  begin
+    //Result := TPLCSSSelectorPseudoExpression.Create(TPLCSSSelectorContext.Create(), );
+  end;
+
   function NewPseudo(AName: TPLString; ANamespaced: TPLBool; AKind: TPLCSSSelectorPseudoKind): TPLCSSSelectorPseudo;
   var
     expr: TPLCSSSelectorPseudoExpression = nil;
@@ -598,7 +664,20 @@ var
     p: SizeInt;
   begin
     p := pos;
-    //...
+    sub += AName;
+
+    ConsumeWhitespace;
+    if not IsEOF and (Current = '(') then begin
+      sub += Current;
+      Inc(pos);
+      ConsumeWhitespace;
+      expr := NewPseudoExpression;
+      sub += expr.Context.Value + ')';
+      ConsumeWhitespace;
+      if not IsEOF then Inc(pos);
+    end;
+
+    Result := TPLCSSSelectorPseudo.Create(TPLCSSSelectorContext.Create(ASelector, sub, p, pos), AName, expr, AKind, ANamespaced);
   end;
 
   function NewPattern: TPLCSSSimpleSelectorPattern;
@@ -738,7 +817,7 @@ var
           continue;
         end;
 
-        Result.Combinators.Add(c);
+        Result.Combinators.Add(TPLCSSSelectorCombinatorItem.Create(Result.SimpleSelectors.Count-1, c));
       end;
 
       p := NewPattern;

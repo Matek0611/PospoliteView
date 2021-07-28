@@ -439,47 +439,47 @@ end;
 
 { TPLHTMLObjectAttributes }
 
-function TPLHTMLObjectAttributes.GetCharset: PPLHTMLObjectAttribute;
+function TPLHTMLObjectAttributes.GetCharset: TPLHTMLObjectAttribute;
 begin
   Result := FPtrs[7];
 end;
 
-function TPLHTMLObjectAttributes.GetClass: PPLHTMLObjectAttribute;
+function TPLHTMLObjectAttributes.GetClass: TPLHTMLObjectAttribute;
 begin
   Result := FPtrs[0];
 end;
 
-function TPLHTMLObjectAttributes.GetHref: PPLHTMLObjectAttribute;
+function TPLHTMLObjectAttributes.GetHref: TPLHTMLObjectAttribute;
 begin
   Result := FPtrs[4];
 end;
 
-function TPLHTMLObjectAttributes.GetId: PPLHTMLObjectAttribute;
+function TPLHTMLObjectAttributes.GetId: TPLHTMLObjectAttribute;
 begin
   Result := FPtrs[2];
 end;
 
-function TPLHTMLObjectAttributes.GetName: PPLHTMLObjectAttribute;
+function TPLHTMLObjectAttributes.GetName: TPLHTMLObjectAttribute;
 begin
   Result := FPtrs[1];
 end;
 
-function TPLHTMLObjectAttributes.GetRel: PPLHTMLObjectAttribute;
+function TPLHTMLObjectAttributes.GetRel: TPLHTMLObjectAttribute;
 begin
   Result := FPtrs[8];
 end;
 
-function TPLHTMLObjectAttributes.GetSrc: PPLHTMLObjectAttribute;
+function TPLHTMLObjectAttributes.GetSrc: TPLHTMLObjectAttribute;
 begin
   Result := FPtrs[5];
 end;
 
-function TPLHTMLObjectAttributes.GetStyle: PPLHTMLObjectAttribute;
+function TPLHTMLObjectAttributes.GetStyle: TPLHTMLObjectAttribute;
 begin
   Result := FPtrs[3];
 end;
 
-function TPLHTMLObjectAttributes.GetType: PPLHTMLObjectAttribute;
+function TPLHTMLObjectAttributes.GetType: TPLHTMLObjectAttribute;
 begin
   Result := FPtrs[6];
 end;
@@ -515,23 +515,23 @@ begin
   UpdateConsts;
 end;
 
-function TPLHTMLObjectAttributes.Get(AName: TPLString): PPLHTMLObjectAttribute;
+function TPLHTMLObjectAttributes.Get(AName: TPLString): TPLHTMLObjectAttribute;
 var
   a: TPLHTMLObjectAttribute;
 begin
   AName := AName.Trim.ToLower;
 
-  if AName.IsEmpty then exit(nil);
+  if AName.IsEmpty then exit(Default(TPLHTMLObjectAttribute));
 
   for a in Self do
-    if a.Key.ToLower = AName then exit(PPLHTMLObjectAttribute(@a));
+    if a.Key.ToLower = AName then exit(a);
 
-  Result := nil;
+  Result := Default(TPLHTMLObjectAttribute);
 end;
 
 function TPLHTMLObjectAttributes.Has(AName: TPLString): TPLBool;
 begin
-  Result := Assigned(Get(AName));
+  Result := Get(AName) <> Default(TPLHTMLObjectAttribute);
 end;
 
 function TPLHTMLObjectAttributes.ToString: TPLString;

@@ -253,54 +253,53 @@ type
     esHover, esVisited, esFocusVisible);
 
   TPLHTMLObjectAttribute = specialize TPLParameter<TPLString, TPLString>;
-  PPLHTMLObjectAttribute = ^TPLHTMLObjectAttribute;
 
   { IPLHTMLObjectAttributes }
 
   IPLHTMLObjectAttributes = interface(specialize IPLList<TPLHTMLObjectAttribute>)
     ['{CA105FEA-CCFF-4192-B17F-45161C3BDF35}']
-    function GetCharset: PPLHTMLObjectAttribute;
-    function GetClass: PPLHTMLObjectAttribute;
-    function GetHref: PPLHTMLObjectAttribute;
-    function GetId: PPLHTMLObjectAttribute;
-    function GetName: PPLHTMLObjectAttribute;
-    function GetRel: PPLHTMLObjectAttribute;
-    function GetSrc: PPLHTMLObjectAttribute;
-    function GetStyle: PPLHTMLObjectAttribute;
-    function GetType: PPLHTMLObjectAttribute;
+    function GetCharset: TPLHTMLObjectAttribute;
+    function GetClass: TPLHTMLObjectAttribute;
+    function GetHref: TPLHTMLObjectAttribute;
+    function GetId: TPLHTMLObjectAttribute;
+    function GetName: TPLHTMLObjectAttribute;
+    function GetRel: TPLHTMLObjectAttribute;
+    function GetSrc: TPLHTMLObjectAttribute;
+    function GetStyle: TPLHTMLObjectAttribute;
+    function GetType: TPLHTMLObjectAttribute;
 
-    function Get(AName: TPLString): PPLHTMLObjectAttribute;
+    function Get(AName: TPLString): TPLHTMLObjectAttribute;
     function Has(AName: TPLString): TPLBool;
     function ToString: TPLString;
 
     // Do not change the order of these properties!
 
-    property &Class: PPLHTMLObjectAttribute read GetClass;
-    property Name: PPLHTMLObjectAttribute read GetName;
-    property Id: PPLHTMLObjectAttribute read GetId;
-    property Style: PPLHTMLObjectAttribute read GetStyle;
-    property Href: PPLHTMLObjectAttribute read GetHref;
-    property Src: PPLHTMLObjectAttribute read GetSrc;
-    property &Type: PPLHTMLObjectAttribute read GetType;
-    property Charset: PPLHTMLObjectAttribute read GetCharset;
-    property Rel: PPLHTMLObjectAttribute read GetRel;
+    property &Class: TPLHTMLObjectAttribute read GetClass;
+    property Name: TPLHTMLObjectAttribute read GetName;
+    property Id: TPLHTMLObjectAttribute read GetId;
+    property Style: TPLHTMLObjectAttribute read GetStyle;
+    property Href: TPLHTMLObjectAttribute read GetHref;
+    property Src: TPLHTMLObjectAttribute read GetSrc;
+    property &Type: TPLHTMLObjectAttribute read GetType;
+    property Charset: TPLHTMLObjectAttribute read GetCharset;
+    property Rel: TPLHTMLObjectAttribute read GetRel;
   end;
 
   { TPLHTMLObjectAttributes }
 
   TPLHTMLObjectAttributes = class(specialize TPLList<TPLHTMLObjectAttribute>, IPLHTMLObjectAttributes)
   private
-    FPtrs: array[0..8] of PPLHTMLObjectAttribute;
+    FPtrs: array[0..8] of TPLHTMLObjectAttribute;
 
-    function GetCharset: PPLHTMLObjectAttribute;
-    function GetClass: PPLHTMLObjectAttribute;
-    function GetHref: PPLHTMLObjectAttribute;
-    function GetId: PPLHTMLObjectAttribute;
-    function GetName: PPLHTMLObjectAttribute;
-    function GetRel: PPLHTMLObjectAttribute;
-    function GetSrc: PPLHTMLObjectAttribute;
-    function GetStyle: PPLHTMLObjectAttribute;
-    function GetType: PPLHTMLObjectAttribute;
+    function GetCharset: TPLHTMLObjectAttribute;
+    function GetClass: TPLHTMLObjectAttribute;
+    function GetHref: TPLHTMLObjectAttribute;
+    function GetId: TPLHTMLObjectAttribute;
+    function GetName: TPLHTMLObjectAttribute;
+    function GetRel: TPLHTMLObjectAttribute;
+    function GetSrc: TPLHTMLObjectAttribute;
+    function GetStyle: TPLHTMLObjectAttribute;
+    function GetType: TPLHTMLObjectAttribute;
 
     procedure UpdateConsts;
   public
@@ -308,19 +307,19 @@ type
     procedure Remove(AItem: T); override;
     procedure Clear; override;
 
-    function Get(AName: TPLString): PPLHTMLObjectAttribute;
+    function Get(AName: TPLString): TPLHTMLObjectAttribute;
     function Has(AName: TPLString): TPLBool;
-    function ToString: TPLString;
+    function ToString: TPLString; reintroduce;
 
-    property &Class: PPLHTMLObjectAttribute read GetClass;
-    property Name: PPLHTMLObjectAttribute read GetName;
-    property Id: PPLHTMLObjectAttribute read GetId;
-    property Style: PPLHTMLObjectAttribute read GetStyle;
-    property Href: PPLHTMLObjectAttribute read GetHref;
-    property Src: PPLHTMLObjectAttribute read GetSrc;
-    property &Type: PPLHTMLObjectAttribute read GetType;
-    property Charset: PPLHTMLObjectAttribute read GetCharset;
-    property Rel: PPLHTMLObjectAttribute read GetRel;
+    property &Class: TPLHTMLObjectAttribute read GetClass;
+    property Name: TPLHTMLObjectAttribute read GetName;
+    property Id: TPLHTMLObjectAttribute read GetId;
+    property Style: TPLHTMLObjectAttribute read GetStyle;
+    property Href: TPLHTMLObjectAttribute read GetHref;
+    property Src: TPLHTMLObjectAttribute read GetSrc;
+    property &Type: TPLHTMLObjectAttribute read GetType;
+    property Charset: TPLHTMLObjectAttribute read GetCharset;
+    property Rel: TPLHTMLObjectAttribute read GetRel;
   end;
 
   // https://developer.mozilla.org/en-US/docs/Web/API/Node
@@ -476,6 +475,9 @@ type
   IPLHTMLDocument = interface(IPLBasicDocument)
     ['{760627BC-3E74-4CE4-AD3B-256BDDA722B0}']
     function GetRoot: IPLHTMLObject;
+
+    function querySelector(const AQuery: TPLString; AObject: TPLHTMLObject = nil): TPLHTMLObject;
+    function querySelectorAll(const AQuery: TPLString; AObject: TPLHTMLObject = nil): TPLHTMLObjects;
 
     property Root: IPLHTMLObject read GetRoot;
   end;
