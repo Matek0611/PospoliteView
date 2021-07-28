@@ -597,7 +597,7 @@ var
   var
     sub: TPLString = '[';
     pom, pom2, op: TPLString;
-    cs: TPLBool;
+    cs: TPLBool = false;
     p, pp: SizeInt;
     v: TPLCSSSelectorString = nil;
     q: TPLChar;
@@ -798,7 +798,7 @@ var
             '>': c := scChild;
             '~': c := scGeneralSibling;
             '+': c := scAdjascentSibling;
-            else if wsp then c := scDescendant;
+            else if wsp then c := scDescendant else c := scChild;
           end;
 
           if (c = scUndefined) or (Current = ',') then break;
@@ -812,10 +812,10 @@ var
           if IsEOF then break;
         end else break;
 
-        if c = scUndefined then begin
-          Inc(pos);
-          continue;
-        end;
+        //if c = scUndefined then begin
+        //  Inc(pos);
+        //  continue;
+        //end;
 
         Result.Combinators.Add(TPLCSSSelectorCombinatorItem.Create(Result.SimpleSelectors.Count-1, c));
       end;

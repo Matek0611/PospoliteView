@@ -34,8 +34,10 @@ var
   s: TPLCSSSelector;
   ssp: TPLCSSSimpleSelectorPattern;
   tmp: array of IPLHTMLObjects;
-  x, i: TPLInt;
+  tmpe: TPLHTMLObject;
+  x, i, j, a, id1, id2: TPLInt;
   c: TPLCSSSelectorCombinatorItem;
+  r: TPLBool;
 
   procedure AddObject(a: TPLHTMLObject);
   begin
@@ -52,6 +54,18 @@ var
     for obj in a.Children do TrySelect(obj);
   end;
 
+  function FindInside(what, where: TPLHTMLObject): TPLBool;
+  var
+    b: SizeInt;
+  begin
+    if what.Parent = where then exit(true);
+
+    Result := false;
+    for b := 0 to where.Children.Count-1 do begin
+      if FindInside(what, where.Children[b]) then exit(true);
+    end;
+  end;
+
 begin
   Result := TPLHTMLObjects.Create(false);
 
@@ -60,7 +74,7 @@ begin
 
   for s in sel do begin
     if s.SimpleSelectors.Empty then continue;
-    if s.Combinators.Empty then x := 1 else x := 2 * s.SimpleSelectors.Count;
+    if s.Combinators.Empty then x := 1 else x := s.SimpleSelectors.Count;
     SetLength(tmp, x);
     for i := 0 to x-1 do
       tmp[i] := TPLHTMLObjects.Create(false);
@@ -71,12 +85,53 @@ begin
       Inc(i);
     end;
 
+    i := 0;
     for c in s.Combinators do begin // na końcu po obróbce są te obiekty co trzeba
-      case c.Value of
-        scDescendant: begin
-          //...
+      if i+1 >= x then break;
+
+      for j := tmp[i+1].Count-1 downto 0 do begin
+        case c.Value of
+          scDescendant: begin
+            if not tmp[i].Empty then begin
+              r := false;
+
+              for a := 0 to tmp[i].Count-1 do begin
+                if FindInside(tmp[i+1][j], tmp[i][a]) then begin
+                  r := true;
+                  break;
+                end;
+              end;
+
+              if not r then tmp[i+1].Remove(tmp[i+1][j]);
+            end;
+          end;
+          scChild: begin
+            if tmp[i].Find(tmp[i+1][j].Parent) < 0 then tmp[i+1].Remove(tmp[i+1][j]);
+          end;
+          scGeneralSibling, scAdjascentSibling: begin
+            if not tmp[i].Empty then begin
+              r := false;
+
+              for a := 0 to tmp[i].Count-1 do begin
+                if tmp[i][a].Parent = tmp[i+1][j].Parent then begin
+                  id1 := tmp[i][a].Parent.Children.Find(tmp[i][a]);
+                  id2 := tmp[i+1][j].Parent.Children.Find(tmp[i+1][j]);
+
+                  if ((c.Value = scGeneralSibling) and (id1 < id2)) or
+                  ((c.Value = scAdjascentSibling) and (id1+1 = id2)) then begin
+                    r := true;
+                    break;
+                  end;
+                end;
+              end;
+
+              if not r then tmp[i+1].Remove(tmp[i+1][j]);
+            end;
+          end;
         end;
       end;
+
+      Inc(i);
     end;
 
     if (x > 0) then begin

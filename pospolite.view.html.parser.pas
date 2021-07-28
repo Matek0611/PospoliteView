@@ -322,6 +322,7 @@ begin
             txt := TPLHTMLObjectFactory.CreateObjectByTagName('__text_object', Result) as TPLHTMLTextObject;
             txt.Text := x;
             Result.Children.Add(txt);
+            txt.Parent := Result;
           end;
 
           //ConsumeWhitespace;
@@ -342,7 +343,10 @@ begin
           end else if not FCurrent^.IsWhiteSpace then begin
             FCurrent := s;
             obj := ReadObject(Result);
-            if Assigned(obj) then Result.Children.Add(obj);
+            if Assigned(obj) then begin
+              Result.Children.Add(obj);
+              obj.Parent := Result;
+            end;
           end;
         until eof;
       end;
@@ -446,8 +450,10 @@ begin
   ConsumeWhitespace;
   while not IsEOF do begin
     obj := ReadObject(FRoot);
-    if Assigned(obj) then
+    if Assigned(obj) then begin
       FRoot.Children.Add(obj);
+      obj.Parent := FRoot;
+    end;
     ConsumeWhitespace;
   end;
 end;
