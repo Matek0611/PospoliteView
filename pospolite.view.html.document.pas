@@ -64,13 +64,19 @@ begin
 end;
 
 function TPLHTMLDocument.GetTitle: TPLString;
+var
+  obj: TPLHTMLObject;
 begin
-
+  obj := querySelector('head > title > __text_object');
+  if Assigned(obj) then Result := obj.Text else Result := '';
 end;
 
 procedure TPLHTMLDocument.SetTitle(AValue: TPLString);
+var
+  obj: TPLHTMLObject;
 begin
-
+  obj := querySelector('head > title > __text_object');
+  if Assigned(obj) then obj.Text := AValue;
 end;
 
 function TPLHTMLDocument.GetRoot: IPLHTMLObject;

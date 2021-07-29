@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.Drawing.Renderer,
-  Pospolite.View.CSS.Declaration;
+  Pospolite.View.Drawing.Basics, Pospolite.View.CSS.Declaration;
 
 type
 
@@ -19,7 +19,7 @@ type
     procedure InitStates; override;
     procedure DoneStates; override;
   public
-    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer); virtual;
+    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer); virtual; reintroduce;
 
     function Clone: IPLHTMLObject; override;
 
@@ -52,16 +52,27 @@ type
   public
     constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
       override;
+
     function ToHTML: TPLString; override;
   end;
 
   { TPLHTMLNormalObject }
 
   TPLHTMLNormalObject = class(TPLHTMLBasicObject)
+  private
+    FAnimationOverrides: TPLCSSDeclarations;
+    FBounds: TPLRectF;
+    FStylesLists: TPLCSSDeclarationsList;
   public
     constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
       override;
+    destructor Destroy; override;
+
     function ToHTML: TPLString; override;
+
+    property Bounds: TPLRectF read FBounds write FBounds;
+    property AnimationOverrides: TPLCSSDeclarations read FAnimationOverrides;
+    property StylesLists: TPLCSSDeclarationsList read FStylesLists;
   end;
 
   { TPLHTMLTextObject }
@@ -70,6 +81,7 @@ type
   public
     constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
       override;
+
     function ToHTML: TPLString; override;
   end;
 
@@ -258,6 +270,17 @@ begin
   inherited Create(AParent, ARenderer);
 
   FName := '__normal_object';
+  FBounds := TPLRectF.Create(0, 0, 0, 0);
+  FAnimationOverrides := TPLCSSDeclarations.Create();
+  FStylesLists := TPLCSSDeclarationsList.Create(false);
+end;
+
+destructor TPLHTMLNormalObject.Destroy;
+begin
+  FAnimationOverrides.Free;
+  FStylesLists.Free;
+
+  inherited Destroy;
 end;
 
 function TPLHTMLNormalObject.ToHTML: TPLString;

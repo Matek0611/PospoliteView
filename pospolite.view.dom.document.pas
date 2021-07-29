@@ -37,7 +37,7 @@ var
   tmpe: TPLHTMLObject;
   x, i, j, a, id1, id2: TPLInt;
   c: TPLCSSSelectorCombinatorItem;
-  r: TPLBool;
+  r, w: TPLBool;
 
   procedure AddObject(a: TPLHTMLObject);
   begin
@@ -85,9 +85,14 @@ begin
       Inc(i);
     end;
 
+    w := true;
     i := 0;
     for c in s.Combinators do begin // na końcu po obróbce są te obiekty co trzeba
       if i+1 >= x then break;
+      if tmp[i].Empty then begin
+        w := false;
+        break;
+      end;
 
       for j := tmp[i+1].Count-1 downto 0 do begin
         case c.Value of
@@ -134,7 +139,7 @@ begin
       Inc(i);
     end;
 
-    if (x > 0) then begin
+    if (x > 0) and w then begin
       Dec(x);
 
       for i := 0 to tmp[x].Count-1 do begin

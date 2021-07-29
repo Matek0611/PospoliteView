@@ -158,6 +158,8 @@ type
     property Properties[AName: TPLString]: TPLCSSProperty read GetProperties;
   end;
 
+  TPLCSSDeclarationsList = class(specialize TPLObjectList<TPLCSSDeclarations>);
+
   { TPLCSSPropertyParser }
 
   TPLCSSPropertyParser = packed class sealed

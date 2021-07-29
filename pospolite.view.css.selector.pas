@@ -101,7 +101,7 @@ type
 
   { TPLCSSSelectorPseudoEvaluator }
 
-  TPLCSSSelectorPseudoEvaluator = packed class
+  TPLCSSSelectorPseudoEvaluator = packed class sealed
   public
     class function Evaluate(AList: TPLCSSSelectorExpressionItems): TPLCSSSelectorExpression;
   end;
@@ -300,7 +300,7 @@ begin
         '*=': if not p2.Exists(p1) then exit;
       end;
     end else if FSimpleSelectors[i] is TPLCSSSelectorPseudo then begin
-      //...
+      //... zrobić pseudo-elementy typu :hover, :active..., ::-webkit-scrollbar...
     end else if FSimpleSelectors[i] is TPLCSSSelectorClass then begin
       if AObject.Attributes.&Class = Default(TPLHTMLObjectAttribute) then exit;
       if not (TPLCSSSelectorClass(FSimpleSelectors[i]).Name.ToLower in AObject.Attributes.&Class.Value.ToLower.Split(' ')) then exit;
