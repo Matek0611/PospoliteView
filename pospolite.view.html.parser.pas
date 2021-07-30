@@ -319,7 +319,7 @@ begin
           end;
           x := x.Trim;
           if not x.IsEmpty then begin
-            txt := TPLHTMLObjectFactory.CreateObjectByTagName('__text_object', Result) as TPLHTMLTextObject;
+            txt := TPLHTMLObjectFactory.CreateObjectByTagName('internal_text_object', Result) as TPLHTMLTextObject;
             txt.Text := x;
             Result.Children.Add(txt);
             txt.Parent := Result;

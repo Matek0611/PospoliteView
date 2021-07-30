@@ -767,3 +767,8 @@ begin
   // ...
 end;
 
+function TPLHTMLObject.IsLink: TPLBool;
+begin
+  Result := false;
+end;
+

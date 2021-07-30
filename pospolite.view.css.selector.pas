@@ -52,7 +52,7 @@ type
     constructor Create(const AContext: TPLCSSSelectorContext); override;
     destructor Destroy; override;
 
-    function AppliesTo(constref AObject: TPLHTMLObject): TPLBool;
+    function AppliesTo(constref AObject: TPLHTMLObject; out AApplied: TPLHTMLObject): TPLBool;
 
     property SimpleSelectors: TPLCSSSimpleSelectors read FSimpleSelectors;
   end;
@@ -214,7 +214,7 @@ type
 
 implementation
 
-uses character, strutils, LazUTF8;
+uses character, strutils, LazUTF8, Pospolite.View.HTML.Basics;
 
 { TPLCSSSelectorContext }
 
@@ -254,14 +254,16 @@ begin
   inherited Destroy;
 end;
 
-function TPLCSSSimpleSelectorPattern.AppliesTo(constref AObject: TPLHTMLObject
-  ): TPLBool;
+function TPLCSSSimpleSelectorPattern.AppliesTo(constref AObject: TPLHTMLObject;
+  out AApplied: TPLHTMLObject): TPLBool;
 var
   i: SizeInt = 0;
   attr: TPLHTMLObjectAttribute;
   p1, p2: TPLString;
+  ps: TPLCSSSelectorPseudo;
 begin
   Result := false;
+  AApplied := AObject;
   if FSimpleSelectors.Empty then exit;
 
   if (FSimpleSelectors.First is TPLCSSSelectorType and
@@ -300,7 +302,31 @@ begin
         '*=': if not p2.Exists(p1) then exit;
       end;
     end else if FSimpleSelectors[i] is TPLCSSSelectorPseudo then begin
-      //... zrobić pseudo-elementy typu :hover, :active..., ::-webkit-scrollbar...
+      //... zrobić pseudo-elementy typu ::-webkit-scrollbar...
+      if not (AObject is TPLHTMLNormalObject) then exit;
+
+      ps := TPLCSSSelectorPseudo(FSimpleSelectors[i]);
+      case ps.Name.ToLower of
+        'hover': if AObject.State <> esHover then exit;
+        'active': if AObject.State <> esActive then exit;
+        'focus': if AObject.State <> esFocus then exit;
+        'focus-visible': if AObject.State <> esFocusVisible then exit;
+        'focus-within': if AObject.State <> esFocusWithin then exit;
+        'any-link': if not (AObject.IsLink and (AObject.State in [esNormal, esVisited])) then exit;
+        'link': if not AObject.IsLink or (AObject.State <> esNormal) then exit;
+        'visited': if not AObject.IsLink or (AObject.State <> esVisited) then exit;
+        'local-link': if not AObject.IsLink or not AObject.Attributes.Href.Value.Trim.StartsWith('#') then exit;
+        'root': if AObject.Name <> 'html' then exit;
+        'empty': if not AObject.Children.Empty or (TPLHTMLObjectFactory.GetTextFromTextNodes(AObject).Trim <> '') then exit;
+        'first-child': if AObject.Children.Empty then exit else AApplied := AObject.Children.First;
+        'last-child': if AObject.Children.Empty then exit else AApplied := AObject.Children.Last;
+        'only-child': if not AObject.Children.Empty then exit;
+        'nth-child': ;
+        'nth-last-child': ;
+        'nth-of-type': ;
+        'nth-last-of-type': ;
+        //...
+      end;
     end else if FSimpleSelectors[i] is TPLCSSSelectorClass then begin
       if AObject.Attributes.&Class = Default(TPLHTMLObjectAttribute) then exit;
       if not (TPLCSSSelectorClass(FSimpleSelectors[i]).Name.ToLower in AObject.Attributes.&Class.Value.ToLower.Split(' ')) then exit;

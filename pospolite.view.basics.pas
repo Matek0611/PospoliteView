@@ -436,6 +436,7 @@ type
 
     function IsVisible: TPLBool; virtual;
     function Display: TPLString; virtual;
+    function IsLink: TPLBool; virtual;
 
     property Zoom: TPLFloat read GetZoom write SetZoom;
     property State: TPLCSSElementState read GetState write SetState;
@@ -474,12 +475,12 @@ type
 
   IPLHTMLDocument = interface(IPLBasicDocument)
     ['{760627BC-3E74-4CE4-AD3B-256BDDA722B0}']
-    function GetRoot: IPLHTMLObject;
+    function GetRoot: TPLHTMLObject;
 
     function querySelector(const AQuery: TPLString; AObject: TPLHTMLObject = nil): TPLHTMLObject;
     function querySelectorAll(const AQuery: TPLString; AObject: TPLHTMLObject = nil): TPLHTMLObjects;
 
-    property Root: IPLHTMLObject read GetRoot;
+    property Root: TPLHTMLObject read GetRoot;
   end;
 
   // - Helpers - //

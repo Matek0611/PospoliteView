@@ -46,10 +46,10 @@ var
 
   procedure TrySelect(a: TPLHTMLObject);
   var
-    obj: TPLHTMLObject;
+    obj, applied: TPLHTMLObject;
   begin
     if not Assigned(a) then exit;
-    if ssp.AppliesTo(a) and (tmp[i].Find(a) < 0) then tmp[i].Add(a);
+    if ssp.AppliesTo(a, applied) and (tmp[i].Find(a) < 0) then tmp[i].Add(applied);
 
     for obj in a.Children do TrySelect(obj);
   end;

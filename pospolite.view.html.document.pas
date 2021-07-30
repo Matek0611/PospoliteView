@@ -24,7 +24,7 @@ type
     function GetMimeType: TPLString;
     function GetTitle: TPLString;
     procedure SetTitle(AValue: TPLString);
-    function GetRoot: IPLHTMLObject;
+    function GetRoot: TPLHTMLObject;
   protected
     procedure InternalLoad(ASource: TPLString);
     procedure InternalLoadOther(AData: TPLString);
@@ -45,7 +45,7 @@ type
     property Title: TPLString read GetTitle write SetTitle;
     property Content: TPLString read GetContent;
     property MimeType: TPLString read GetMimeType;
-    property Root: IPLHTMLObject read GetRoot;
+    property Root: TPLHTMLObject read GetRoot;
     property Renderer: TPLDrawingRenderer read FRenderer write FRenderer;
   end;
 
@@ -67,7 +67,7 @@ function TPLHTMLDocument.GetTitle: TPLString;
 var
   obj: TPLHTMLObject;
 begin
-  obj := querySelector('head > title > __text_object');
+  obj := querySelector('head > title > internal_text_object');
   if Assigned(obj) then Result := obj.Text else Result := '';
 end;
 
@@ -75,11 +75,11 @@ procedure TPLHTMLDocument.SetTitle(AValue: TPLString);
 var
   obj: TPLHTMLObject;
 begin
-  obj := querySelector('head > title > __text_object');
+  obj := querySelector('head > title > internal_text_object');
   if Assigned(obj) then obj.Text := AValue;
 end;
 
-function TPLHTMLDocument.GetRoot: IPLHTMLObject;
+function TPLHTMLDocument.GetRoot: TPLHTMLObject;
 begin
   Result := FRoot;
 end;
@@ -93,7 +93,7 @@ var
 begin
   if not IsLoaded then exit;
 
-  if Assigned(FRoot) then FRoot.Free;
+  if Assigned(FRoot) then FreeAndNil(FRoot);
   FRoot := TPLHTMLRootObject.Create(nil, FRenderer);
 
   if not FMimeType.Exists('html') then begin
@@ -130,7 +130,7 @@ end;
 
 destructor TPLHTMLDocument.Destroy;
 begin
-  //if Assigned(FRoot) then FRoot.Free;
+  if Assigned(FRoot) then FRoot.Free;
 
   inherited Destroy;
 end;

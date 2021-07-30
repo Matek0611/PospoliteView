@@ -104,6 +104,9 @@ type
   public
     class function CreateObjectByTagName(const ATagName: TPLString; AParent: TPLHTMLBasicObject;
       ARenderer: TPLDrawingRenderer = nil): TPLHTMLBasicObject;
+    class function GetTextNodes(AObject: TPLHTMLObject): TPLHTMLObjects;
+    class function GetTextFromTextNodes(AObject: TPLHTMLObject): TPLString;
+    class function GetTextNodesCount(AObject: TPLHTMLObject): SizeInt;
   end;
 
 implementation
@@ -209,7 +212,7 @@ constructor TPLHTMLRootObject.Create(AParent: TPLHTMLBasicObject;
 begin
   inherited Create(AParent, ARenderer);
 
-  FName := '__root_object';
+  FName := 'internal_root_object';
 end;
 
 { TPLHTMLVoidObject }
@@ -219,7 +222,7 @@ constructor TPLHTMLVoidObject.Create(AParent: TPLHTMLBasicObject;
 begin
   inherited Create(AParent, ARenderer);
 
-  FName := '__void_object';
+  FName := 'internal_void_object';
 end;
 
 function TPLHTMLVoidObject.ToHTML: TPLString;
@@ -254,7 +257,7 @@ constructor TPLHTMLTextObject.Create(AParent: TPLHTMLBasicObject;
 begin
   inherited Create(AParent, ARenderer);
 
-  FName := '__text_object';
+  FName := 'internal_text_object';
 end;
 
 function TPLHTMLTextObject.ToHTML: TPLString;
@@ -269,7 +272,7 @@ constructor TPLHTMLNormalObject.Create(AParent: TPLHTMLBasicObject;
 begin
   inherited Create(AParent, ARenderer);
 
-  FName := '__normal_object';
+  FName := 'internal_normal_object';
   FBounds := TPLRectF.Create(0, 0, 0, 0);
   FAnimationOverrides := TPLCSSDeclarations.Create();
   FStylesLists := TPLCSSDeclarationsList.Create(false);
@@ -310,13 +313,43 @@ begin
   if not Assigned(ARenderer) then ARenderer := AParent.Renderer;
 
   case ATagName.ToLower of
-    '__text_object': Result := TPLHTMLTextObject.Create(AParent, ARenderer);
+    'internal_text_object': Result := TPLHTMLTextObject.Create(AParent, ARenderer);
     'div': Result := TPLHTMLObjectDIV.Create(AParent, ARenderer);
     else begin
       Result := TPLHTMLNormalObject.Create(AParent, ARenderer);
       Result.Name := ATagName;
     end;
   end;
+end;
+
+class function TPLHTMLObjectFactory.GetTextNodes(AObject: TPLHTMLObject
+  ): TPLHTMLObjects;
+var
+  obj: TPLHTMLObject;
+begin
+  Result := TPLHTMLObjects.Create(false);
+  for obj in AObject.Children do
+    if obj is TPLHTMLTextObject then Result.Add(obj);
+end;
+
+class function TPLHTMLObjectFactory.GetTextFromTextNodes(AObject: TPLHTMLObject
+  ): TPLString;
+var
+  nodes: IPLHTMLObjects;
+  obj: TPLHTMLObject;
+begin
+  nodes := GetTextNodes(AObject);
+  Result := '';
+  for obj in nodes do Result += obj.Text;
+end;
+
+class function TPLHTMLObjectFactory.GetTextNodesCount(AObject: TPLHTMLObject
+  ): SizeInt;
+var
+  nodes: IPLHTMLObjects;
+begin
+  nodes := GetTextNodes(AObject);
+  Result := nodes.Count;
 end;
 
 end.
