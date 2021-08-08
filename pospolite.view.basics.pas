@@ -364,6 +364,7 @@ type
     procedure Draw;
     function ToHTML: TPLString;
     function ToObject: TPLHTMLObject;
+    function PositionInParent: SizeInt;
 
     property Zoom: TPLFloat read GetZoom write SetZoom;
 
@@ -433,6 +434,7 @@ type
     procedure Draw;
     function ToHTML: TPLString; virtual;
     function ToObject: TPLHTMLObject;
+    function PositionInParent: SizeInt;
 
     function IsVisible: TPLBool; virtual;
     function Display: TPLString; virtual;

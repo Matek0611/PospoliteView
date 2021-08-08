@@ -755,6 +755,18 @@ begin
   Result := self;
 end;
 
+function TPLHTMLObject.PositionInParent: SizeInt;
+var
+  i: SizeInt;
+begin
+  Result := -1;
+  if not Assigned(FParent) then exit;
+
+  for i := 0 to FParent.Children.Count-1 do begin
+    if FParent.Children[i] = self then exit(i);
+  end;
+end;
+
 function TPLHTMLObject.IsVisible: TPLBool;
 begin
   Result := false;

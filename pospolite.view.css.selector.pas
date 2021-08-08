@@ -52,7 +52,7 @@ type
     constructor Create(const AContext: TPLCSSSelectorContext); override;
     destructor Destroy; override;
 
-    function AppliesTo(constref AObject: TPLHTMLObject; out AApplied: TPLHTMLObject): TPLBool;
+    function AppliesTo(AObject: TPLHTMLObject; out AApplied: TPLHTMLObject): TPLBool;
 
     property SimpleSelectors: TPLCSSSimpleSelectors read FSimpleSelectors;
   end;
@@ -216,6 +216,17 @@ implementation
 
 uses character, strutils, LazUTF8, Pospolite.View.HTML.Basics;
 
+function BelongsToLinearFunction(a, b, v: SizeInt): TPLBool; register;
+var
+  i: SizeInt = 0;
+begin
+  if a = 0 then exit(v = b);
+
+  while v > a*i + b do Inc(i);
+
+  Result := v = a*i + b;
+end;
+
 { TPLCSSSelectorContext }
 
 constructor TPLCSSSelectorContext.Create(const ASelector, AValue: TPLString;
@@ -254,13 +265,17 @@ begin
   inherited Destroy;
 end;
 
-function TPLCSSSimpleSelectorPattern.AppliesTo(constref AObject: TPLHTMLObject;
+function TPLCSSSimpleSelectorPattern.AppliesTo(AObject: TPLHTMLObject;
   out AApplied: TPLHTMLObject): TPLBool;
 var
   i: SizeInt = 0;
   attr: TPLHTMLObjectAttribute;
   p1, p2: TPLString;
   ps: TPLCSSSelectorPseudo;
+  obj: TPLHTMLObject;
+  j: SizeInt;
+  r: TPLBool;
+  v: TPLInt;
 begin
   Result := false;
   AApplied := AObject;
@@ -318,11 +333,41 @@ begin
         'local-link': if not AObject.IsLink or not AObject.Attributes.Href.Value.Trim.StartsWith('#') then exit;
         'root': if AObject.Name <> 'html' then exit;
         'empty': if not AObject.Children.Empty or (TPLHTMLObjectFactory.GetTextFromTextNodes(AObject).Trim <> '') then exit;
-        'first-child': if AObject.Children.Empty then exit else AApplied := AObject.Children.First;
-        'last-child': if AObject.Children.Empty then exit else AApplied := AObject.Children.Last;
-        'only-child': if not AObject.Children.Empty then exit;
-        'nth-child': ;
-        'nth-last-child': ;
+        'first-child': begin
+          if not Assigned(AObject.Parent) then obj := AObject else obj := AObject.Parent;
+          r := false;
+          for j := 0 to obj.Children.Count-1 do begin
+            if (obj.Children[j].Name = AObject.Name) and (obj.Children[j] = AObject) then begin
+              r := true;
+              AApplied := obj.Children[j];
+              break;
+            end;
+            if obj.Children[j].Name = AObject.Name then break;
+          end;
+          if not r then exit;
+        end;
+        'last-child': begin
+          if not Assigned(AObject.Parent) then obj := AObject else obj := AObject.Parent;
+          r := false;
+          for j := obj.Children.Count-1 downto 0 do begin
+            if (obj.Children[j].Name = AObject.Name) and (obj.Children[j] = AObject) then begin
+              r := true;
+              AApplied := obj.Children[j];
+              break;
+            end;
+            if obj.Children[j].Name = AObject.Name then break;
+          end;
+          if not r then exit;
+        end;
+        'only-child': if AObject.Children.Count - TPLHTMLObjectFactory.GetTextNodesCount(AObject) > 0 then exit;
+        // to co niżej naprawić dla <> *, tzn. np. p:nth-child(...)
+        'nth-child':
+          if not BelongsToLinearFunction(ps.Expression.Evaluation.First, ps.Expression.Evaluation.Second, AObject.PositionInParent+1) then exit;
+        'nth-last-child': begin
+          v := 0;
+          if Assigned(AObject.Parent) then v := AObject.Parent.Children.Count;
+          if not BelongsToLinearFunction(ps.Expression.Evaluation.First, ps.Expression.Evaluation.Second, v-AObject.PositionInParent) then exit;
+        end;
         'nth-of-type': ;
         'nth-last-of-type': ;
         //...
@@ -332,6 +377,7 @@ begin
       if not (TPLCSSSelectorClass(FSimpleSelectors[i]).Name.ToLower in AObject.Attributes.&Class.Value.ToLower.Split(' ')) then exit;
     end;
 
+    AObject := AApplied;
     Inc(i);
   end;
 
@@ -574,6 +620,17 @@ var
     end;
   end;
 
+  function NewNumber: TPLString;
+  begin
+    Result := Current;
+    Inc(pos);
+
+    while not IsEOF and TCharacter.IsNumber(Current) do begin
+      Result += Current;
+      Inc(pos);
+    end;
+  end;
+
   function NewString: TPLCSSSelectorString;
   var
     q: TPLChar;
@@ -679,8 +736,47 @@ var
   end;
 
   function NewPseudoExpression: TPLCSSSelectorPseudoExpression;
+  var
+    p: SizeInt;
+    sb: TPLString = '';
+    c: TPLChar;
+    list: TPLCSSSelectorExpressionItems;
+    expr: TPLCSSSelectorExpression;
+    s: TPLCSSSelectorString;
+    pom: TPLString;
   begin
-    //Result := TPLCSSSelectorPseudoExpression.Create(TPLCSSSelectorContext.Create(), );
+    p := pos;
+    list := TPLCSSSelectorExpressionItems.Create;
+
+    if Current in ['''', '"'] then begin
+      c := Current;
+      s := NewString;
+      sb += c + s.Value + c;
+      expr := TPLCSSSelectorExpression.Create(0, 0, s.Value);
+      s.Free;
+
+      exit(TPLCSSSelectorPseudoExpression.Create(TPLCSSSelectorContext.Create(ASelector, sb, p, pos), expr.Text, expr));
+    end else begin
+      while not IsEOF do begin
+        if Current in ['+', '-'] then begin
+          list.Add(TPLCSSSelectorExpressionItem.Create(sekSignal, Current));
+          Inc(pos);
+        end else if TCharacter.IsLetter(Current) then begin
+          pom := NewIdentifier;
+          sb += pom;
+          list.Add(TPLCSSSelectorExpressionItem.Create(sekIdentifier, pom));
+        end else if TCharacter.IsDigit(Current) then begin
+          pom := NewNumber;
+          sb += pom;
+          list.Add(TPLCSSSelectorExpressionItem.Create(sekNumber, pom));
+        end else break;
+
+        ConsumeWhitespace;
+      end;
+    end;
+
+    Result := TPLCSSSelectorPseudoExpression.Create(TPLCSSSelectorContext.Create(ASelector, sb, p, pos), sb, TPLCSSSelectorPseudoEvaluator.Evaluate(list));
+    list.Free;
   end;
 
   function NewPseudo(AName: TPLString; ANamespaced: TPLBool; AKind: TPLCSSSelectorPseudoKind): TPLCSSSelectorPseudo;
