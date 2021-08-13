@@ -17,7 +17,8 @@ uses
   Pospolite.View.Drawing.ImageCodecs, Pospolite.View.Drawing.Renderer, 
   Pospolite.View.HTML.Basics, Pospolite.View.HTML.Parser, 
   Pospolite.View.HTML.Document, Pospolite.View.DOM.Document, 
-  Pospolite.View.Internet, Pospolite.View.Version, LazarusPackageIntf;
+  Pospolite.View.Internet, Pospolite.View.Version, Pospolite.View.Threads, 
+  LazarusPackageIntf;
 
 implementation
 

@@ -86,11 +86,13 @@ type
 
   end;
 
-  IPLJSRuntime = interface
+  { TPLJSRuntime }
 
-  end;
-
-  TPLJSRuntime = packed class(TInterfacedObject, IPLJSRuntime)
+  TPLJSRuntime = packed class
+  private
+    FInfo: TPLString;
+  public
+    property Info: TPLString read FInfo write FInfo;
 
   end;
 
@@ -102,16 +104,12 @@ type
     ObjectType: TPLJSGarbageCollectorObjectType;
   end;
 
-  TPLJSGarbageCollectorMarker = procedure (var ARuntime: IPLJSRuntime; AValue: TPLJSObjectValue);
-  TPLJSGarbageCollectorFinalizer = procedure (var ARuntime: IPLJSRuntime; const AFunction,
+  TPLJSGarbageCollectorMarker = procedure (var ARuntime: TPLJSRuntime; AValue: TPLJSObjectValue);
+  TPLJSGarbageCollectorFinalizer = procedure (var ARuntime: TPLJSRuntime; const AFunction,
     AThis: TPLJSObjectValue; const AArguments: array of TPLJSObjectValue);
 
-  { TPLJSObject }
+  TPLJSObject = class
 
-  TPLJSObject = class(TInterfacedObject, IPLJSBasicObject{, IPLJSEventTarget})
-  public
-    constructor Create(); virtual;
-    function AsString: TPLString; virtual;
   end;
 
 implementation
@@ -181,7 +179,7 @@ begin
     ovtInteger: Result := TPLInt(FVPtr^);
     ovtFloat: Result := TPLFloat(FVPtr^);
     ovtrString: Result := TPLString(FVPtr^);
-    ovtrObject: Result := TPLJSObject(FVPtr).AsString;
+    //ovtrObject: Result := TPLJSObject(FVPtr).AsString;
     ovtException: Result := 'exception'
     else Result := '';
   end;
@@ -191,18 +189,6 @@ function TPLJSObjectValue.AsNumber: TPLFloat;
 begin
   Result := 0;
   TryStrToFloat(AsString, Result, PLFormatSettingsDef);
-end;
-
-{ TPLJSObject }
-
-constructor TPLJSObject.Create();
-begin
-  inherited Create;
-end;
-
-function TPLJSObject.AsString: TPLString;
-begin
-  Result := 'object';
 end;
 
 end.
