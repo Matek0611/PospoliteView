@@ -28,6 +28,7 @@ type
     constructor Create(ANormalProc: TPLAsyncNormalProc); overload;
     constructor Create(ANestedProc: TPLAsyncNestedProc); overload;
 
+    class function Nullptr: TPLAsyncProc; static;
     function AsPureProc: TPLAsyncPureProc;
 
     class operator := (AObjectProc: TPLAsyncObjectProc) r: TPLAsyncProc;
@@ -78,14 +79,19 @@ type
 
   TPLAsyncTask = class(TInterfacedObject, IPLAsyncTask)
   private
+    FName: TPLString;
     FThread: TPLAsyncTaskThread;
     FRunning: TPLBool;
     FCancelled: TPLBool;
     FFailed: TPLBool;
 
     procedure Fail;
+    function GetPriority: TThreadPriority;
+    procedure SetName(AValue: TPLString);
+    procedure SetPriority(AValue: TThreadPriority);
   public
     constructor Create(AProc: TPLAsyncProc);
+    procedure BeforeDestruction; override;
 
     procedure Await(const AArguments: array of const; ANotify: TPLAsyncProc);
     procedure Async(const AArguments: array of const);
@@ -96,38 +102,42 @@ type
     function IsCancelled: TPLBool; inline;
     function IsFailed: TPLBool; inline;
     function IsSuspended: TPLBool; inline;
+
+    property Name: TPLString read FName write SetName;
+    property Priority: TThreadPriority read GetPriority write SetPriority;
   end;
 
-  // Run async task with parameters and without await
-  function Async(AProc: TPLAsyncProc; const AArguments: array of const): IPLAsyncTask; overload;
-  // Run async task without parameters and without await
-  function Async(AProc: TPLAsyncProc): IPLAsyncTask; overload; inline;
-  // Run async task with parameters and await
-  function Await(AProc, ANotify: TPLAsyncProc; const AArguments: array of const): IPLAsyncTask; overload;
-  // Run async task without parameters and with await
-  function Await(AProc, ANotify: TPLAsyncProc): IPLAsyncTask; overload; inline;
+  // Run async task with parameters and without await (assign the result value to a variable to avoid memory leaks!)
+  function Async(AProc: TPLAsyncProc; const AArguments: array of const): TPLAsyncTask; overload;
+  // Run async task without parameters and without await (assign the result value to a variable to avoid memory leaks!)
+  function Async(AProc: TPLAsyncProc): TPLAsyncTask; overload; inline;
+  // Run async task with parameters and await (assign the result value to a variable to avoid memory leaks!)
+  function Await(AProc, ANotify: TPLAsyncProc; const AArguments: array of const): TPLAsyncTask; overload;
+  // Run async task without parameters and with await (assign the result value to a variable to avoid memory leaks!)
+  function Await(AProc, ANotify: TPLAsyncProc): TPLAsyncTask; overload; inline;
 
 implementation
 
-function Async(AProc: TPLAsyncProc; const AArguments: array of const): IPLAsyncTask;
+function Async(AProc: TPLAsyncProc;
+  const AArguments: array of const): TPLAsyncTask;
 begin
   Result := TPLAsyncTask.Create(AProc);
   Result.Async(AArguments);
 end;
 
-function Async(AProc: TPLAsyncProc): IPLAsyncTask;
+function Async(AProc: TPLAsyncProc): TPLAsyncTask;
 begin
   Result := Async(AProc, []);
 end;
 
 function Await(AProc, ANotify: TPLAsyncProc;
-  const AArguments: array of const): IPLAsyncTask;
+  const AArguments: array of const): TPLAsyncTask;
 begin
   Result := TPLAsyncTask.Create(AProc);
   Result.Await(AArguments, ANotify);
 end;
 
-function Await(AProc, ANotify: TPLAsyncProc): IPLAsyncTask;
+function Await(AProc, ANotify: TPLAsyncProc): TPLAsyncTask;
 begin
   Result := Await(AProc, ANotify, []);
 end;
@@ -153,6 +163,13 @@ begin
   FObjectProc := nil;
   FNormalProc := nil;
   FNestedProc := ANestedProc;
+end;
+
+class function TPLAsyncProc.Nullptr: TPLAsyncProc;
+begin
+  Result.FObjectProc := nil;
+  Result.FNormalProc := nil;
+  Result.FNestedProc := nil;
 end;
 
 function TPLAsyncProc.AsPureProc: TPLAsyncPureProc;
@@ -201,7 +218,6 @@ begin
 
   FProc := AProc;
   FOnNotify := nil;
-  FreeOnTerminate := true;
 end;
 
 procedure TPLAsyncTaskThread.Execute;
@@ -224,6 +240,23 @@ begin
   FFailed := true;
 end;
 
+function TPLAsyncTask.GetPriority: TThreadPriority;
+begin
+  Result := FThread.Priority;
+end;
+
+procedure TPLAsyncTask.SetName(AValue: TPLString);
+begin
+  if FName = AValue then exit;
+  FName := AValue;
+end;
+
+procedure TPLAsyncTask.SetPriority(AValue: TThreadPriority);
+begin
+  if FThread.Priority = AValue then exit;
+  FThread.Priority := AValue;
+end;
+
 constructor TPLAsyncTask.Create(AProc: TPLAsyncProc);
 begin
   inherited Create;
@@ -233,6 +266,17 @@ begin
   FRunning := false;
   FCancelled := false;
   FFailed := false;
+  FName := '';
+end;
+
+procedure TPLAsyncTask.BeforeDestruction;
+begin
+  inherited BeforeDestruction;
+
+  if Assigned(FThread) then begin
+    if FRunning then FThread.Terminate;
+    FreeAndNil(FThread);
+  end;
 end;
 
 procedure TPLAsyncTask.Await(const AArguments: array of const;
@@ -241,6 +285,7 @@ var
   i: SizeInt;
 begin
   if FFailed then exit;
+  if FRunning then Cancel;
 
   try
     FRunning := true;
@@ -249,6 +294,7 @@ begin
     SetLength(FThread.FArguments, Length(AArguments));
     for i := Low(AArguments) to High(FThread.Arguments) do
       FThread.Arguments[i] := AArguments[i];
+    FThread.OnNotify := ANotify;
 
     FThread.Start;
   except
@@ -265,8 +311,8 @@ procedure TPLAsyncTask.Cancel;
 begin
   if FRunning then begin
     FThread.Terminate;
-    FCancelled := FThread.CheckTerminated;
-    if FCancelled then FRunning := false;
+    FCancelled := true;
+    FRunning := false;
   end;
 end;
 

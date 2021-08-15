@@ -18,7 +18,7 @@ uses
   Pospolite.View.HTML.Basics, Pospolite.View.HTML.Parser, 
   Pospolite.View.HTML.Document, Pospolite.View.DOM.Document, 
   Pospolite.View.Internet, Pospolite.View.Version, Pospolite.View.Threads, 
-  LazarusPackageIntf;
+  Pospolite.View.CSS.Binder, Pospolite.View.CSS.StyleSheet, LazarusPackageIntf;
 
 implementation
 

@@ -15,7 +15,7 @@
       </CodeGeneration>
     </CompilerOptions>
     <Version Major="1"/>
-    <Files Count="23">
+    <Files Count="24">
       <Item1>
         <Filename Value="pospolite.view.basics.pas"/>
         <UnitName Value="Pospolite.View.Basics"/>
@@ -106,8 +106,12 @@
       </Item22>
       <Item23>
         <Filename Value="pospolite.view.threads.pas"/>
-        <UnitName Value="pospolite.view.threads"/>
+        <UnitName Value="Pospolite.View.Threads"/>
       </Item23>
+      <Item24>
+        <Filename Value="pospolite.view.css.binder.pas"/>
+        <UnitName Value="pospolite.view.css.binder"/>
+      </Item24>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

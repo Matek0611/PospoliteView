@@ -6,7 +6,8 @@ interface
 
 uses
   Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.Drawing.Renderer,
-  Pospolite.View.Drawing.Basics, Pospolite.View.CSS.Declaration;
+  Pospolite.View.Drawing.Basics, Pospolite.View.CSS.Declaration,
+  Pospolite.View.CSS.Binder;
 
 type
 
@@ -62,7 +63,7 @@ type
   private
     FAnimationOverrides: TPLCSSDeclarations;
     FBounds: TPLRectF;
-    FStylesLists: TPLCSSDeclarationsList;
+    FBindings: TPLCSSSelectorBind;
   public
     constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
       override;
@@ -72,7 +73,7 @@ type
 
     property Bounds: TPLRectF read FBounds write FBounds;
     property AnimationOverrides: TPLCSSDeclarations read FAnimationOverrides;
-    property StylesLists: TPLCSSDeclarationsList read FStylesLists;
+    property Bindings: TPLCSSSelectorBind read FBindings;
   end;
 
   { TPLHTMLTextObject }
@@ -275,13 +276,13 @@ begin
   FName := 'internal_normal_object';
   FBounds := TPLRectF.Create(0, 0, 0, 0);
   FAnimationOverrides := TPLCSSDeclarations.Create();
-  FStylesLists := TPLCSSDeclarationsList.Create(false);
+  FBindings := TPLCSSSelectorBind.Create;
 end;
 
 destructor TPLHTMLNormalObject.Destroy;
 begin
   FAnimationOverrides.Free;
-  FStylesLists.Free;
+  FBindings.Free;
 
   inherited Destroy;
 end;
