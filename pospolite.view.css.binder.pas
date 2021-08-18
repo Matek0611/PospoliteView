@@ -13,7 +13,7 @@ type
 
   { TPLCSSSelectorBind }
 
-  TPLCSSSelectorBind = packed class(specialize TPLList<TPLCSSDeclarations>);
+  TPLCSSSelectorBind = specialize TPLList<TPLCSSDeclarations>;
 
   { TPLCSSSelectorBinder }
 

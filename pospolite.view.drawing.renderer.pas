@@ -49,9 +49,47 @@ type
 
   function NewDrawingRenderer(ACanvas: TCanvas): IPLDrawingRenderer;
 
+type
+
+  TPLDrawingRendererManager = class;
+
+  { TPLDrawingRendererThread }
+
+  TPLDrawingRendererThread = class(TThread)
+  private
+    FManager: TPLDrawingRendererManager;
+
+    procedure UpdateRendering;
+    function QueryPerformance: TPLFloat;
+  public
+    constructor Create(AManager: TPLDrawingRendererManager);
+
+    procedure Execute; override;
+  end;
+
+  TPLDrawingRendererFPS = 1..120;
+
+  { TPLDrawingRendererManager }
+
+  TPLDrawingRendererManager = class
+  private
+    FControl: TPLCustomControl;
+    FMaxFPS: TPLDrawingRendererFPS;
+    FThread: TPLDrawingRendererThread;
+  public
+    constructor Create(AControl: TPLCustomControl);
+    destructor Destroy; override;
+
+    procedure StartRendering;
+    procedure StopRendering;
+
+    property Control: TPLCustomControl read FControl write FControl;
+    property MaxFPS: TPLDrawingRendererFPS read FMaxFPS write FMaxFPS default 60;
+  end;
+
 implementation
 
-uses math, Dialogs;
+uses {$ifdef windows}Windows,{$endif} math, Dialogs;
 
 function NewDrawingMatrix: IPLDrawingMatrix; inline;
 begin
@@ -665,10 +703,100 @@ begin
   if AFreePropertiesAfterDrawing then AProperties.Free;
 end;
 
-
 function NewDrawingRenderer(ACanvas: TCanvas): IPLDrawingRenderer;
 begin
   Result := TPLDrawingRenderer.Create(ACanvas);
+end;
+
+{ TPLDrawingRendererThread }
+
+procedure TPLDrawingRendererThread.UpdateRendering;
+begin
+  if Assigned(FManager) and Assigned(FManager.FControl) then
+    FManager.FControl.Invalidate;
+end;
+
+function TPLDrawingRendererThread.QueryPerformance: TPLFloat;
+var
+  {$ifdef windows}
+    f, c: TPLInt;
+  {$else}
+   {$ifdef unix}
+    tv: TTimeVal;
+   {$else}
+    dummy: byte;
+   {$endif}
+  {$endif}
+begin
+  Result := 0;
+  f := 0;
+  c := 0;
+
+  {$ifdef windows}
+    if QueryPerformanceFrequency(f) and QueryPerformanceCounter(c) then
+      Result := c / f;
+  {$else if defined(unix)}
+    // to do
+  {$endif}
+end;
+
+constructor TPLDrawingRendererThread.Create(AManager: TPLDrawingRendererManager
+  );
+begin
+  inherited Create(true);
+
+  FManager := AManager;
+  Suspended := true;
+  FreeOnTerminate := false;
+end;
+
+procedure TPLDrawingRendererThread.Execute;
+var
+  delay, d1, d2: TPLFloat;
+begin
+  delay := 1.0 / FManager.FMaxFPS;
+  d1 := QueryPerformance;
+
+  while true do begin
+    Synchronize(@UpdateRendering);
+
+    d2 := QueryPerformance - d1;
+    while d2 < delay do begin
+      d2 := (delay - d2) * 1000;
+      Sleep(round(d2));
+      d2 := QueryPerformance - d1;
+    end;
+    d1 := QueryPerformance - d1 + delay;
+  end;
+end;
+
+{ TPLDrawingRendererManager }
+
+constructor TPLDrawingRendererManager.Create(AControl: TPLCustomControl);
+begin
+  inherited Create;
+
+  FControl := AControl;
+  FMaxFPS := 60;
+  FThread := TPLDrawingRendererThread.Create(self);
+end;
+
+destructor TPLDrawingRendererManager.Destroy;
+begin
+  StopRendering;
+  FThread.Free;
+
+  inherited Destroy;
+end;
+
+procedure TPLDrawingRendererManager.StartRendering;
+begin
+  FThread.Start;
+end;
+
+procedure TPLDrawingRendererManager.StopRendering;
+begin
+  FThread.Terminate;
 end;
 
 end.

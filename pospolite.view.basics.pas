@@ -7,7 +7,7 @@ unit Pospolite.View.Basics;
 interface
 
 uses
-  Classes, SysUtils, strutils, math, LazUTF8;
+  Classes, SysUtils, strutils, math, LazUTF8, Controls;
 
 type
 
@@ -484,6 +484,10 @@ type
 
     property Root: TPLHTMLObject read GetRoot;
   end;
+
+  { TPLCustomControl }
+
+  TPLCustomControl = class(TCustomControl);
 
   // - Helpers - //
 

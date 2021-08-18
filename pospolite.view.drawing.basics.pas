@@ -90,6 +90,8 @@ type
   operator := (p: TPLPointI) r: TPLPointF; inline;
   operator := (p: TPLPointS) r: TPLPointI; inline;
   operator := (p: TPLPointI) r: TPLPointS; inline;
+  operator * (p: TPLPointF; q: TPLFloat) r: TPLPointF; inline;
+  operator * (q: TPLFloat; p: TPLPointF) r: TPLPointF; inline;
 
 type
 
@@ -744,6 +746,16 @@ end;
 operator :=(p: TPLPointI) r: TPLPointS;
 begin
   r := TPLPointS.Create(p.X, p.Y);
+end;
+
+operator * (p: TPLPointF; q: TPLFloat) r: TPLPointF;
+begin
+  r := TPLPointF.Create(p.X * q, p.Y * q);
+end;
+
+operator * (q: TPLFloat; p: TPLPointF) r: TPLPointF;
+begin
+  r := TPLPointF.Create(p.X * q, p.Y * q);
 end;
 
 operator :=(p: TPLRectF) r: TPLRectI;

@@ -44,7 +44,7 @@ type
 
   { TPLCSSStyleSheetPartRule }
 
-  TPLCSSStyleSheetPartRule = packed class(TPLCSSStyleSheetPart)
+  TPLCSSStyleSheetPartRule = class(TPLCSSStyleSheetPart)
   private
     FNestedRules: TPLCSSStyleSheetPartRules;
     FValue: TPLCSSPropertyValue;
@@ -56,19 +56,48 @@ type
     property Value: TPLCSSPropertyValue read FValue;
   end;
 
+  { TPLCSSStyleSheet }
+
   TPLCSSStyleSheet = packed class
   private
+    FFileName: TPLString;
     FParts: TPLCSSStyleSheetParts;
   public
     constructor Create;
     destructor Destroy; override;
 
     procedure Load(ASource: TPLString);
+    procedure Import(const AURL: TPLString);
+    procedure Merge(ASheet: TPLCSSStyleSheet);
 
     property Parts: TPLCSSStyleSheetParts read FParts;
+    property FileName: TPLString read FFileName write FFileName;
+  end;
+
+  TPLCSSStyleSheetList = packed class(specialize TPLObjectList<TPLCSSStyleSheet>);
+
+  { TPLCSSStyleSheetManager }
+
+  TPLCSSStyleSheetManager = class
+  private
+    FExternals: TPLCSSStyleSheetList;
+    FInternal: TPLCSSStyleSheet;
+
+    procedure ParseStyleSheet(ASource: TPLString; var ASheet: TPLCSSStyleSheet);
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure AddToInternal(AStyle: TPLString);
+    procedure AddExternal(AURL: TPLString);
+
+    property Internal: TPLCSSStyleSheet read FInternal;
+    property Externals: TPLCSSStyleSheetList read FExternals;
   end;
 
 implementation
+
+uses Pospolite.View.CSS.Basics;
 
 { TPLCSSStyleSheetPart }
 
@@ -121,6 +150,7 @@ begin
   inherited Create;
 
   FParts := TPLCSSStyleSheetParts.Create(true);
+  FFileName := '';
 end;
 
 destructor TPLCSSStyleSheet.Destroy;
@@ -131,6 +161,54 @@ begin
 end;
 
 procedure TPLCSSStyleSheet.Load(ASource: TPLString);
+begin
+  RemoveCSSComments(ASource);
+
+
+end;
+
+procedure TPLCSSStyleSheet.Import(const AURL: TPLString);
+begin
+
+end;
+
+procedure TPLCSSStyleSheet.Merge(ASheet: TPLCSSStyleSheet);
+begin
+
+end;
+
+{ TPLCSSStyleSheetManager }
+
+procedure TPLCSSStyleSheetManager.ParseStyleSheet(ASource: TPLString;
+  var ASheet: TPLCSSStyleSheet);
+begin
+
+end;
+
+constructor TPLCSSStyleSheetManager.Create;
+begin
+  inherited Create;
+
+  FInternal := TPLCSSStyleSheet.Create;
+  FExternals := TPLCSSStyleSheetList.Create(true);
+end;
+
+destructor TPLCSSStyleSheetManager.Destroy;
+begin
+  FInternal.Free;
+  FExternals.Free;
+
+  inherited Destroy;
+end;
+
+procedure TPLCSSStyleSheetManager.AddToInternal(AStyle: TPLString);
+begin
+  ParseStyleSheet(AStyle, FInternal);
+end;
+
+procedure TPLCSSStyleSheetManager.AddExternal(AURL: TPLString);
+var
+  ss: TPLCSSStyleSheet;
 begin
 
 end;

@@ -51,6 +51,8 @@ type
     FProc: TPLAsyncProc;
     FArguments: array_of_const;
     FTask: TPLAsyncTask;
+  protected
+    procedure DoTerminate; override;
   public
     constructor CreateAsyncThread(AProc: TPLAsyncProc);
 
@@ -79,6 +81,7 @@ type
 
   TPLAsyncTask = class(TInterfacedObject, IPLAsyncTask)
   private
+    FFreeIfDone: TPLBool;
     FName: TPLString;
     FThread: TPLAsyncTaskThread;
     FRunning: TPLBool;
@@ -105,15 +108,18 @@ type
 
     property Name: TPLString read FName write SetName;
     property Priority: TThreadPriority read GetPriority write SetPriority;
+    property FreeIfDone: TPLBool read FFreeIfDone write FFreeIfDone;
   end;
 
-  // Run async task with parameters and without await (assign the result value to a variable to avoid memory leaks!)
+  TPLAsyncTaskList = TPLObjectList<TPLAsyncTask>;
+
+  // Run async task with parameters and without await
   function Async(AProc: TPLAsyncProc; const AArguments: array of const): TPLAsyncTask; overload;
-  // Run async task without parameters and without await (assign the result value to a variable to avoid memory leaks!)
+  // Run async task without parameters and without await
   function Async(AProc: TPLAsyncProc): TPLAsyncTask; overload; inline;
-  // Run async task with parameters and await (assign the result value to a variable to avoid memory leaks!)
+  // Run async task with parameters and await
   function Await(AProc, ANotify: TPLAsyncProc; const AArguments: array of const): TPLAsyncTask; overload;
-  // Run async task without parameters and with await (assign the result value to a variable to avoid memory leaks!)
+  // Run async task without parameters and with await
   function Await(AProc, ANotify: TPLAsyncProc): TPLAsyncTask; overload; inline;
 
 implementation
@@ -212,6 +218,13 @@ end;
 
 { TPLAsyncTaskThread }
 
+procedure TPLAsyncTaskThread.DoTerminate;
+begin
+  inherited DoTerminate;
+
+  if FTask.FFreeIfDone then FTask.Free;
+end;
+
 constructor TPLAsyncTaskThread.CreateAsyncThread(AProc: TPLAsyncProc);
 begin
   inherited Create(true);
@@ -266,7 +279,8 @@ begin
   FRunning := false;
   FCancelled := false;
   FFailed := false;
-  FName := '';
+  FName := 'Async Task ' + FThread.ThreadID;
+  FFreeIfDone := true;
 end;
 
 procedure TPLAsyncTask.BeforeDestruction;

@@ -15,7 +15,7 @@
       </CodeGeneration>
     </CompilerOptions>
     <Version Major="1"/>
-    <Files Count="24">
+    <Files Count="26">
       <Item1>
         <Filename Value="pospolite.view.basics.pas"/>
         <UnitName Value="Pospolite.View.Basics"/>
@@ -110,8 +110,16 @@
       </Item23>
       <Item24>
         <Filename Value="pospolite.view.css.binder.pas"/>
-        <UnitName Value="pospolite.view.css.binder"/>
+        <UnitName Value="Pospolite.View.CSS.Binder"/>
       </Item24>
+      <Item25>
+        <Filename Value="pospolite.view.css.mediaquery.pas"/>
+        <UnitName Value="Pospolite.View.CSS.MediaQuery"/>
+      </Item25>
+      <Item26>
+        <Filename Value="pospolite.view.css.animation.pas"/>
+        <UnitName Value="pospolite.view.css.animation"/>
+      </Item26>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

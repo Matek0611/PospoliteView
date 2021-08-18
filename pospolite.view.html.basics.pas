@@ -6,10 +6,13 @@ interface
 
 uses
   Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.Drawing.Renderer,
-  Pospolite.View.Drawing.Basics, Pospolite.View.CSS.Declaration,
-  Pospolite.View.CSS.Binder;
+  Pospolite.View.Drawing.Basics, Pospolite.View.CSS.Declaration;
 
 type
+
+  { TPLCSSSelectorBind }
+
+  TPLCSSSelectorBind = specialize TPLList<TPLCSSDeclarations>; // redef - avoiding circular unit reference
 
   { TPLHTMLBasicObject }
 
@@ -111,6 +114,8 @@ type
   end;
 
 implementation
+
+uses Pospolite.View.CSS.Binder;
 
 { TPLHTMLBasicObject }
 
