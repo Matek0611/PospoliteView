@@ -1,5 +1,9 @@
 ## Home
 
+<p align="center">
+  <img src="repository-open-graph-pospoliteview.png">
+</p>
+
 PospoLite View is a simple HTML viewer engine fully made in Free Pascal.
 
 ### Contents
