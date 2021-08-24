@@ -8,7 +8,7 @@ PospoLite View is a simple HTML viewer engine fully made in Free Pascal.
 - Installation
 - Components List
 - Simple Demo
-- [Wiki](wiki)
+- [Wiki](https://github.com/Matek0611/PospoliteView/wiki)
 
 ### Change Log
 
