@@ -24,7 +24,7 @@ type
     function GetDrawer: TPLDrawingDrawerDef;
 
     procedure DrawBox(ARect: TPLRectF; AProperties: TPLCSSDeclarations;
-      AHTMLObject: IPLHTMLObject = nil; ADrawOutline: TPLBool = False;
+      AHTMLObject: TPLHTMLObject = nil; ADrawOutline: TPLBool = False;
       AFreePropertiesAfterDrawing: TPLBool = False);
 
     property Drawer: TPLDrawingDrawerDef read GetDrawer;
@@ -41,7 +41,7 @@ type
     destructor Destroy; override;
 
     procedure DrawBox(ARect: TPLRectF; AProperties: TPLCSSDeclarations;
-      AHTMLObject: IPLHTMLObject = nil; ADrawOutline: TPLBool = False;
+      AHTMLObject: TPLHTMLObject = nil; ADrawOutline: TPLBool = False;
       AFreePropertiesAfterDrawing: TPLBool = False);
 
     property Drawer: TPLDrawingDrawerDef read GetDrawer;
@@ -197,7 +197,7 @@ begin
 end;
 
 function ExtractCSSGradientLinear(part: TPLCSSPropertyValuePartFunction;
-  ARect: TPLRectF; AHTMLObject: IPLHTMLObject = nil): IPLDrawingBrushGradientLinear;
+  ARect: TPLRectF; AHTMLObject: TPLHTMLObject = nil): IPLDrawingBrushGradientLinear;
 
   procedure CorrectPoint(var pt: TPLPointF);
   begin
@@ -334,7 +334,7 @@ begin
 end;
 
 function ExtractCSSBackground(AStyles: TPLCSSDeclarations; APart: TPLString;
-  ARect: TPLRectF; AHTMLObject: IPLHTMLObject = nil; AIndex: TPLInt = 0): IPLDrawingBrush; inline;
+  ARect: TPLRectF; AHTMLObject: TPLHTMLObject = nil; AIndex: TPLInt = 0): IPLDrawingBrush; inline;
 var
   prop: TPLCSSProperty;
   part: TPLCSSPropertyValuePartFunction;
@@ -357,7 +357,7 @@ begin
 end;
 
 // border and outline
-function ExtractCSSBorder(AStyles: TPLCSSDeclarations; AHTMLObject: IPLHTMLObject = nil; AType: TPLString = 'border'): TPLDrawingBorders;
+function ExtractCSSBorder(AStyles: TPLCSSDeclarations; AHTMLObject: TPLHTMLObject = nil; AType: TPLString = 'border'): TPLDrawingBorders;
 
   function GetLVal(a: TPLCSSPropertyValuePart; v: TPLString = ''; id: TPLInt = 0): TPLFloat;
   begin
@@ -664,7 +664,7 @@ begin
 end;
 
 procedure TPLDrawingRenderer.DrawBox(ARect: TPLRectF;
-  AProperties: TPLCSSDeclarations; AHTMLObject: IPLHTMLObject;
+  AProperties: TPLCSSDeclarations; AHTMLObject: TPLHTMLObject;
   ADrawOutline: TPLBool; AFreePropertiesAfterDrawing: TPLBool);
 var
   brd, brdn: TPLDrawingBorders;

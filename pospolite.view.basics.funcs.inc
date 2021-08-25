@@ -35,7 +35,7 @@ begin
   end;
 end;
 
-function ScaleLengthToScreen(AValueInPx: TPLFloat; AHTMLObject: IPLHTMLObject): TPLFloat;
+function ScaleLengthToScreen(AValueInPx: TPLFloat; AHTMLObject: TPLHTMLObject): TPLFloat;
 var
   k: TPLFloat = 1;
 begin
@@ -43,7 +43,7 @@ begin
   Result := Screen.PixelsPerInch / 96 * k * AValueInPx;
 end;
 
-function AbsoluteLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: IPLHTMLObject): TPLFloat;
+function AbsoluteLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject): TPLFloat;
 begin
   case AUnit.ToLower of
     'px': Result := AValue;
@@ -59,7 +59,7 @@ begin
   Result := ScaleLengthToScreen(Result, AHTMLObject);
 end;
 
-function RelativeLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: IPLHTMLObject): TPLFloat;
+function RelativeLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject): TPLFloat;
 begin
   case AUnit.ToLower of
     '%': ;
@@ -75,7 +75,7 @@ begin
   end;
 end;
 
-function AutoLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: IPLHTMLObject): TPLFloat;
+function AutoLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject): TPLFloat;
 begin
   case AUnit.ToLower of
     'px', 'cm', 'mm', 'q', 'in', 'pc', 'pt': Result := AbsoluteLengthToPx(AValue, AUnit, AHTMLObject);

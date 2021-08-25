@@ -5,7 +5,8 @@ unit Pospolite.View.CSS.Animation;
 interface
 
 uses
-  Classes, SysUtils, math, Pospolite.View.Basics, Pospolite.View.Drawing.Basics;
+  Classes, SysUtils, math, dateutils, Pospolite.View.Basics,
+  Pospolite.View.Drawing.Basics;
 
 type
 
@@ -28,7 +29,38 @@ type
     class function GetFunction(const AName: TPLString): TPLCSSTimingFunction;
   end;
 
+  TPLCSSTransitionEvent = procedure(const APropertyName, APseudoElement: TPLString;
+    const AElapsedTime: TPLFloat) of object;
 
+  { TPLCSSTransition }
+
+  TPLCSSTransition = packed class
+  private
+    FHTMLObject: TPLHTMLObject;
+    FOnCancel: TPLCSSTransitionEvent;
+    FOnEnd: TPLCSSTransitionEvent;
+    FOnRun: TPLCSSTransitionEvent;
+    FOnStart: TPLCSSTransitionEvent;
+    FRunning: TPLBool;
+    FStarted: TDateTime;
+    FTProp, FTPseudo: TPLString;
+
+    procedure SetHTMLObject(AValue: TPLHTMLObject);
+    procedure CleanUp;
+  public
+    constructor Create(AObject: TPLHTMLObject);
+
+    procedure Start;
+    procedure Cancel;
+    procedure &End;
+
+    property HTMLObject: TPLHTMLObject read FHTMLObject write SetHTMLObject;
+    property Running: TPLBool read FRunning;
+    property OnStart: TPLCSSTransitionEvent read FOnStart write FOnStart;
+    property OnEnd: TPLCSSTransitionEvent read FOnEnd write FOnEnd;
+    property OnRun: TPLCSSTransitionEvent read FOnRun write FOnRun;
+    property OnCancel: TPLCSSTransitionEvent read FOnCancel write FOnCancel;
+  end;
 
 implementation
 
@@ -110,6 +142,53 @@ begin
     'ease-in-out': Result := @EaseInOut;
     else Result := @Linear;
   end;
+end;
+
+{ TPLCSSTransition }
+
+procedure TPLCSSTransition.SetHTMLObject(AValue: TPLHTMLObject);
+begin
+  if FHTMLObject = AValue then exit;
+
+  CleanUp;
+  FHTMLObject := AValue;
+end;
+
+procedure TPLCSSTransition.CleanUp;
+begin
+  FHTMLObject := nil;
+
+end;
+
+constructor TPLCSSTransition.Create(AObject: TPLHTMLObject);
+begin
+  inherited Create;
+
+  HTMLObject := AObject;
+end;
+
+procedure TPLCSSTransition.Start;
+begin
+  if FRunning then exit;
+  FRunning := true;
+
+  FStarted := Now;
+end;
+
+procedure TPLCSSTransition.Cancel;
+begin
+  if not FRunning then exit;
+  FRunning := false;
+
+  if Assigned(FOnCancel) then FOnCancel(FTProp, FTPseudo, SecondOf(Now - FStarted));
+end;
+
+procedure TPLCSSTransition.&End;
+begin
+  if not FRunning then exit;
+  FRunning := false;
+
+
 end;
 
 end.

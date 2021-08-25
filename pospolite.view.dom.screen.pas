@@ -21,6 +21,7 @@ type
     function colorDepth: TPLShortInt;
     function pixelDepth: TPLShortInt; inline;
     function deviceScaleFactor: TPLFloat; inline;
+    function devicePPI: TPLInt; inline;
   end;
 
 implementation
@@ -64,6 +65,11 @@ end;
 function TPLDOMScreen.deviceScaleFactor: TPLFloat;
 begin
   Result := Screen.PixelsPerInch / 96;
+end;
+
+function TPLDOMScreen.devicePPI: TPLInt;
+begin
+  Result := Screen.PixelsPerInch;
 end;
 
 end.

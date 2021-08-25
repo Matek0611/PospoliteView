@@ -579,6 +579,11 @@ begin
   Result := FName;
 end;
 
+function TPLHTMLObject.GetNodeType: TPLHTMLObjectNodeType;
+begin
+  Result := FNodeType;
+end;
+
 function TPLHTMLObject.GetParent: TPLHTMLObject;
 begin
   Result := FParent;
@@ -609,6 +614,11 @@ begin
   AValue := AValue.Trim;
   if (FName = AValue) or (AValue.IsEmpty) then exit;
   FName := AValue;
+end;
+
+procedure TPLHTMLObject.SetNodeType(AValue: TPLHTMLObjectNodeType);
+begin
+  FNodeType := AValue;
 end;
 
 procedure TPLHTMLObject.SetParent(AValue: TPLHTMLObject);

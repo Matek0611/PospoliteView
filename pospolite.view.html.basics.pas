@@ -143,6 +143,7 @@ begin
   inherited Create(AParent);
 
   FRenderer := ARenderer;
+  FNodeType := ontDocumentFragmentNode;
 end;
 
 function TPLHTMLBasicObject.Clone: IPLHTMLObject;
@@ -219,6 +220,7 @@ begin
   inherited Create(AParent, ARenderer);
 
   FName := 'internal_root_object';
+  FNodeType := ontDocumentNode;
 end;
 
 { TPLHTMLVoidObject }
@@ -229,6 +231,7 @@ begin
   inherited Create(AParent, ARenderer);
 
   FName := 'internal_void_object';
+  FNodeType := ontDocumentFragmentNode;
 end;
 
 function TPLHTMLVoidObject.ToHTML: TPLString;
@@ -264,6 +267,7 @@ begin
   inherited Create(AParent, ARenderer);
 
   FName := 'internal_text_object';
+  FNodeType := ontTextNode;
 end;
 
 function TPLHTMLTextObject.ToHTML: TPLString;
@@ -279,6 +283,7 @@ begin
   inherited Create(AParent, ARenderer);
 
   FName := 'internal_normal_object';
+  FNodeType := ontElementNode;
   FBounds := TPLRectF.Create(0, 0, 0, 0);
   FAnimationOverrides := TPLCSSDeclarations.Create();
   FBindings := TPLCSSSelectorBind.Create;

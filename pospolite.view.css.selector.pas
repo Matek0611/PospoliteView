@@ -216,13 +216,13 @@ implementation
 
 uses character, strutils, LazUTF8, Pospolite.View.HTML.Basics;
 
-function BelongsToLinearFunction(a, b, v: SizeInt): TPLBool; register;
+function BelongsToLinearFunction(a, b, v: SizeInt): TPLBool;
 var
   i: SizeInt = 0;
 begin
   if a = 0 then exit(v = b);
 
-  while v > a*i + b do Inc(i);
+  while v <> a*i + b do Inc(i);  // poprawić!
 
   Result := v = a*i + b;
 end;

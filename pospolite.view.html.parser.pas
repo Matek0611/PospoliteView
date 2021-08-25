@@ -255,6 +255,11 @@ begin
     Result.Position := s;
     Result.Text := FSource.SubStr(s, Position - s).Trim;
     Result.Name := AName;
+    case AName of
+      'comment': Result.NodeType := ontCommentNode;
+      'DOCTYPE': Result.NodeType := ontDocumentTypeNode;
+      'CDATA': Result.NodeType := ontCDataSectionNode;
+    end;
     Inc(FCurrent, l);
   end else FErrors.Add(TPLHTMLParserError.Create(FPos, '"%s" tag ending expected but "%s" found.'.Format([AEnd, FSource.SubStr(Position, l)])));
 end;

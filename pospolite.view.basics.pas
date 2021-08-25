@@ -341,12 +341,14 @@ type
     function GetChildren: TPLHTMLObjects;
     function GetJSObject: IPLJSBasicObject;
     function GetName: TPLString;
+    function GetNodeType: TPLHTMLObjectNodeType;
     function GetParent: TPLHTMLObject;
     function GetPosition: SizeInt;
     function GetState: TPLCSSElementState;
     function GetText: TPLString;
     function GetZoom: TPLFloat;
     procedure SetName(AValue: TPLString);
+    procedure SetNodeType(AValue: TPLHTMLObjectNodeType);
     procedure SetParent(AValue: TPLHTMLObject);
     procedure SetPosition(AValue: SizeInt);
     procedure SetState(AValue: TPLCSSElementState);
@@ -379,6 +381,7 @@ type
     property Name: TPLString read GetName write SetName;
     property Text: TPLString read GetText write SetText;
     property Position: SizeInt read GetPosition write SetPosition;
+    property NodeType: TPLHTMLObjectNodeType read GetNodeType write SetNodeType;
   end;
 
   { TPLHTMLObject }
@@ -395,18 +398,21 @@ type
     FName: TPLString;
     FText: TPLString;
     FPosition: SizeInt;
+    FNodeType: TPLHTMLObjectNodeType;
   private
     function GetAttributes: TPLHTMLObjectAttributes;
     function GetChild(const AName: TPLString): TPLHTMLObject;
     function GetChildren: TPLHTMLObjects;
     function GetJSObject: IPLJSBasicObject;
     function GetName: TPLString;
+    function GetNodeType: TPLHTMLObjectNodeType;
     function GetParent: TPLHTMLObject;
     function GetPosition: SizeInt;
     function GetState: TPLCSSElementState;
     function GetText: TPLString;
     function GetZoom: TPLFloat;
     procedure SetName(AValue: TPLString);
+    procedure SetNodeType(AValue: TPLHTMLObjectNodeType);
     procedure SetParent(AValue: TPLHTMLObject);
     procedure SetPosition(AValue: SizeInt);
     procedure SetState(AValue: TPLCSSElementState);
@@ -450,6 +456,7 @@ type
     property Name: TPLString read GetName write SetName;
     property Text: TPLString read GetText write SetText;
     property Position: SizeInt read GetPosition write SetPosition;
+    property NodeType: TPLHTMLObjectNodeType read GetNodeType write SetNodeType;
   end;
 
   { IPLBasicDocument }
@@ -619,10 +626,10 @@ const
   function InRanges(const AValue: TPLInt; const ARanges: array of TPLIntRange): TPLBool;
   function fmod(a, b: TPLFloat): TPLFloat;
   function AngleDeg(AAngle: TPLFloat; const AUnit: TPLString = 'deg'): TPLFloat;
-  function ScaleLengthToScreen(AValueInPx: TPLFloat; AHTMLObject: IPLHTMLObject = nil): TPLFloat;
-  function AbsoluteLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: IPLHTMLObject = nil): TPLFloat; // px, cm, mm, Q, in, pc, pt => px (scaled)
-  function RelativeLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: IPLHTMLObject = nil): TPLFloat; // => px (scaled)
-  function AutoLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: IPLHTMLObject = nil): TPLFloat; // auto detect absolute or relative value
+  function ScaleLengthToScreen(AValueInPx: TPLFloat; AHTMLObject: TPLHTMLObject = nil): TPLFloat;
+  function AbsoluteLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject = nil): TPLFloat; // px, cm, mm, Q, in, pc, pt => px (scaled)
+  function RelativeLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject = nil): TPLFloat; // => px (scaled)
+  function AutoLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject = nil): TPLFloat; // auto detect absolute or relative value
 
   operator := (a: TPLFloat) b: TPLString;
   operator := (a: TPLString) b: TPLFloat;
