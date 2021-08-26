@@ -21,10 +21,11 @@ States: ***\^** - almost done, **\*** - in progress, **\~** - beginning*
 
 - [ ] **\^** HTML5 Parser 
 - [ ] **\^** CSS3 Selectors
+- [ ] **\^** CSS Media Query Expressions (normal and range)
 - [ ] **\*** CSS Transitions
-- [ ] **\*** CSS Media Queries Level 4
+- [ ] **\*** CSS Media Queries Level 4 & 5
 - [ ] **\~** Rendering
-- [ ] **\~** CSS Style Sheets Parsing and Management
+- [ ] **\~** Style Sheets Parsing and Management
 - [ ] **\~** Connections Between HTML, CSS and JS Objects
 
 ### Planned
