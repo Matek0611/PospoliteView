@@ -1,5 +1,5 @@
 # Pospolite View
-Pospolite View is a simple HTML viewer engine fully made in Free Pascal. Please note that currently this package **is under construction and uncompleted**.
+Pospolite View aims to be a simple HTML5 viewer engine fully made in Free Pascal. Please note that currently this package **is under construction and uncompleted**.
 
 <p align="center">
   <img src="img/logo_pospolite.png" title="Pospolite View Logo">
