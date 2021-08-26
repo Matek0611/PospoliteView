@@ -424,6 +424,27 @@ begin
     Result.Add(tab[i]);
 end;
 
+class function TPLFuncs.ToString(tab: specialize TArray<T>): TPLString;
+var
+  v: Variant;
+  i: SizeInt;
+begin
+  Result := '[';
+
+  for i := Low(tab) to High(tab) do begin
+    v := tab[i];
+
+    if VarIsStr(v) then
+      Result += '''' + v + ''''
+    else
+      Result += VarToStr(v);
+
+    if i < High(tab) then Result += ', ';
+  end;
+
+  Result += ']';
+end;
+
 { TPLParameter }
 
 class operator TPLParameter.=(a, b: TPLParameter) r: TPLBool;

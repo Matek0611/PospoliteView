@@ -118,16 +118,19 @@
       </Item25>
       <Item26>
         <Filename Value="pospolite.view.css.animation.pas"/>
-        <UnitName Value="pospolite.view.css.animation"/>
+        <UnitName Value="Pospolite.View.CSS.Animation"/>
       </Item26>
     </Files>
-    <RequiredPkgs Count="2">
+    <RequiredPkgs Count="3">
       <Item1>
-        <PackageName Value="LCL"/>
+        <PackageName Value="Printer4Lazarus"/>
       </Item1>
       <Item2>
-        <PackageName Value="FCL"/>
+        <PackageName Value="LCL"/>
       </Item2>
+      <Item3>
+        <PackageName Value="FCL"/>
+      </Item3>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>

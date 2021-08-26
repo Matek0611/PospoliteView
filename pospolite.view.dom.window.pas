@@ -1,6 +1,7 @@
 unit Pospolite.View.DOM.Window;
 
 {$mode objfpc}{$H+}
+{$modeswitch advancedrecords}
 
 interface
 
@@ -9,22 +10,32 @@ uses
 
 type
 
+  TPLDOMWindowDisplay = (wdStandalone, wdMinimalUI, wdBrowser);
+
   { TPLDOMWindow }
 
-  TPLDOMWindow = class
+  TPLDOMWindow = packed record
   private
+    FDisplay: TPLDOMWindowDisplay;
     FHook: TCustomForm;
   public
-    // helpers
-    property Hook: TCustomForm read FHook write FHook;
+    constructor Create(AHook: TCustomForm);
 
-    // from js
     function closed: boolean;
+
+    property Hook: TCustomForm read FHook write FHook;
+    property Display: TPLDOMWindowDisplay read FDisplay write FDisplay;
   end;
 
 implementation
 
 { TPLDOMWindow }
+
+constructor TPLDOMWindow.Create(AHook: TCustomForm);
+begin
+  Hook := AHook;
+  FDisplay := wdStandalone;
+end;
 
 function TPLDOMWindow.closed: boolean;
 begin

@@ -7,7 +7,8 @@ unit Pospolite.View.Basics;
 interface
 
 uses
-  Classes, SysUtils, strutils, math, LazUTF8, Controls;
+  Classes, SysUtils, strutils, math, LazUTF8, Controls, LCLType, LCLProc,
+  LCLIntf;
 
 type
 
@@ -222,12 +223,18 @@ type
     class procedure Swap(var a, b: T);
     class function NewArray(tab: array of T): specialize TArray<T>;
     class function NewList(tab: array of T): specialize TPLList<T>;
+    class function ToString(tab: specialize TArray<T>): TPLString; reintroduce;
   end;
 
   TPLStringFuncs = specialize TPLFuncs<TPLString>;
   TPLIntFuncs = specialize TPLFuncs<TPLInt>;
   TPLFloatFuncs = specialize TPLFuncs<TPLFloat>;
   TPLPointerFuncs = specialize TPLFuncs<Pointer>;
+
+  TPLStringArray = specialize TArray<TPLString>;
+  TPLIntArray = specialize TArray<TPLInt>;
+  TPLFloatArray = specialize TArray<TPLFloat>;
+  TPLPointerArray = specialize TArray<Pointer>;
 
   { TPLParameter }
 
@@ -646,7 +653,7 @@ const
 
 implementation
 
-uses Forms;
+uses Forms, variants;
 
 // - Functions and operators - //
 {$I pospolite.view.basics.funcs.inc}
