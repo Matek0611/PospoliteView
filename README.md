@@ -5,6 +5,10 @@ Pospolite View aims to be a simple HTML5 viewer engine fully made in Free Pascal
   <img src="img/logo_pospolite.png" title="Pospolite View Logo">
 </p>
 
+## Important note
+
+If you have any ideas or questions please feel free to join the [discussions](https://github.com/Matek0611/PospoliteView/discussions)!
+
 ## To Do List
 
 This list is updated as often as possible.
