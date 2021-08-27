@@ -9,6 +9,15 @@ Pospolite View aims to be a simple HTML5 viewer engine fully made in Free Pascal
 
 If you have any ideas or questions feel free to join the [discussions](https://github.com/Matek0611/PospoliteView/discussions)!
 
+## Builds Table
+
+ Code Name | Current/Planned Version | Start Date | Release Date | New Features
+:---- | -------:|:----------:|:------------:|:------------
+Iks | 0.3a / 1.0 | 09.2020 | 07.2022p | First release
+Iks | X / 1.1 | 07.2022p | 10.2022p | (new features etc.)
+
+\* **p** - planned, **a** - alpha, **b** - beta, **o** - omega
+
 ## To Do List
 
 The list is updated as often as possible.
