@@ -30,16 +30,16 @@ The list is updated as often as possible.
 
 ### Not Completed
 
-States: ***\^** - almost done, **\*** - in progress, **\~** - beginning*
+States: ***🟩** - almost done, **🟨** - in progress, **🟧** - beginning*
 
-- [ ] **\^** HTML5 Parser 
-- [ ] **\^** CSS3 Selectors
-- [ ] **\^** CSS Media Query Expressions (Normal and Range Types)
-- [ ] **\*** CSS Transitions
-- [ ] **\*** CSS Media Queries Level 4 & 5
-- [ ] **\~** Rendering
-- [ ] **\~** Style Sheets Parsing and Management
-- [ ] **\~** Connections between HTML, CSS and JS Objects
+- [ ] 🟩 HTML5 Parser 
+- [ ] 🟩 CSS3 Selectors
+- [ ] 🟩 CSS Media Query Expressions (Normal and Range Types)
+- [ ] 🟨 CSS Transitions
+- [ ] 🟨 CSS Media Queries Level 4 & 5
+- [ ] 🟧 Rendering
+- [ ] 🟧 Style Sheets Parsing and Management
+- [ ] 🟧 Connections between HTML, CSS and JS Objects
 
 ### Planned
 
