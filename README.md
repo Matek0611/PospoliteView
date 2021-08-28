@@ -37,6 +37,8 @@ States: ***🟩** - almost done, **🟨** - in progress, **🟧** - beginning*
 - [ ] 🟩 HTML5 Parser 
 - [ ] 🟩 CSS3 Selectors
 - [ ] 🟨 CSS Transitions
+- [ ] 🟧 Objects Scrolling
+- [ ] 🟧 Layouter
 - [ ] 🟧 CSS Media Queries Applying
 - [ ] 🟧 Applying 
 - [ ] 🟧 Rendering
@@ -50,8 +52,6 @@ States: ***🟩** - almost done, **🟨** - in progress, **🟧** - beginning*
 - [ ] D2D1 Image 
 - [ ] D2D1 Text 
 - [ ] JavaScript Interpreter
-- [ ] Objects Scrolling
-- [ ] Layouter
 - [ ] Audio Support
 - [ ] Video Support
 - [ ] DevTools
