@@ -1,5 +1,17 @@
 unit Pospolite.View.Basics;
 
+{
+  +-------------------------+
+  | Package: Pospolite View |
+  | Author: Matek0611       |
+  | Email: matiowo@wp.pl    |
+  | Version: 1.0p           |
+  +-------------------------+
+
+  Comments:
+  ...
+}
+
 {$mode objfpc}{$H+}
 {$modeswitch advancedrecords}
 {$modeswitch TypeHelpers}
@@ -16,6 +28,8 @@ type
 
   // Normal char
   TPLChar = char;
+  // Charset
+  TPLCharSet = set of TPLChar;
   // Complex string
   TPLString = string;
   // High precision floating number
@@ -529,6 +543,7 @@ type
     function IsEmoji(AIndex: SizeInt): TPLBool;
     function AsHex: TPLString;
     function FromHex: integer;
+    function WithoutWhitespaces: TPLString;
   end;
 
   { TPLCharHelper }

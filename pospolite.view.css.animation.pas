@@ -1,5 +1,17 @@
 unit Pospolite.View.CSS.Animation;
 
+{
+  +-------------------------+
+  | Package: Pospolite View |
+  | Author: Matek0611       |
+  | Email: matiowo@wp.pl    |
+  | Version: 1.0p           |
+  +-------------------------+
+
+  Comments:
+  ...
+}
+
 {$mode objfpc}{$H+}
 
 interface

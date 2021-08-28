@@ -1,7 +1,17 @@
 unit Pospolite.View.Drawing.DrawerD2D1.Definitions;
 
-// From Codebot Pascal Library by Anthony Walter
-// https://github.com/sysrpl/Cross.Codebot/tree/master/source
+{
+  +-------------------------+
+  | Package: Pospolite View |
+  | Author: Matek0611       |
+  | Email: matiowo@wp.pl    |
+  | Version: 1.0p           |
+  +-------------------------+
+
+  Comments:
+    From Codebot Pascal Library by Anthony Walter
+    https://github.com/sysrpl/Cross.Codebot/tree/master/source
+}
 
 {$mode delphi}{$H+}
 

@@ -106,6 +106,16 @@ begin
   TryStrToInt('$' + Self, Result);
 end;
 
+function TPLStringHelper.WithoutWhitespaces: TPLString;
+var
+  wch: TPLChar;
+begin
+  Result := self.Trim;
+
+  for wch in WhitespacesSet do
+    Result := Result.Replace(wch, #0);
+end;
+
 { TPLCharHelper }
 
 function TPLCharHelper.IsWhiteSpace: TPLBool;

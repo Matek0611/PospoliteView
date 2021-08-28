@@ -1,5 +1,17 @@
 unit Pospolite.View.CSS.Declaration;
 
+{
+  +-------------------------+
+  | Package: Pospolite View |
+  | Author: Matek0611       |
+  | Email: matiowo@wp.pl    |
+  | Version: 1.0p           |
+  +-------------------------+
+
+  Comments:
+  ...
+}
+
 {$mode objfpc}{$H+}
 
 interface
@@ -60,6 +72,8 @@ type
   public
     function SetValue(const AValue: TPLString): TPLBool; override;
     function AsString: TPLString; override;
+
+    class function IsDimensionValue(const AValue: TPLString): TPLBool;
 
     property Value: TPLFloat read FValue;
     property &Unit: TPLString read FUnit;
@@ -241,8 +255,11 @@ var
 begin
   FKind := pvpkDimension;
   FValue := 0;
+  FUnit := '';
 
   v := AValue.Trim;
+  if (v.Length < 1) or not (v[1] in ['0'..'9', '+', '-']) then exit(false);
+
   if (v.Length > 1) and not (v[2] in ['0'..'9']) then begin
     if v.StartsWith('-') or v.StartsWith('+') then v := v.Insert(2, '0') else v := '0' + v;
   end;
@@ -265,6 +282,21 @@ function TPLCSSPropertyValuePartDimension.AsString: TPLString;
 begin
   Result := FValue;
   Result += FUnit;
+end;
+
+class function TPLCSSPropertyValuePartDimension.IsDimensionValue(
+  const AValue: TPLString): TPLBool;
+var
+  d: TPLCSSPropertyValuePartDimension;
+begin
+  Result := false;
+
+  d := TPLCSSPropertyValuePartDimension.Create('x');
+  try
+    Result := d.SetValue(AValue);
+  finally
+    d.Free;
+  end;
 end;
 
 { TPLCSSPropertyValuePartFunction }

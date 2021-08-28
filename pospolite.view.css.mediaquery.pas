@@ -1,14 +1,28 @@
 unit Pospolite.View.CSS.MediaQuery;
 
+{
+  +-------------------------+
+  | Package: Pospolite View |
+  | Author: Matek0611       |
+  | Email: matiowo@wp.pl    |
+  | Version: 1.0p           |
+  +-------------------------+
+
+  Comments:
+    custom variables in media queries are not supported
+    or = comma
+}
+
 {$mode objfpc}{$H+}
 {$modeswitch advancedrecords}
+{$goto on}
 
 interface
 
 uses
   Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.CSS.Declaration,
   Pospolite.View.DOM.Screen, Pospolite.View.DOM.Window, LCLType, LCLProc,
-  LCLIntf, Printers, OSPrinters, Graphics, Forms;
+  LCLIntf, Printers, OSPrinters, Graphics, Forms, strutils;
 
 type
   // - Media Queries Level 4 and some 5 - //
@@ -72,6 +86,7 @@ type
     function IsCorrect: TPLBool; virtual;
     function Clone: TPLCSSMediaExpressionBase; virtual;
     function Evaluate(const {%H-}AEnvironment: TPLCSSMediaQueriesEnvironment): TPLBool; virtual;
+    function AsString: TPLString; virtual;
 
     property Feature: TPLString read FFeature;
   end;
@@ -91,6 +106,7 @@ type
     function Clone: TPLCSSMediaExpressionBase; override;
     function Evaluate(const AEnvironment: TPLCSSMediaQueriesEnvironment): TPLBool;
       override;
+    function AsString: TPLString; override;
 
     property Value: TPLCSSPropertyValuePart read FValue;
   end;
@@ -119,6 +135,7 @@ type
     function Clone: TPLCSSMediaExpressionBase; override;
     function Evaluate(const AEnvironment: TPLCSSMediaQueriesEnvironment): TPLBool;
       override;
+    function AsString: TPLString; override;
 
     property ValueFirst: TPLCSSPropertyValuePart read FValueFirst;
     property ValueSecond: TPLCSSPropertyValuePart read FValueSecond;
@@ -143,6 +160,9 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    function Evaluate(const AEnvironment: TPLCSSMediaQueriesEnvironment): TPLBool;
+    function AsString: TPLString;
+
     property Qualifier: TPLCSSMediaQualifier read FQualifier write FQualifier;
     property MediaType: TPLString read FMediaType write FMediaType;
     property Expressions: TPLCSSMediaExpressions read FExpressions;
@@ -153,7 +173,12 @@ type
   TPLCSSMediaQueries = class(specialize TPLObjectList<TPLCSSMediaQuery>)
   public
     function Evaluate(const AEnvironment: TPLCSSMediaQueriesEnvironment): TPLBool;
+    function AsString: TPLString;
   end;
+
+  { TPLCSSMediaQueriesList }
+
+  TPLCSSMediaQueriesList = class(specialize TPLObjectList<TPLCSSMediaQueries>);
 
   { TPLCSSMediaQueryParser }
 
@@ -203,6 +228,17 @@ function GetAutoRotationState(out pState: TAR_STATE): LongBool; stdcall; externa
 function PowerDeterminePlatformRoleEx(Version: ULONG): POWER_PLATFORM_ROLE; stdcall; external 'PowrProf.dll';
 
 {$endif}
+
+operator := (a: TPLCSSMediaExpressionRangeOperator) r: TPLString;
+begin
+  case a of
+    meroEqual: r := '=';
+    meroGreater: r := '>';
+    meroGreaterEqual: r := '>=';
+    meroLess: r := '<';
+    meroLessEqual: r := '<=';
+  end;
+end;
 
 { TPLCSSMediaQueriesEnvironment }
 
@@ -494,6 +530,11 @@ begin
   // ...
 end;
 
+function TPLCSSMediaExpressionBase.AsString: TPLString;
+begin
+  Result := '';
+end;
+
 { TPLCSSMediaExpression }
 
 constructor TPLCSSMediaExpression.Create(const AFeature: TPLString);
@@ -699,6 +740,16 @@ begin
   end;
 end;
 
+function TPLCSSMediaExpression.AsString: TPLString;
+begin
+  Result := '(' + FFeature;
+
+  if HasValue then
+    Result += ': ' + FValue.AsString;
+
+  Result += ')';
+end;
+
 { TPLCSSMediaExpressionRange }
 
 constructor TPLCSSMediaExpressionRange.Create(const AFeature: TPLString;
@@ -774,12 +825,22 @@ begin
       vf1 := TPLCSSPropertyValuePartNumber(TPLCSSPropertyValuePartFunction(FValueFirst).Arguments.First).Value /
         TPLCSSPropertyValuePartNumber(TPLCSSPropertyValuePartFunction(FValueFirst).Arguments.Last).Value;
 
-      case FOperatorFirst of
-        meroEqual: Result := vf1 = vc;
-        meroGreater: Result := vf1 > vc;
-        meroGreaterEqual: Result := vf1 >= vc;
-        meroLess: Result := vf1 < vc;
-        meroLessEqual: Result := vf1 <= vc;
+      if HasTwoSides then begin
+        case FOperatorFirst of
+          meroEqual: Result := vf1 = vc;
+          meroGreater: Result := vf1 > vc;
+          meroGreaterEqual: Result := vf1 >= vc;
+          meroLess: Result := vf1 < vc;
+          meroLessEqual: Result := vf1 <= vc;
+        end;
+      end else begin
+        case FOperatorFirst of
+          meroEqual: Result := vf1 = vc;
+          meroGreater: Result := vf1 < vc;
+          meroGreaterEqual: Result := vf1 <= vc;
+          meroLess: Result := vf1 > vc;
+          meroLessEqual: Result := vf1 >= vc;
+        end;
       end;
 
       if Result and HasTwoSides and (FValueSecond is TPLCSSPropertyValuePartFunction) and
@@ -808,12 +869,22 @@ begin
 
       vf1 := TPLCSSPropertyValuePartNumber(FValueFirst).Value;
 
-      case FOperatorFirst of
-        meroEqual: Result := vf1 = vc;
-        meroGreater: Result := vf1 > vc;
-        meroGreaterEqual: Result := vf1 >= vc;
-        meroLess: Result := vf1 < vc;
-        meroLessEqual: Result := vf1 <= vc;
+      if HasTwoSides then begin
+        case FOperatorFirst of
+          meroEqual: Result := vf1 = vc;
+          meroGreater: Result := vf1 > vc;
+          meroGreaterEqual: Result := vf1 >= vc;
+          meroLess: Result := vf1 < vc;
+          meroLessEqual: Result := vf1 <= vc;
+        end;
+      end else begin
+        case FOperatorFirst of
+          meroEqual: Result := vf1 = vc;
+          meroGreater: Result := vf1 < vc;
+          meroGreaterEqual: Result := vf1 <= vc;
+          meroLess: Result := vf1 > vc;
+          meroLessEqual: Result := vf1 >= vc;
+        end;
       end;
 
       if Result and HasTwoSides and (FValueSecond is TPLCSSPropertyValuePartNumber) then begin
@@ -850,12 +921,22 @@ begin
         vf1 := AutoLengthToPx(TPLCSSPropertyValuePartDimension(FValueFirst).Value, TPLCSSPropertyValuePartDimension(FValueFirst).&Unit, AEnvironment.DocumentBody);
       end;
 
-      case FOperatorFirst of
-        meroEqual: Result := vf1 = vc;
-        meroGreater: Result := vf1 > vc;
-        meroGreaterEqual: Result := vf1 >= vc;
-        meroLess: Result := vf1 < vc;
-        meroLessEqual: Result := vf1 <= vc;
+      if HasTwoSides then begin
+        case FOperatorFirst of
+          meroEqual: Result := vf1 = vc;
+          meroGreater: Result := vf1 > vc;
+          meroGreaterEqual: Result := vf1 >= vc;
+          meroLess: Result := vf1 < vc;
+          meroLessEqual: Result := vf1 <= vc;
+        end;
+      end else begin
+        case FOperatorFirst of
+          meroEqual: Result := vf1 = vc;
+          meroGreater: Result := vf1 < vc;
+          meroGreaterEqual: Result := vf1 <= vc;
+          meroLess: Result := vf1 > vc;
+          meroLessEqual: Result := vf1 >= vc;
+        end;
       end;
 
       if Result and HasTwoSides and (FValueSecond is TPLCSSPropertyValuePartDimension) then begin
@@ -883,6 +964,20 @@ begin
   end;
 end;
 
+function TPLCSSMediaExpressionRange.AsString: TPLString;
+begin
+  Result := '(';
+
+  if HasOneSide then begin
+    Result += FFeature + ' ' + TPLString(FOperatorFirst) + ' ' + FValueFirst.AsString;
+  end else if HasTwoSides then begin
+    Result += FValueFirst.AsString + ' ' + TPLString(FOperatorFirst) + ' ' + FFeature +
+      ' ' + TPLString(FOperatorSecond) + ' ' + FValueSecond.AsString;
+  end;
+
+  Result += ')';
+end;
+
 { TPLCSSMediaQuery }
 
 constructor TPLCSSMediaQuery.Create;
@@ -891,6 +986,7 @@ begin
 
   FExpressions := TPLCSSMediaExpressions.Create(true);
   FQualifier := mqNone;
+  FMediaType := 'all';
 end;
 
 destructor TPLCSSMediaQuery.Destroy;
@@ -900,20 +996,390 @@ begin
   inherited Destroy;
 end;
 
+function TPLCSSMediaQuery.Evaluate(
+  const AEnvironment: TPLCSSMediaQueriesEnvironment): TPLBool;
+var
+  e: TPLCSSMediaExpressionBase;
+begin
+  if AEnvironment.UsePrinter then
+    Result := FMediaType in TPLStringFuncs.NewArray(['all', 'print'])
+  else Result := FMediaType in TPLStringFuncs.NewArray(['all', 'screen']);
+
+  if Result then for e in FExpressions do begin
+    Result := Result and e.Evaluate(AEnvironment);
+    if not Result then break;
+  end;
+
+  if FQualifier = mqNot then Result := not Result;
+end;
+
+function TPLCSSMediaQuery.AsString: TPLString;
+var
+  e: TPLCSSMediaExpressionBase;
+begin
+  Result := '';
+
+  if FQualifier <> mqNone then
+  case FQualifier of
+    mqNot: Result := 'not ';
+    mqOnly: Result := 'only ';
+  end;
+
+  Result += FMediaType;
+
+  if FExpressions.Empty then exit;
+
+  Result += ' and ';
+
+  for e in FExpressions do begin
+    Result += e.AsString;
+    if e <> FExpressions.Last then Result += ' and ';
+  end;
+end;
+
 { TPLCSSMediaQueries }
 
 function TPLCSSMediaQueries.Evaluate(
   const AEnvironment: TPLCSSMediaQueriesEnvironment): TPLBool;
+var
+  q: TPLCSSMediaQuery;
 begin
+  Result := false;
 
+  for q in self do begin
+    Result := Result or q.Evaluate(AEnvironment);
+    if Result then break;
+  end;
+end;
+
+function TPLCSSMediaQueries.AsString: TPLString;
+var
+  q: TPLCSSMediaQuery;
+begin
+  Result := '';
+
+  for q in self do begin
+    Result += q.AsString;
+    if q <> Last then Result += ', ';
+  end;
+
+  Result := Result.Trim;
 end;
 
 { TPLCSSMediaQueryParser }
 
 class procedure TPLCSSMediaQueryParser.ParseMediaQueries(ASource: TPLString;
   var AMediaQueries: TPLCSSMediaQueries);
-begin
+label
+  abort_end, one_side2;
+const
+  set_idm = ['A'..'Z', 'a'..'z', '_'];
+  set_id = set_idm + ['-'];
+  set_num = ['0'..'9'];
+  set_comp = ['<', '>', '='];
+var
+  pos: SizeInt = 1;
+  q: TPLCSSMediaQuery = nil;
 
+  function IsEOF: TPLBool; inline;
+  begin
+    Result := pos > Length(ASource);
+  end;
+
+  function Current: TPLChar; inline;
+  begin
+    Result := ASource[pos];
+  end;
+
+  function Peek: TPLChar; inline;
+  begin
+    Result := ifthen(pos+1 > Length(ASource), #0, ASource[pos+1])[1];
+  end;
+
+  procedure ConsumeWhitespace;
+  begin
+    while not IsEOF and (Current in ''.WhitespacesArrayString) do Inc(pos);
+  end;
+
+  function GetIdentifier(out id: TPLString): TPLBool;
+  var
+    bpos: SizeInt;
+  begin
+    Result := true;
+    id := '';
+    bpos := pos;
+
+    if (Current in ['0'..'9']) or ((Current = '-') and (Peek in ['0'..'9'])) then
+      Result := false;
+
+    if not Result then exit;
+
+    while not IsEOF and Result do begin
+      if Current.IsWhiteSpace or (Current = ':') then break;
+      if not (Current in (set_id + set_num)) then
+        Result := false
+      else begin
+        id += Current;
+        Inc(pos);
+      end;
+    end;
+
+    if not Result then begin
+      id := '';
+      pos := bpos;
+    end;
+  end;
+
+  function GetValue(const stop_chars: TPLCharSet): TPLString;
+  begin
+    Result := '';
+
+    while not (IsEOF or (Current in stop_chars)) do begin
+      Result += Current;
+      Inc(pos);
+    end;
+  end;
+
+var
+  idn, ft, v1, v2, ops: TPLString;
+  op1, op2: TPLCSSMediaExpressionRangeOperator;
+  part1, part2: TPLCSSPropertyValuePart;
+  vf: TPLFloat;
+  arr: TPLStringArray;
+
+  procedure Abort;
+  begin
+    if Assigned(q) then q.Free;
+    if Assigned(part1) then part1.Free;
+    if Assigned(part2) then part2.Free;
+    AMediaQueries.Clear;
+  end;
+
+begin
+  ASource := ASource.Trim.ToLower.Replace('(', ' ').Replace(')', ' ') + ' ';
+
+  while not IsEOF do begin
+    ConsumeWhitespace;
+
+    q := TPLCSSMediaQuery.Create;
+
+    if GetIdentifier(idn) then begin
+      case idn of
+        'not': q.Qualifier := mqNot;
+        'only': q.Qualifier := mqOnly;
+      end;
+
+      if q.Qualifier <> mqNone then begin
+        ConsumeWhitespace;
+        GetIdentifier(idn);
+      end;
+
+      if idn in TPLStringFuncs.NewArray(['all', 'print', 'screen', 'tty', 'tv',
+        'projection', 'handheld', 'braille', 'embossed', 'aural', 'speech'])
+      then begin
+        q.MediaType := idn;
+        ConsumeWhitespace;
+        GetIdentifier(idn);
+      end;
+    end;
+
+    while not IsEOF do begin
+      if idn = '' then begin // range
+        ConsumeWhitespace;
+        v1 := GetValue(set_comp + [' ']);
+        ConsumeWhitespace;
+        if not (Current in set_comp) then goto abort_end;
+        ops := Current;
+        Inc(pos);
+        if Current in set_comp then begin
+          ops += Current;
+          Inc(pos);
+        end;
+        ConsumeWhitespace;
+        if not GetIdentifier(idn) then goto abort_end;
+        ft := idn;
+        ConsumeWhitespace;
+
+        if TryStrToFloat(v1, vf) then
+          part1 := TPLCSSPropertyValuePartNumber.Create(v1)
+        else begin
+          if v1.Exists('/') then begin
+            arr := v1.Split('/');
+            if Length(arr) <> 2 then goto abort_end;
+            arr[0] := arr[0].Trim;
+            arr[1] := arr[1].Trim;
+            vf := arr[1];
+            if vf = 0 then goto abort_end; // cannot divide by 0
+            part1 := TPLCSSPropertyValuePartFunction.Create('r(%s, %s)'.Format([arr[0], arr[1]])); // ratio function
+          end else if TPLCSSPropertyValuePartDimension.IsDimensionValue(v1) then
+            part1 := TPLCSSPropertyValuePartDimension.Create(v1)
+          else
+            part1 := TPLCSSPropertyValuePartStringOrIdentifier.Create(v1);
+        end;
+
+        if GetIdentifier(idn) then begin // only one side
+          case ops of // mirror
+            '>': op1 := meroLess;
+            '<': op1 := meroGreater;
+            '>=': op1 := meroLessEqual;
+            '<=': op1 := meroGreaterEqual;
+            else op1 := meroEqual;
+          end;
+
+          q.Expressions.Add(TPLCSSMediaExpressionRange.Create(ft, op1, part1));
+          part1 := nil;
+          part2 := nil;
+          continue;
+        end;
+
+        case ops of
+          '<': op1 := meroLess;
+          '>': op1 := meroGreater;
+          '<=': op1 := meroLessEqual;
+          '>=': op1 := meroGreaterEqual;
+          else op1 := meroEqual;
+        end;
+
+        ConsumeWhitespace;
+        if not (Current in set_comp) then goto abort_end;
+        ops := Current;
+        Inc(pos);
+        if Current in set_comp then begin
+          ops += Current;
+          Inc(pos);
+        end;
+        ConsumeWhitespace;
+
+        case ops of
+          '<': op2 := meroLess;
+          '>': op2 := meroGreater;
+          '<=': op2 := meroLessEqual;
+          '>=': op2 := meroGreaterEqual;
+          else op2 := meroEqual;
+        end;
+
+        v2 := GetValue(set_comp + [' ']);
+        ConsumeWhitespace;
+
+        if TryStrToFloat(v2, vf) then
+          part2 := TPLCSSPropertyValuePartNumber.Create(v2)
+        else begin
+          if v2.Exists('/') then begin
+            arr := v2.Split('/');
+            if Length(arr) <> 2 then goto abort_end;
+            arr[0] := arr[0].Trim;
+            arr[1] := arr[1].Trim;
+            vf := arr[1];
+            if vf = 0 then goto abort_end; // cannot divide by 0
+            part2 := TPLCSSPropertyValuePartFunction.Create('r(%s, %s)'.Format([arr[0], arr[1]])); // ratio function
+          end else if TPLCSSPropertyValuePartDimension.IsDimensionValue(v2) then
+            part2 := TPLCSSPropertyValuePartDimension.Create(v2)
+          else
+            part2 := TPLCSSPropertyValuePartStringOrIdentifier.Create(v2);
+        end;
+
+        q.Expressions.Add(TPLCSSMediaExpressionRange.Create(ft, op1, op2, part1, part2));
+        part1 := nil;
+        part2 := nil;
+        GetIdentifier(idn);
+      end else if idn <> 'and' then begin // normal or range?
+        if Current.IsWhiteSpace then begin // normal without value
+          ConsumeWhitespace;
+          if Current in set_comp then goto one_side2;
+          q.Expressions.Add(TPLCSSMediaExpression.Create(idn));
+          ConsumeWhitespace;
+        end else if Current = ':' then begin // normal with value
+          ConsumeWhitespace;
+          Inc(pos);
+          ConsumeWhitespace;
+          ft := idn;
+          v1 := GetValue(set_comp + [' ']);
+
+          if TryStrToFloat(v1, vf) then
+            part1 := TPLCSSPropertyValuePartNumber.Create(v1)
+          else begin
+            if v1.Exists('/') then begin
+              arr := v1.Split('/');
+              if Length(arr) <> 2 then goto abort_end;
+              arr[0] := arr[0].Trim;
+              arr[1] := arr[1].Trim;
+              vf := arr[1];
+              if vf = 0 then goto abort_end; // cannot divide by 0
+              part1 := TPLCSSPropertyValuePartFunction.Create('r(%s, %s)'.Format([arr[0], arr[1]])); // ratio function
+            end else if TPLCSSPropertyValuePartDimension.IsDimensionValue(v1) then
+              part1 := TPLCSSPropertyValuePartDimension.Create(v1)
+            else
+              part1 := TPLCSSPropertyValuePartStringOrIdentifier.Create(v1);
+          end;
+
+          q.Expressions.Add(TPLCSSMediaExpression.Create(ft, part1));
+          part1 := nil;
+          part2 := nil;
+        end else if Current in set_comp then begin // one-side range
+          ConsumeWhitespace;
+          one_side2:
+          ft := idn;
+          ops := Current;
+          Inc(pos);
+          if Current in set_comp then begin
+            ops += Current;
+            Inc(pos);
+          end;
+          ConsumeWhitespace;
+
+          case ops of
+            '<': op1 := meroLess;
+            '>': op1 := meroGreater;
+            '<=': op1 := meroLessEqual;
+            '>=': op1 := meroGreaterEqual;
+            else op1 := meroEqual;
+          end;
+
+          ConsumeWhitespace;
+          v1 := GetValue(set_comp + [' ']);
+
+          if TryStrToFloat(v1, vf) then
+            part1 := TPLCSSPropertyValuePartNumber.Create(v1)
+          else begin
+            if v1.Exists('/') then begin
+              arr := v1.Split('/');
+              if Length(arr) <> 2 then goto abort_end;
+              arr[0] := arr[0].Trim;
+              arr[1] := arr[1].Trim;
+              vf := arr[1];
+              if vf = 0 then goto abort_end; // cannot divide by 0
+              part1 := TPLCSSPropertyValuePartFunction.Create('r(%s, %s)'.Format([arr[0], arr[1]])); // ratio function
+            end else if TPLCSSPropertyValuePartDimension.IsDimensionValue(v1) then
+              part1 := TPLCSSPropertyValuePartDimension.Create(v1)
+            else
+              part1 := TPLCSSPropertyValuePartStringOrIdentifier.Create(v1);
+          end;
+
+          q.Expressions.Add(TPLCSSMediaExpressionRange.Create(ft, op1, part1));
+          part1 := nil;
+          part2 := nil;
+        end else goto abort_end;
+      end;
+
+      ConsumeWhitespace;
+      if (Current = ',') or (Current + Peek = 'or') then break;
+      GetIdentifier(idn);
+    end;
+
+    AMediaQueries.Add(q);
+    q := nil;
+
+    ConsumeWhitespace;
+    if Current = ',' then Inc(pos);
+    ConsumeWhitespace;
+    if Current + Peek = 'or' then Inc(pos, 2);
+    ConsumeWhitespace;
+  end;
+
+  exit;
+
+  abort_end:
+    Abort;
 end;
 
 initialization
