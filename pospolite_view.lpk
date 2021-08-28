@@ -15,7 +15,7 @@
       </CodeGeneration>
     </CompilerOptions>
     <Version Major="1"/>
-    <Files Count="26">
+    <Files Count="28">
       <Item1>
         <Filename Value="pospolite.view.basics.pas"/>
         <UnitName Value="Pospolite.View.Basics"/>
@@ -120,6 +120,14 @@
         <Filename Value="pospolite.view.css.animation.pas"/>
         <UnitName Value="Pospolite.View.CSS.Animation"/>
       </Item26>
+      <Item27>
+        <Filename Value="pospolite.view.html.scrolling.pas"/>
+        <UnitName Value="pospolite.view.html.scrolling"/>
+      </Item27>
+      <Item28>
+        <Filename Value="pospolite.view.html.layout.pas"/>
+        <UnitName Value="pospolite.view.html.layout"/>
+      </Item28>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

@@ -19,7 +19,8 @@ uses
   Pospolite.View.HTML.Document, Pospolite.View.DOM.Document, 
   Pospolite.View.Internet, Pospolite.View.Version, Pospolite.View.Threads, 
   Pospolite.View.CSS.Binder, Pospolite.View.CSS.MediaQuery, 
-  Pospolite.View.CSS.Animation, LazarusPackageIntf;
+  Pospolite.View.CSS.Animation, Pospolite.View.HTML.Scrolling, 
+  Pospolite.View.HTML.Layout, LazarusPackageIntf;
 
 implementation
 

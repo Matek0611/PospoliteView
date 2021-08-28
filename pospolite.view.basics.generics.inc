@@ -703,6 +703,7 @@ begin
   FState := esNormal;
   FZoom := 1;
   FPosition := 0;
+  FZIndex := 0;
 
   FParent := AParent;
   FAttributes := TPLHTMLObjectAttributes.Create;
@@ -813,5 +814,10 @@ end;
 function TPLHTMLObject.IsLink: TPLBool;
 begin
   Result := false;
+end;
+
+function TPLHTMLObject.PositionType: TPLString;
+begin
+  Result := 'static';
 end;
 

@@ -13,12 +13,14 @@ unit Pospolite.View.HTML.Basics;
 }
 
 {$mode objfpc}{$H+}
+{$modeswitch advancedrecords}
 
 interface
 
 uses
   Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.Drawing.Renderer,
-  Pospolite.View.Drawing.Basics, Pospolite.View.CSS.Declaration;
+  Pospolite.View.Drawing.Basics, Pospolite.View.CSS.Declaration,
+  Pospolite.View.HTML.Scrolling;
 
 type
 
@@ -30,7 +32,10 @@ type
 
   TPLHTMLBasicObject = class(TPLHTMLObject)
   private
+    FRealPos: TPLPointF;
     FRenderer: TPLDrawingRenderer;
+    FScrolling: TPLHTMLScrolling;
+    FSize: TPLRectF;
   protected
     procedure InitStates; override;
     procedure DoneStates; override;
@@ -46,12 +51,23 @@ type
     function CSS_Get(APropName: TPLString): Pointer; override;
     procedure CSS_Set(APropName: TPLString; const APropValue); override;
 
+    function GetHeight: TPLFloat; override;
+    function GetWidth: TPLFloat; override;
+    function GetTop: TPLFloat; override;
+    function GetLeft: TPLFloat; override;
+    function GetRealTop: TPLFloat; override;
+    function GetRealLeft: TPLFloat; override;
+
     procedure Draw; reintroduce;
 
     function IsVisible: TPLBool; override;
     function Display: TPLString; override;
+    function PositionType: TPLString; override;
 
     property Renderer: TPLDrawingRenderer read FRenderer;
+    property Scrolling: TPLHTMLScrolling read FScrolling;
+    property Size: TPLRectF read FSize write FSize;
+    property RealPos: TPLPointF read FRealPos write FRealPos;
   end;
 
   { TPLHTMLRootObject }
@@ -156,6 +172,7 @@ begin
 
   FRenderer := ARenderer;
   FNodeType := ontDocumentFragmentNode;
+  FScrolling := TPLHTMLScrolling.Create(self, FRenderer);
 end;
 
 function TPLHTMLBasicObject.Clone: IPLHTMLObject;
@@ -197,11 +214,42 @@ begin
 
 end;
 
+function TPLHTMLBasicObject.GetHeight: TPLFloat;
+begin
+  Result := FSize.Height;
+end;
+
+function TPLHTMLBasicObject.GetWidth: TPLFloat;
+begin
+  Result := FSize.Width;
+end;
+
+function TPLHTMLBasicObject.GetTop: TPLFloat;
+begin
+  Result := FSize.Top;
+end;
+
+function TPLHTMLBasicObject.GetLeft: TPLFloat;
+begin
+  Result := FSize.Left;
+end;
+
+function TPLHTMLBasicObject.GetRealTop: TPLFloat;
+begin
+  Result := FRealPos.Y;
+end;
+
+function TPLHTMLBasicObject.GetRealLeft: TPLFloat;
+begin
+  Result := FRealPos.X;
+end;
+
 procedure TPLHTMLBasicObject.Draw;
 begin
   if not Assigned(FRenderer) then exit;
 
   inherited Draw;
+  FScrolling.Draw;
 end;
 
 function TPLHTMLBasicObject.IsVisible: TPLBool;
@@ -220,6 +268,16 @@ var
 begin
   p := CSS_Get('display');
   if not Assigned(p) then exit('block');
+
+  Result := TPLCSSProperty(@p).AsString.ToLower;
+end;
+
+function TPLHTMLBasicObject.PositionType: TPLString;
+var
+  p: Pointer;
+begin
+  p := CSS_Get('position');
+  if not Assigned(p) then exit('static');
 
   Result := TPLCSSProperty(@p).AsString.ToLower;
 end;

@@ -421,6 +421,7 @@ type
     FPosition: SizeInt;
     FNodeType: TPLHTMLObjectNodeType;
   private
+    FZIndex: TPLInt;
     function GetAttributes: TPLHTMLObjectAttributes;
     function GetChild(const AName: TPLString): TPLHTMLObject;
     function GetChildren: TPLHTMLObjects;
@@ -463,9 +464,17 @@ type
     function ToObject: TPLHTMLObject;
     function PositionInParent: SizeInt;
 
+    function GetWidth: TPLFloat; virtual; abstract;
+    function GetHeight: TPLFloat; virtual; abstract;
+    function GetTop: TPLFloat; virtual; abstract;
+    function GetLeft: TPLFloat; virtual; abstract;
+    function GetRealTop: TPLFloat; virtual; abstract;
+    function GetRealLeft: TPLFloat; virtual; abstract;
+
     function IsVisible: TPLBool; virtual;
     function Display: TPLString; virtual;
     function IsLink: TPLBool; virtual;
+    function PositionType: TPLString; virtual;
 
     property Zoom: TPLFloat read GetZoom write SetZoom;
     property State: TPLCSSElementState read GetState write SetState;
@@ -478,6 +487,7 @@ type
     property Text: TPLString read GetText write SetText;
     property Position: SizeInt read GetPosition write SetPosition;
     property NodeType: TPLHTMLObjectNodeType read GetNodeType write SetNodeType;
+    property ZIndex: TPLInt read FZIndex write FZIndex;
   end;
 
   { IPLBasicDocument }
