@@ -27,6 +27,8 @@ The list is updated as often as possible.
 - [x] Threads (Async, Await)
 - [x] Version Info
 - [x] Logo
+- [x] CSS Media Query Expressions (Normal and Range Types) 
+- [x] CSS Media Queries Parsing and Evaluating (Level 4 & a bit 5)
 
 ### Not Completed
 
@@ -34,9 +36,9 @@ States: ***🟩** - almost done, **🟨** - in progress, **🟧** - beginning*
 
 - [ ] 🟩 HTML5 Parser 
 - [ ] 🟩 CSS3 Selectors
-- [ ] 🟩 CSS Media Query Expressions (Normal and Range Types)
 - [ ] 🟨 CSS Transitions
-- [ ] 🟨 CSS Media Queries Level 4 & 5
+- [ ] 🟧 CSS Media Queries Applying
+- [ ] 🟧 Applying 
 - [ ] 🟧 Rendering
 - [ ] 🟧 Style Sheets Parsing and Management
 - [ ] 🟧 Connections between HTML, CSS and JS Objects
