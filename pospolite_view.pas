@@ -20,7 +20,7 @@ uses
   Pospolite.View.Internet, Pospolite.View.Version, Pospolite.View.Threads, 
   Pospolite.View.CSS.Binder, Pospolite.View.CSS.MediaQuery, 
   Pospolite.View.CSS.Animation, Pospolite.View.HTML.Scrolling, 
-  Pospolite.View.HTML.Layout, LazarusPackageIntf;
+  Pospolite.View.HTML.Layout, Pospolite.View.HTML.Events, LazarusPackageIntf;
 
 implementation
 

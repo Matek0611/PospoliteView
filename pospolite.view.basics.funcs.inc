@@ -84,6 +84,12 @@ begin
   end;
 end;
 
+function ObjectToVariant(AObject: TObject): Variant;
+begin
+  tvardata(Result).vtype := varbyref or varvariant;
+  tvardata(Result).vpointer := AObject;
+end;
+
 operator := (a: TPLFloat) b: TPLString;
 begin
   b := FloatToStr(a, PLFormatSettingsDef);

@@ -234,10 +234,10 @@ type
   private type
     ListHelper = specialize TPLList<T>;
   public
-    class procedure Swap(var a, b: T);
-    class function NewArray(tab: array of T): specialize TArray<T>;
-    class function NewList(tab: array of T): specialize TPLList<T>;
-    class function ToString(tab: specialize TArray<T>): TPLString; reintroduce;
+    class procedure Swap(var A, B: T);
+    class function NewArray(ATab: array of T): specialize TArray<T>;
+    class function NewList(ATab: array of T): specialize TPLList<T>;
+    class function ToString(ATab: specialize TArray<T>): TPLString; reintroduce;
   end;
 
   TPLStringFuncs = specialize TPLFuncs<TPLString>;
@@ -245,10 +245,32 @@ type
   TPLFloatFuncs = specialize TPLFuncs<TPLFloat>;
   TPLPointerFuncs = specialize TPLFuncs<Pointer>;
 
+  generic TPLFuncsOfClassComparator<T: class> = function(const AObject: T;
+    const ACriteria: Variant): TPLSign of object;
+
+  generic TPLFuncsOfClass<T: class> = packed class sealed
+  private type
+    ListHelper = specialize TPLObjectList<T>;
+    ComparatorHelper = specialize TPLFuncsOfClassComparator<T>;
+  private
+    class function DefaultComparator(const AObject: T; const ACriteria: Variant): TPLSign;
+    class function InternalBinarySearch(AList: ListHelper; const ACriteria: Variant;
+      c: ComparatorHelper; ALeft, ARight: SizeInt): SizeInt;
+    class function InternalSearch(AList: ListHelper; const ACriteria: Variant;
+      c: ComparatorHelper): SizeInt;
+  public
+    class procedure Swap(var A, B: T);
+    class function NewList(ATab: array of T; const AFreeObjects: TPLBool = true): specialize TPLObjectList<T>;
+    // Fast (exponential) search works if only list is sorted!
+    class function FastSearch(AList: specialize TPLObjectList<T>; const ACriteria: Variant;
+      ACustomComparator: specialize TPLFuncsOfClassComparator<T> = nil): SizeInt;
+  end;
+
   TPLStringArray = specialize TArray<TPLString>;
   TPLIntArray = specialize TArray<TPLInt>;
   TPLFloatArray = specialize TArray<TPLFloat>;
   TPLPointerArray = specialize TArray<Pointer>;
+  TPLConstArray = specialize TArray<TVarRec>;
 
   { TPLParameter }
 
@@ -420,8 +442,11 @@ type
     FText: TPLString;
     FPosition: SizeInt;
     FNodeType: TPLHTMLObjectNodeType;
+  protected type
+    TArrayOfConst = array of TVarRec;
   private
     FZIndex: TPLInt;
+
     function GetAttributes: TPLHTMLObjectAttributes;
     function GetChild(const AName: TPLString): TPLHTMLObject;
     function GetChildren: TPLHTMLObjects;
@@ -464,12 +489,14 @@ type
     function ToObject: TPLHTMLObject;
     function PositionInParent: SizeInt;
 
-    function GetWidth: TPLFloat; virtual; abstract;
-    function GetHeight: TPLFloat; virtual; abstract;
-    function GetTop: TPLFloat; virtual; abstract;
-    function GetLeft: TPLFloat; virtual; abstract;
-    function GetRealTop: TPLFloat; virtual; abstract;
-    function GetRealLeft: TPLFloat; virtual; abstract;
+    function GetWidth: TPLFloat; virtual;
+    function GetHeight: TPLFloat; virtual;
+    function GetTop: TPLFloat; virtual;
+    function GetLeft: TPLFloat; virtual;
+    function GetRealTop: TPLFloat; virtual;
+    function GetRealLeft: TPLFloat; virtual;
+    function GetElementTarget: Pointer; virtual;
+    function GetArgsFor(const AType: TPLString): TArrayOfConst;
 
     function IsVisible: TPLBool; virtual;
     function Display: TPLString; virtual;
@@ -662,6 +689,7 @@ const
   function AbsoluteLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject = nil): TPLFloat; // px, cm, mm, Q, in, pc, pt => px (scaled)
   function RelativeLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject = nil): TPLFloat; // => px (scaled)
   function AutoLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject = nil): TPLFloat; // auto detect absolute or relative value
+  function ObjectToVariant(AObject: TObject): Variant;
 
   operator := (a: TPLFloat) b: TPLString;
   operator := (a: TPLString) b: TPLFloat;

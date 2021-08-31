@@ -20,7 +20,7 @@ interface
 uses
   Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.Drawing.Renderer,
   Pospolite.View.Drawing.Basics, Pospolite.View.CSS.Declaration,
-  Pospolite.View.HTML.Scrolling;
+  Pospolite.View.HTML.Scrolling, Pospolite.View.HTML.Events;
 
 type
 
@@ -32,6 +32,7 @@ type
 
   TPLHTMLBasicObject = class(TPLHTMLObject)
   private
+    FEventTarget: TPLHTMLEventTarget;
     FRealPos: TPLPointF;
     FRenderer: TPLDrawingRenderer;
     FScrolling: TPLHTMLScrolling;
@@ -39,8 +40,29 @@ type
   protected
     procedure InitStates; override;
     procedure DoneStates; override;
+  protected
+    // https://developer.mozilla.org/en-US/docs/Web/Events
+    procedure InitEventTarget; virtual;
+    procedure EventOnClick(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnDblClick(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnTripleClick(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnQuadClick(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnContextMenu(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnKeyDown(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnKeyPress(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnKeyUp(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnMouseWheel(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnMouseEnter(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnMouseLeave(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnMouseUp(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnMouseDown(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnMouseOver(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnMouseOut(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnFocus(const {%H-}AArguments: array of const); virtual;
+    procedure EventOnBlur(const {%H-}AArguments: array of const); virtual;
   public
     constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer); virtual; reintroduce;
+    destructor Destroy; override;
 
     function Clone: IPLHTMLObject; override;
 
@@ -57,6 +79,8 @@ type
     function GetLeft: TPLFloat; override;
     function GetRealTop: TPLFloat; override;
     function GetRealLeft: TPLFloat; override;
+    function GetElementTarget: Pointer; override;
+    function GetArgsFor(const AType: TPLString): TArrayOfConst;
 
     procedure Draw; reintroduce;
 
@@ -68,6 +92,7 @@ type
     property Scrolling: TPLHTMLScrolling read FScrolling;
     property Size: TPLRectF read FSize write FSize;
     property RealPos: TPLPointF read FRealPos write FRealPos;
+    property EventTarget: TPLHTMLEventTarget read FEventTarget;
   end;
 
   { TPLHTMLRootObject }
@@ -143,7 +168,7 @@ type
 
 implementation
 
-uses Pospolite.View.CSS.Binder;
+uses Controls, Variants, Pospolite.View.Threads, Pospolite.View.CSS.Binder;
 
 { TPLHTMLBasicObject }
 
@@ -165,6 +190,126 @@ begin
     TPLCSSDeclarations(FStates[s]).Free;
 end;
 
+procedure TPLHTMLBasicObject.InitEventTarget;
+
+  procedure AddEventListener(const AType: TPLString; const AEvent: TPLAsyncProc); inline;
+  begin
+    FEventTarget.AddEventListener(AType, TPLHTMLEventListener.Create(
+      TPLHTMLEvent.Create(AEvent, self, AType, GetDefaultEventProperties(AType)))
+    );
+  end;
+
+begin
+  // basic events (more in the future)
+  AddEventListener('click', @EventOnClick);
+  AddEventListener('dblclick', @EventOnDblClick);
+  AddEventListener('tripleclick', @EventOnTripleClick);
+  AddEventListener('quadclick', @EventOnQuadClick);
+  AddEventListener('contextmenu', @EventOnContextMenu);
+  AddEventListener('keydown', @EventOnKeyDown);
+  AddEventListener('keypress', @EventOnKeyPress);
+  AddEventListener('keyup', @EventOnKeyUp);
+  AddEventListener('mousewheel', @EventOnMouseWheel);
+  AddEventListener('mouseenter', @EventOnMouseEnter);
+  AddEventListener('mouseleave', @EventOnMouseLeave);
+  AddEventListener('mouseup', @EventOnMouseUp);
+  AddEventListener('mousedown', @EventOnMouseDown);
+  AddEventListener('mouseover', @EventOnMouseOver);
+  AddEventListener('mouseout', @EventOnMouseOut);
+  AddEventListener('focus', @EventOnFocus);
+  AddEventListener('blur', @EventOnBlur);
+end;
+
+procedure TPLHTMLBasicObject.EventOnClick(const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnDblClick(const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnTripleClick(
+  const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnQuadClick(const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnContextMenu(
+  const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnKeyDown(const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnKeyPress(const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnKeyUp(const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnMouseWheel(
+  const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnMouseEnter(
+  const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnMouseLeave(
+  const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnMouseUp(const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnMouseDown(const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnMouseOver(const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnMouseOut(const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnFocus(const AArguments: array of const);
+begin
+
+end;
+
+procedure TPLHTMLBasicObject.EventOnBlur(const AArguments: array of const);
+begin
+
+end;
+
 constructor TPLHTMLBasicObject.Create(AParent: TPLHTMLBasicObject;
   ARenderer: TPLDrawingRenderer);
 begin
@@ -173,6 +318,17 @@ begin
   FRenderer := ARenderer;
   FNodeType := ontDocumentFragmentNode;
   FScrolling := TPLHTMLScrolling.Create(self, FRenderer);
+
+  FEventTarget := TPLHTMLEventTarget.Create(self);
+  InitEventTarget;
+end;
+
+destructor TPLHTMLBasicObject.Destroy;
+begin
+  FreeAndNil(FEventTarget);
+  FreeAndNil(FScrolling);
+
+  inherited Destroy;
 end;
 
 function TPLHTMLBasicObject.Clone: IPLHTMLObject;
@@ -242,6 +398,22 @@ end;
 function TPLHTMLBasicObject.GetRealLeft: TPLFloat;
 begin
   Result := FRealPos.X;
+end;
+
+function TPLHTMLBasicObject.GetElementTarget: Pointer;
+begin
+  Result := FEventTarget;
+end;
+
+function TPLHTMLBasicObject.GetArgsFor(const AType: TPLString): TArrayOfConst;
+begin
+  // for mouse (temporary version)
+  SetLength(Result, 2);
+  Result[0].VType := vtInt64;
+  New(Result[0].VInt64);
+  Result[0].VInt64^ := Mouse.CursorPos.x;
+  New(Result[1].VInt64);
+  Result[1].VInt64^ := Mouse.CursorPos.y;
 end;
 
 procedure TPLHTMLBasicObject.Draw;

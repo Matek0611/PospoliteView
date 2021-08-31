@@ -396,53 +396,123 @@ end;
 
 { TPLFuncs }
 
-class procedure TPLFuncs.Swap(var a, b: T);
+class procedure TPLFuncs.Swap(var A, B: T);
 var
   tmp: T;
 begin
-  tmp := a;
-  a := b;
-  b := tmp;
+  tmp := A;
+  A := B;
+  B := tmp;
 end;
 
-class function TPLFuncs.NewArray(tab: array of T): specialize TArray<T>;
+class function TPLFuncs.NewArray(ATab: array of T): specialize TArray<T>;
 var
   i: TPLInt;
 begin
-  SetLength(Result, Length(tab));
-  for i := Low(tab) to High(tab) do
-    Result[i] := tab[i];
+  SetLength(Result, Length(ATab));
+  for i := Low(ATab) to High(ATab) do
+    Result[i] := ATab[i];
 end;
 
-class function TPLFuncs.NewList(tab: array of T): specialize TPLList<T>;
+class function TPLFuncs.NewList(ATab: array of T): specialize TPLList<T>;
 var
   i: SizeInt;
 begin
   Result := ListHelper.Create;
 
-  for i := Low(tab) to High(tab) do
-    Result.Add(tab[i]);
+  for i := Low(ATab) to High(ATab) do
+    Result.Add(ATab[i]);
 end;
 
-class function TPLFuncs.ToString(tab: specialize TArray<T>): TPLString;
+class function TPLFuncs.ToString(ATab: specialize TArray<T>): TPLString;
 var
   v: Variant;
   i: SizeInt;
 begin
   Result := '[';
 
-  for i := Low(tab) to High(tab) do begin
-    v := tab[i];
+  for i := Low(ATab) to High(ATab) do begin
+    v := ATab[i];
 
     if VarIsStr(v) then
       Result += '''' + v + ''''
     else
       Result += VarToStr(v);
 
-    if i < High(tab) then Result += ', ';
+    if i < High(ATab) then Result += ', ';
   end;
 
   Result += ']';
+end;
+
+{ TPLFuncsOfClass }
+
+class function TPLFuncsOfClass.DefaultComparator(const AObject: T;
+  const ACriteria: Variant): TPLSign;
+begin
+  case VarCompareValue(ObjectToVariant(AObject), ACriteria) of
+    vrEqual: Result := 0;
+    vrLessThan: Result := -1;
+    else Result := 1;
+  end;
+end;
+
+class function TPLFuncsOfClass.InternalBinarySearch(AList: ListHelper;
+  const ACriteria: Variant; c: ComparatorHelper; ALeft, ARight: SizeInt): SizeInt;
+var
+  m: SizeInt;
+begin
+  if ARight >= ALeft then begin
+    m := ALeft + (ARight - ALeft) div 2;
+
+    if c(AList[m], ACriteria) = 0 then exit(m);
+    if c(AList[m], ACriteria) = -1 then exit(InternalBinarySearch(AList, ACriteria, c, ALeft, m - 1));
+
+    exit(InternalBinarySearch(AList, ACriteria, c, m + 1, ARight));
+  end;
+
+  Result := -1;
+end;
+
+class function TPLFuncsOfClass.InternalSearch(AList: ListHelper; const ACriteria: Variant;
+  c: ComparatorHelper): SizeInt;
+var
+  bound: SizeInt = 1;
+begin
+  Result := -1;
+
+  if AList.Count = 0 then exit;
+
+  while (bound < AList.Count) and (c(AList[bound], ACriteria) = -1) do bound *= 2;
+
+  Result := InternalBinarySearch(AList, ACriteria, c, bound div 2, min(bound + 1, AList.Count - 1));
+end;
+
+class procedure TPLFuncsOfClass.Swap(var A, B: T);
+var
+  tmp: T;
+begin
+  tmp := A;
+  A := B;
+  B := A;
+end;
+
+class function TPLFuncsOfClass.NewList(ATab: array of T; const AFreeObjects: TPLBool): specialize TPLObjectList<T>;
+var
+  i: SizeInt;
+begin
+  Result := ListHelper.Create(AFreeObjects);
+
+  for i := Low(ATab) to High(ATab) do
+    Result.Add(ATab[i]);
+end;
+
+class function TPLFuncsOfClass.FastSearch(AList: specialize TPLObjectList<T>;
+  const ACriteria: Variant; ACustomComparator: specialize TPLFuncsOfClassComparator<T>): SizeInt;
+begin
+  if not Assigned(ACustomComparator) then ACustomComparator := @DefaultComparator;
+
+  Result := InternalSearch(AList, ACriteria, ACustomComparator);
 end;
 
 { TPLParameter }
@@ -797,6 +867,46 @@ begin
   for i := 0 to FParent.Children.Count-1 do begin
     if FParent.Children[i] = self then exit(i);
   end;
+end;
+
+function TPLHTMLObject.GetWidth: TPLFloat;
+begin
+  Result := 0;
+end;
+
+function TPLHTMLObject.GetHeight: TPLFloat;
+begin
+  Result := 0;
+end;
+
+function TPLHTMLObject.GetTop: TPLFloat;
+begin
+  Result := 0;
+end;
+
+function TPLHTMLObject.GetLeft: TPLFloat;
+begin
+  Result := 0;
+end;
+
+function TPLHTMLObject.GetRealTop: TPLFloat;
+begin
+  Result := 0;
+end;
+
+function TPLHTMLObject.GetRealLeft: TPLFloat;
+begin
+  Result := 0;
+end;
+
+function TPLHTMLObject.GetElementTarget: Pointer;
+begin
+  Result := nil;
+end;
+
+function TPLHTMLObject.GetArgsFor(const AType: TPLString): TArrayOfConst;
+begin
+  SetLength(Result, 0);
 end;
 
 function TPLHTMLObject.IsVisible: TPLBool;

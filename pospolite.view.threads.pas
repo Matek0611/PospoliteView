@@ -49,6 +49,7 @@ type
     class operator := (AProc: TPLAsyncProc) r: TPLAsyncObjectProc;
     class operator := (AProc: TPLAsyncProc) r: TPLAsyncNormalProc;
     class operator := (AProc: TPLAsyncProc) r: TPLAsyncNestedProc;
+    class operator = (a, b: TPLAsyncProc) r: TPLBool;
   end;
 
   TPLAsyncTask = class;
@@ -226,6 +227,12 @@ end;
 class operator TPLAsyncProc.:=(AProc: TPLAsyncProc) r: TPLAsyncNestedProc;
 begin
   r := AProc.FNestedProc;
+end;
+
+class operator TPLAsyncProc.=(a, b: TPLAsyncProc) r: TPLBool;
+begin
+  r := (@a.FNestedProc = @b.FNestedProc) and (@a.FNormalProc = @b.FNormalProc) and
+    (@a.FObjectProc = @b.FObjectProc);
 end;
 
 { TPLAsyncTaskThread }
