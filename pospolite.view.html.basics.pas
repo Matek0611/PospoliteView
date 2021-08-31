@@ -40,6 +40,7 @@ type
   protected
     procedure InitStates; override;
     procedure DoneStates; override;
+    procedure DoDraw; override;
   protected
     // https://developer.mozilla.org/en-US/docs/Web/Events
     procedure InitEventTarget; virtual;
@@ -188,6 +189,12 @@ var
 begin
   for s in TPLCSSElementState do
     TPLCSSDeclarations(FStates[s]).Free;
+end;
+
+procedure TPLHTMLBasicObject.DoDraw;
+begin
+  inherited DoDraw;
+  FScrolling.Draw;
 end;
 
 procedure TPLHTMLBasicObject.InitEventTarget;
@@ -421,7 +428,6 @@ begin
   if not Assigned(FRenderer) then exit;
 
   inherited Draw;
-  FScrolling.Draw;
 end;
 
 function TPLHTMLBasicObject.IsVisible: TPLBool;

@@ -15,7 +15,7 @@
       </CodeGeneration>
     </CompilerOptions>
     <Version Major="1"/>
-    <Files Count="29">
+    <Files Count="32">
       <Item1>
         <Filename Value="pospolite.view.basics.pas"/>
         <UnitName Value="Pospolite.View.Basics"/>
@@ -132,6 +132,19 @@
         <Filename Value="pospolite.view.html.events.pas"/>
         <UnitName Value="Pospolite.View.HTML.Events"/>
       </Item29>
+      <Item30>
+        <Filename Value="pospolite.view.frame.pas"/>
+        <UnitName Value="Pospolite.View.Frame"/>
+      </Item30>
+      <Item31>
+        <Filename Value="pospolite.view.registerall.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="Pospolite.View.RegisterAll"/>
+      </Item31>
+      <Item32>
+        <Filename Value="pospolite.view.css.stylesheet.pas"/>
+        <UnitName Value="Pospolite.View.CSS.StyleSheet"/>
+      </Item32>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

@@ -841,10 +841,13 @@ begin
 end;
 
 procedure TPLHTMLObject.Draw;
+var
+  obj: TPLHTMLObject;
 begin
   if not isVisible or (Display = 'none') then exit;
 
   DoDraw;
+  for obj in FChildren do obj.DoDraw;
 end;
 
 function TPLHTMLObject.ToHTML: TPLString;

@@ -6,7 +6,8 @@ interface
 
 uses
   Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.HTML.Document,
-  Pospolite.View.CSS.Declaration, Pospolite.View.CSS.Selector;
+  Pospolite.View.CSS.Declaration, Pospolite.View.CSS.Selector,
+  Pospolite.View.CSS.MediaQuery;
 
 type
 
@@ -93,6 +94,8 @@ type
 
     property Internal: TPLCSSStyleSheet read FInternal;
     property Externals: TPLCSSStyleSheetList read FExternals;
+  public
+    Environment: TPLCSSMediaQueriesEnvironment;
   end;
 
 implementation

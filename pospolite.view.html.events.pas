@@ -114,8 +114,9 @@ type
   private
     FListeners: TPLHTMLEventListenerList;
     FObject: TPLHTMLObject;
-    function ComparatorForNames(const AObject: TPLHTMLEventListenerItem;
+    function ComparatorForSearch(const AObject: TPLHTMLEventListenerItem;
       const ACriteria: Variant): TPLSign;
+    function ComparatorForSort(a, b: TPLHTMLEventListenerItem): TPLSign;
   public
     constructor Create(AObject: TPLHTMLObject);
     destructor Destroy; override;
@@ -271,7 +272,7 @@ end;
 
 { TPLHTMLEventTarget }
 
-function TPLHTMLEventTarget.ComparatorForNames(
+function TPLHTMLEventTarget.ComparatorForSearch(
   const AObject: TPLHTMLEventListenerItem; const ACriteria: Variant): TPLSign;
 var
   s: TPLString;
@@ -280,6 +281,14 @@ begin
 
   if AObject.FTypeName < s then Result := -1
   else if AObject.FTypeName > s then Result := 1
+  else Result := 0;
+end;
+
+function TPLHTMLEventTarget.ComparatorForSort(a, b: TPLHTMLEventListenerItem
+  ): TPLSign;
+begin
+  if a.FTypeName < b.FTypeName then Result := -1
+  else if a.FTypeName > b.FTypeName then Result := 1
   else Result := 0;
 end;
 
@@ -301,15 +310,20 @@ procedure TPLHTMLEventTarget.AddEventListener(const AType: TPLString;
   AListener: TPLHTMLEventListener);
 var
   id: SizeInt;
+  found: TPLBool = true;
 begin
-  id := TPLFuncsOfClassEventListenerItem.FastSearch(FListeners, AType, @ComparatorForNames);
+  id := TPLFuncsOfClassEventListenerItem.FastSearch(FListeners, AType, @ComparatorForSearch);
 
   if id < 0 then begin
     FListeners.Add(TPLHTMLEventListenerItem.Create(AType));
     id := FListeners.Count - 1;
+    found := false;
   end;
 
   FListeners[id].FList.Add(AListener);
+
+  if not found then
+    FListeners.Sort(@ComparatorForSort);
 end;
 
 procedure TPLHTMLEventTarget.RemoveEventListener(const AType: TPLString;
@@ -317,7 +331,7 @@ procedure TPLHTMLEventTarget.RemoveEventListener(const AType: TPLString;
 var
   id: SizeInt;
 begin
-  id := TPLFuncsOfClassEventListenerItem.FastSearch(FListeners, AType, @ComparatorForNames);
+  id := TPLFuncsOfClassEventListenerItem.FastSearch(FListeners, AType, @ComparatorForSearch);
 
   if id < 0 then exit;
 
@@ -335,7 +349,7 @@ procedure TPLHTMLEventTarget.DispatchAllEventsFromListeners(
 var
   id, x: SizeInt;
 begin
-  id := TPLFuncsOfClassEventListenerItem.FastSearch(FListeners, AType, @ComparatorForNames);
+  id := TPLFuncsOfClassEventListenerItem.FastSearch(FListeners, AType, @ComparatorForSearch);
 
   if id < 0 then exit;
 

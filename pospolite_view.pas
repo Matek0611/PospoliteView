@@ -20,12 +20,16 @@ uses
   Pospolite.View.Internet, Pospolite.View.Version, Pospolite.View.Threads, 
   Pospolite.View.CSS.Binder, Pospolite.View.CSS.MediaQuery, 
   Pospolite.View.CSS.Animation, Pospolite.View.HTML.Scrolling, 
-  Pospolite.View.HTML.Layout, Pospolite.View.HTML.Events, LazarusPackageIntf;
+  Pospolite.View.HTML.Layout, Pospolite.View.HTML.Events, 
+  Pospolite.View.Frame, Pospolite.View.RegisterAll, 
+  Pospolite.View.CSS.StyleSheet, LazarusPackageIntf;
 
 implementation
 
 procedure Register;
 begin
+  RegisterUnit('Pospolite.View.RegisterAll', 
+    @Pospolite.View.RegisterAll.Register);
 end;
 
 initialization
