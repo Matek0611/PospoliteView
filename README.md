@@ -37,6 +37,7 @@ States: ***🟩** - almost done, **🟨** - in progress, **🟧** - beginning*
 - [ ] 🟩 HTML5 Parser 
 - [ ] 🟩 CSS3 Selectors
 - [ ] 🟨 CSS Transitions
+- [ ] 🟨 HTML Objects Event Management 
 - [ ] 🟧 Objects Scrolling
 - [ ] 🟧 Layouter
 - [ ] 🟧 CSS Media Queries Applying
