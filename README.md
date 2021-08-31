@@ -13,7 +13,7 @@ If you have any ideas or questions feel free to join the [discussions](https://g
 
  Code Name | Current/Planned Version | FPC Version | Start Date | Release Date | New Features
 :--------- | -----------------------:|:-----------:|:----------:|:------------:|:------------
-Iks | 0.3a / 1.0 | >= 3.0.4 | 09.2020 | 07.2022p | First release
+Iks | 0.5a / 1.0 | >= 3.0.4 | 09.2020 | 07.2022p | First release
 Iks | X / 1.1 | >= 3.0.4 | 07.2022p | 10.2022p | (new features etc.)
 
 \* **p** - planned, **a** - alpha, **b** - beta, **o** - omega
@@ -36,22 +36,22 @@ States: ***🟩** - almost done, **🟨** - in progress, **🟧** - beginning*
 
 - [ ] 🟩 HTML5 Parser 
 - [ ] 🟩 CSS3 Selectors
+- [ ] 🟩 Frame (component)
+- [ ] 🟩 HTML Objects Event Management
 - [ ] 🟨 CSS Transitions
-- [ ] 🟨 HTML Objects Event Management 
+- [ ] 🟨 CSS Media Queries Applying
+- [ ] 🟨 Applying
 - [ ] 🟧 Objects Scrolling
 - [ ] 🟧 Layouter
-- [ ] 🟧 CSS Media Queries Applying
-- [ ] 🟧 Applying 
 - [ ] 🟧 Rendering
+- [ ] 🟧 D2D1 Text
 - [ ] 🟧 Style Sheets Parsing and Management
 - [ ] 🟧 Connections between HTML, CSS and JS Objects
 
 ### Planned
 
 - [ ] CSS Animations
-- [ ] Frames
 - [ ] D2D1 Image 
-- [ ] D2D1 Text 
 - [ ] JavaScript Interpreter
 - [ ] Audio Support
 - [ ] Video Support
