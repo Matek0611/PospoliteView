@@ -40,7 +40,7 @@ States: ***🟩** - almost done, **🟨** - in progress, **🟧** - beginning*
 - [ ] 🟩 HTML Objects Event Management
 - [ ] 🟨 CSS Transitions
 - [ ] 🟨 CSS Media Queries Applying
-- [ ] 🟨 Applying
+- [ ] 🟨 Properties Applying
 - [ ] 🟧 Objects Scrolling
 - [ ] 🟧 Layouter
 - [ ] 🟧 Rendering
