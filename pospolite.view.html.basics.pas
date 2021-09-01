@@ -437,7 +437,7 @@ begin
   p := CSS_Get('visibility');
   if not Assigned(p) then exit(true);
 
-  Result := TPLCSSProperty(@p).AsString.ToLower <> 'hidden';
+  Result := TPLCSSProperty(p).AsString.ToLower <> 'hidden';
 end;
 
 function TPLHTMLBasicObject.Display: TPLString;
@@ -447,7 +447,7 @@ begin
   p := CSS_Get('display');
   if not Assigned(p) then exit('block');
 
-  Result := TPLCSSProperty(@p).AsString.ToLower;
+  Result := TPLCSSProperty(p).AsString.ToLower;
 end;
 
 function TPLHTMLBasicObject.PositionType: TPLString;
@@ -457,7 +457,7 @@ begin
   p := CSS_Get('position');
   if not Assigned(p) then exit('static');
 
-  Result := TPLCSSProperty(@p).AsString.ToLower;
+  Result := TPLCSSProperty(p).AsString.ToLower;
 end;
 
 { TPLHTMLRootObject }

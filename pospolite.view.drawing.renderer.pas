@@ -69,14 +69,16 @@ type
 
   TPLDrawingRendererThread = class(TThread)
   private
+    FEnabled: TPLBool;
     FManager: TPLDrawingRendererManager;
 
     procedure UpdateRendering;
-    function QueryPerformance: TPLFloat;
   public
     constructor Create(AManager: TPLDrawingRendererManager);
 
     procedure Execute; override;
+
+    property Enabled: TPLBool read FEnabled write FEnabled;
   end;
 
   TPLDrawingRendererFPS = 1..120;
@@ -94,6 +96,7 @@ type
 
     procedure StartRendering;
     procedure StopRendering;
+    function IsRendering: TPLBool; //inline;
 
     property Control: TPLCustomControl read FControl write FControl;
     property MaxFPS: TPLDrawingRendererFPS read FMaxFPS write FMaxFPS default 60;
@@ -728,30 +731,6 @@ begin
     FManager.FControl.Invalidate;
 end;
 
-function TPLDrawingRendererThread.QueryPerformance: TPLFloat;
-var
-  {$ifdef windows}
-    f, c: TPLInt;
-  {$else}
-   {$ifdef unix}
-    tv: TTimeVal;
-   {$else}
-    dummy: byte;
-   {$endif}
-  {$endif}
-begin
-  Result := 0;
-  f := 0;
-  c := 0;
-
-  {$ifdef windows}
-    if QueryPerformanceFrequency(f) and QueryPerformanceCounter(c) then
-      Result := c / f;
-  {$else if defined(unix)}
-    // to do
-  {$endif}
-end;
-
 constructor TPLDrawingRendererThread.Create(AManager: TPLDrawingRendererManager
   );
 begin
@@ -760,25 +739,19 @@ begin
   FManager := AManager;
   Suspended := true;
   FreeOnTerminate := false;
+  FEnabled := false;
 end;
 
 procedure TPLDrawingRendererThread.Execute;
 var
-  delay, d1, d2: TPLFloat;
+  delay: Cardinal;
 begin
-  delay := 1.0 / FManager.FMaxFPS;
-  d1 := QueryPerformance;
+  delay := round(1000 / FManager.FMaxFPS);
 
-  while true do begin
+  while FEnabled do begin
     Synchronize(@UpdateRendering);
 
-    d2 := QueryPerformance - d1;
-    while d2 < delay do begin
-      d2 := (delay - d2) * 1000;
-      Sleep(round(d2));
-      d2 := QueryPerformance - d1;
-    end;
-    d1 := QueryPerformance - d1 + delay;
+    Sleep(delay);
   end;
 end;
 
@@ -795,7 +768,8 @@ end;
 
 destructor TPLDrawingRendererManager.Destroy;
 begin
-  StopRendering;
+  FThread.Enabled := false;
+  FThread.Terminate;
   FThread.Free;
 
   inherited Destroy;
@@ -803,12 +777,19 @@ end;
 
 procedure TPLDrawingRendererManager.StartRendering;
 begin
+  FThread.Enabled := true;
   FThread.Start;
 end;
 
 procedure TPLDrawingRendererManager.StopRendering;
 begin
-  FThread.Terminate;
+  FThread.Enabled := false;
+  FThread.Suspended := true;
+end;
+
+function TPLDrawingRendererManager.IsRendering: TPLBool;
+begin
+  Result := not FThread.Finished and not FThread.Suspended;
 end;
 
 end.

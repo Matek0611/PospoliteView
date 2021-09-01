@@ -92,6 +92,9 @@ type
     procedure AddToInternal(AStyle: TPLString);
     procedure AddExternal(AURL: TPLString);
 
+    procedure StartStyling;
+    procedure StopStyling;
+
     property Internal: TPLCSSStyleSheet read FInternal;
     property Externals: TPLCSSStyleSheetList read FExternals;
   public
@@ -212,6 +215,16 @@ end;
 procedure TPLCSSStyleSheetManager.AddExternal(AURL: TPLString);
 var
   ss: TPLCSSStyleSheet;
+begin
+
+end;
+
+procedure TPLCSSStyleSheetManager.StartStyling;
+begin
+
+end;
+
+procedure TPLCSSStyleSheetManager.StopStyling;
 begin
 
 end;

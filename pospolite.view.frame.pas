@@ -39,6 +39,7 @@ type
     procedure DoOnChangeBounds; override;
     procedure ManagersStop;
     procedure ManagersStart;
+
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -79,6 +80,8 @@ begin
 
   if Assigned(FDocument) and Assigned(FDocument.Root) then
     FDocument.Root.Draw;
+
+  //Canvas.TextOut(10, 10, FormatDateTime('hh:nn:ss,zzz', Now)); // for fps testing
 end;
 
 procedure TPLHTMLFrame.UpdateEnvironment;
@@ -99,14 +102,16 @@ end;
 
 procedure TPLHTMLFrame.ManagersStop;
 begin
-  FRenderingManager.StartRendering;
+  FRenderingManager.StopRendering;
+  FStylesManager.StopStyling;
   FEventManager.StopEvents;
 end;
 
 procedure TPLHTMLFrame.ManagersStart;
 begin
-  FEventManager.StopEvents;
-  FRenderingManager.StopRendering;
+  FEventManager.StartEvents;
+  FStylesManager.StartStyling;
+  FRenderingManager.StartRendering;
 end;
 
 constructor TPLHTMLFrame.Create(AOwner: TComponent);
@@ -178,21 +183,27 @@ procedure TPLHTMLFrame.LoadFromLocalFile(const AFileName: TPLString);
 begin
   if IsLoading then exit;
 
+  ManagersStop;
   FDocument.LoadFromLocalFile(AFileName);
+  if FDocument.IsLoaded then ManagersStart;
 end;
 
 procedure TPLHTMLFrame.LoadFromURL(const AURL: TPLString);
 begin
   if IsLoading then exit;
 
+  ManagersStop;
   FDocument.LoadFromURL(AURL);
+  if FDocument.IsLoaded then ManagersStart;
 end;
 
 procedure TPLHTMLFrame.LoadFromString(const AText: TPLString);
 begin
   if IsLoading then exit;
 
+  ManagersStop;
   FDocument.LoadFromString(AText);
+  if FDocument.IsLoaded then ManagersStart;
 end;
 
 procedure TPLHTMLFrame.SaveToLocalFile(const AFileName: TPLString);

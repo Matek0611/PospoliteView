@@ -29,6 +29,17 @@ const
 
 type
 
+  { TPLHTMLPointerEventInfo }
+
+  PPLHTMLPointerEventInfo = ^TPLHTMLPointerEventInfo;
+  TPLHTMLPointerEventInfo = packed record
+  public
+    Button: TMouseButton;
+    Shift: TShiftState;
+    X, Y: Integer;
+    WheelDelta: Integer;
+  end;
+
   { TPLHTMLEventProperties }
 
   TPLHTMLEventProperties = packed record
