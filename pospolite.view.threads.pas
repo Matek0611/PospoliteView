@@ -106,7 +106,7 @@ type
     procedure SetName(AValue: TPLString);
     procedure SetPriority(AValue: TThreadPriority);
   public
-    constructor Create(AProc: TPLAsyncProc);
+    constructor Create(AProc: TPLAsyncProc; AFreeIfDone: TPLBool = true);
     procedure BeforeDestruction; override;
 
     procedure Await(const AArguments: array of const; ANotify: TPLAsyncProc);
@@ -289,7 +289,7 @@ begin
   FThread.Priority := AValue;
 end;
 
-constructor TPLAsyncTask.Create(AProc: TPLAsyncProc);
+constructor TPLAsyncTask.Create(AProc: TPLAsyncProc; AFreeIfDone: TPLBool);
 begin
   inherited Create;
 
@@ -299,7 +299,7 @@ begin
   FCancelled := false;
   FFailed := false;
   FName := 'Async Task ' + FThread.ThreadID;
-  FFreeIfDone := true;
+  FFreeIfDone := AFreeIfDone;
 end;
 
 procedure TPLAsyncTask.BeforeDestruction;

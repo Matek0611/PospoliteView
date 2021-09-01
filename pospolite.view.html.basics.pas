@@ -369,7 +369,7 @@ end;
 
 function TPLHTMLBasicObject.CSS_Get(APropName: TPLString): Pointer;
 begin
-
+  Result := nil;
 end;
 
 procedure TPLHTMLBasicObject.CSS_Set(APropName: TPLString; const APropValue);

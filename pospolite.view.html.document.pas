@@ -32,6 +32,7 @@ type
     FRoot: TPLHTMLRootObject;
     FMimeType: TPLString;
     FRenderer: TPLDrawingRenderer;
+    FIsLoading: TPLBool;
     function GetContent: TPLString;
     function GetMimeType: TPLString;
     function GetTitle: TPLString;
@@ -59,6 +60,7 @@ type
     property MimeType: TPLString read GetMimeType;
     property Root: TPLHTMLObject read GetRoot;
     property Renderer: TPLDrawingRenderer read FRenderer write FRenderer;
+    property IsLoading: TPLBool read FIsLoading;
   end;
 
 implementation
@@ -101,7 +103,7 @@ const
 
 procedure TPLHTMLDocument.InternalLoad(ASource: TPLString);
 var
-  p: IPLHTMLParser;
+  p: TPLHTMLParser;
 begin
   if not IsLoaded then exit;
 
@@ -115,13 +117,17 @@ begin
 
   p := TPLHTMLParser.Create;
   try
-    p.Parse(ASource, FRoot);
-    if p.HasCriticalError then raise Exception.Create(p.Errors.AllInOneString);
-  except
-    on e: Exception do begin
-      FRoot.Children.Clear;
-      p.Parse(HTML_ERROR_TEMPLATE.Format(['Error', 'Error occured', e.Message]), FRoot);
+    try
+      p.Parse(ASource, FRoot);
+      if p.HasCriticalError then raise Exception.Create(p.Errors.AllInOneString);
+    except
+      on e: Exception do begin
+        FRoot.Children.Clear;
+        p.Parse(HTML_ERROR_TEMPLATE.Format(['Error', 'Error occured', e.Message]), FRoot);
+      end;
     end;
+  finally
+    p.Free;
   end;
 end;
 
@@ -138,11 +144,13 @@ begin
   FMimeType := 'text/html';
   FIsLocal := true;
   FRoot := nil;
+  FIsLoading := false;
 end;
 
 destructor TPLHTMLDocument.Destroy;
 begin
   if Assigned(FRoot) then FRoot.Free;
+  if Assigned(FRenderer) then FRenderer.Free;
 
   inherited Destroy;
 end;
@@ -152,6 +160,7 @@ var
   sl: TStringList;
   t: TPLString;
 begin
+  FIsLoading := true;
   FIsLocal := true;
   FFile := '';
   FRoot := nil;
@@ -194,6 +203,7 @@ begin
   FFile := AFileName;
 
   InternalLoad(t);
+  FIsLoading := false;
 end;
 
 procedure TPLHTMLDocument.LoadFromURL(const AFileName: TPLString);
@@ -201,6 +211,7 @@ var
   oc: IPLHTTPClient;
   t: TPLString;
 begin
+  FIsLoading := true;
   FIsLocal := false;
   FFile := '';
   FRoot := nil;
@@ -223,22 +234,27 @@ begin
   FFile := AFileName;
 
   InternalLoad(t);
+  FIsLoading := false;
 end;
 
 procedure TPLHTMLDocument.LoadFromString(const AText: TPLString);
 begin
+  FIsLoading := true;
   FIsLocal := true;
   FFile := '<string>';
   FMimeType := 'text/html';
   FRoot := nil;
 
   InternalLoad(AText);
+  FIsLoading := false;
 end;
 
 procedure TPLHTMLDocument.SaveToLocalFile(const AFileName: TPLString);
 var
   sl: TStringList;
 begin
+  if FIsLoading then exit;
+
   sl := TStringList.Create;
   try
     sl.Text := FRoot.ToHTML;
