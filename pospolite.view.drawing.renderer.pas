@@ -762,7 +762,7 @@ begin
   inherited Create;
 
   FControl := AControl;
-  FMaxFPS := 30;
+  FMaxFPS := 60;
   FThread := TPLDrawingRendererThread.Create(self);
 end;
 

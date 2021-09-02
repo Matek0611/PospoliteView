@@ -21,7 +21,8 @@ uses
   Pospolite.View.HTML.Events, Pospolite.View.HTML.Document,
   Pospolite.View.HTML.Layout, Pospolite.View.Drawing.Basics,
   Pospolite.View.Drawing.Renderer, Pospolite.View.CSS.StyleSheet,
-  Pospolite.View.CSS.MediaQuery, Pospolite.View.Threads;
+  Pospolite.View.CSS.MediaQuery, Pospolite.View.Threads, LMessages, LCLType,
+  LCLProc;
 
 type
 
@@ -39,7 +40,13 @@ type
     procedure DoOnChangeBounds; override;
     procedure ManagersStop;
     procedure ManagersStart;
-
+    procedure WMSetFocus(var Message: TLMSetFocus); message LM_SETFOCUS;
+    procedure WMKillFocus(var Message: TLMKillFocus); message LM_KILLFOCUS;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer
+      ); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+      override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -114,6 +121,37 @@ begin
   FRenderingManager.StartRendering;
 end;
 
+procedure TPLHTMLFrame.WMSetFocus(var Message: TLMSetFocus);
+begin
+  inherited WMSetFocus(Message);
+
+  FEventManager.Focused := true;
+end;
+
+procedure TPLHTMLFrame.WMKillFocus(var Message: TLMKillFocus);
+begin
+  inherited WMKillFocus(Message);
+
+  FEventManager.Focused := false;
+end;
+
+procedure TPLHTMLFrame.MouseMove(Shift: TShiftState; X, Y: Integer);
+begin
+  inherited MouseMove(Shift, X, Y);
+end;
+
+procedure TPLHTMLFrame.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  inherited MouseDown(Button, Shift, X, Y);
+end;
+
+procedure TPLHTMLFrame.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  inherited MouseUp(Button, Shift, X, Y);
+end;
+
 constructor TPLHTMLFrame.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -121,6 +159,7 @@ begin
   ControlStyle := ControlStyle + [csClickEvents, csTripleClicks, csQuadClicks,
     csReplicatable] - [csAcceptsControls, csNoFocus, csNoStdEvents];
   Parent := AOwner as TWinControl;
+  TabStop := true;
 
   FDocument := TPLHTMLDocument.Create;
 

@@ -149,6 +149,8 @@ type
   private
     FDocument: Pointer;
     FEnabled: TPLBool;
+    FFocused: TPLBool;
+    FFocusedElement: TPLHTMLObject;
     FTask: TPLAsyncTask;
     FQueue: TPLHTMLEventManagerQueue;
 
@@ -163,6 +165,8 @@ type
     procedure DoEvent(AObject: TPLHTMLObject; const AType: TPLString);
 
     property Document: Pointer read FDocument write SetDocument;
+    property Focused: TPLBool read FFocused write FFocused;
+    property FocusedElement: TPLHTMLObject read FFocusedElement write FFocusedElement;
   end;
 
 implementation
@@ -396,6 +400,8 @@ begin
   FQueue := TPLHTMLEventManagerQueue.Create;
   FTask := nil;
   FDocument := nil;
+  FFocused := false;
+  FFocusedElement := nil;
 end;
 
 destructor TPLHTMLEventManager.Destroy;
