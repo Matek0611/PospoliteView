@@ -164,7 +164,7 @@ begin
   FDocument := TPLHTMLDocument.Create;
 
   FEventManager := TPLHTMLEventManager.Create;
-  FStylesManager := TPLCSSStyleSheetManager.Create;
+  FStylesManager := TPLCSSStyleSheetManager.Create(FDocument);
   FStylesManager.Environment := TPLCSSMediaQueriesEnvironment.Create(0, 0);
   if not (AOwner is TCustomForm) then AOwner := AOwner.Owner;
   FStylesManager.Environment.Hook.Hook := AOwner as TCustomForm;

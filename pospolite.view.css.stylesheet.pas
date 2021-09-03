@@ -47,6 +47,7 @@ type
 
   TPLCSSStyleSheetPartRule = class(TPLCSSStyleSheetPart)
   private
+    FMediaQueries: TPLCSSMediaQueries;
     FNestedRules: TPLCSSStyleSheetPartRules;
     FValue: TPLCSSPropertyValue;
   public
@@ -54,6 +55,7 @@ type
     destructor Destroy; override;
 
     property NestedRules: TPLCSSStyleSheetPartRules read FNestedRules;
+    property MediaQueries: TPLCSSMediaQueries read FMediaQueries;
     property Value: TPLCSSPropertyValue read FValue;
   end;
 
@@ -83,10 +85,11 @@ type
   private
     FExternals: TPLCSSStyleSheetList;
     FInternal: TPLCSSStyleSheet;
+    FDocument: TPLHTMLDocument;
 
     procedure ParseStyleSheet(ASource: TPLString; var ASheet: TPLCSSStyleSheet);
   public
-    constructor Create;
+    constructor Create(ADocument: TPLHTMLDocument);
     destructor Destroy; override;
 
     procedure AddToInternal(AStyle: TPLString);
@@ -94,11 +97,14 @@ type
 
     procedure StartStyling;
     procedure StopStyling;
+    procedure Rebuilt;
 
     property Internal: TPLCSSStyleSheet read FInternal;
     property Externals: TPLCSSStyleSheetList read FExternals;
   public
     Environment: TPLCSSMediaQueriesEnvironment;
+
+    function EnvironmentPrinter: TPLCSSMediaQueriesEnvironment;
   end;
 
 implementation
@@ -140,12 +146,14 @@ begin
 
   FKind := sspRule;
   FNestedRules := TPLCSSStyleSheetPartRules.Create(true);
+  FMediaQueries := TPLCSSMediaQueries.Create(true);
   FValue := TPLCSSPropertyValue.Create(true);
 end;
 
 destructor TPLCSSStyleSheetPartRule.Destroy;
 begin
   FValue.Free;
+  FMediaQueries.Free;
   FNestedRules.Free;
 
   inherited Destroy;
@@ -191,7 +199,7 @@ begin
 
 end;
 
-constructor TPLCSSStyleSheetManager.Create;
+constructor TPLCSSStyleSheetManager.Create(ADocument: TPLHTMLDocument);
 begin
   inherited Create;
 
@@ -227,6 +235,17 @@ end;
 procedure TPLCSSStyleSheetManager.StopStyling;
 begin
 
+end;
+
+procedure TPLCSSStyleSheetManager.Rebuilt;
+begin
+
+end;
+
+function TPLCSSStyleSheetManager.EnvironmentPrinter: TPLCSSMediaQueriesEnvironment;
+begin
+  Result := Environment;
+  Result.UsePrinter := true;
 end;
 
 end.
