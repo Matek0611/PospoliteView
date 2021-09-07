@@ -81,7 +81,6 @@ type
     function GetRealTop: TPLFloat; override;
     function GetRealLeft: TPLFloat; override;
     function GetElementTarget: Pointer; override;
-    function GetArgsFor(const AType: TPLString): TArrayOfConst;
 
     procedure Draw; reintroduce;
 
@@ -410,17 +409,6 @@ end;
 function TPLHTMLBasicObject.GetElementTarget: Pointer;
 begin
   Result := FEventTarget;
-end;
-
-function TPLHTMLBasicObject.GetArgsFor(const AType: TPLString): TArrayOfConst;
-begin
-  // for mouse (temporary version)
-  SetLength(Result, 2);
-  Result[0].VType := vtInt64;
-  New(Result[0].VInt64);
-  Result[0].VInt64^ := Mouse.CursorPos.x;
-  New(Result[1].VInt64);
-  Result[1].VInt64^ := Mouse.CursorPos.y;
 end;
 
 procedure TPLHTMLBasicObject.Draw;

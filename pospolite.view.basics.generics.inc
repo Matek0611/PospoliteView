@@ -907,11 +907,6 @@ begin
   Result := nil;
 end;
 
-function TPLHTMLObject.GetArgsFor(const AType: TPLString): TArrayOfConst;
-begin
-  SetLength(Result, 0);
-end;
-
 function TPLHTMLObject.IsVisible: TPLBool;
 begin
   Result := false;
@@ -932,5 +927,23 @@ end;
 function TPLHTMLObject.PositionType: TPLString;
 begin
   Result := 'static';
+end;
+
+function TPLHTMLObject.CoordsInObject(const AX, AY: TPLFloat): TPLBool;
+begin
+  Result := (AX >= GetLeft) and (AX <= GetLeft + GetWidth) and (AY >= GetTop)
+    and (AY <= GetTop + GetWidth);
+end;
+
+function TPLHTMLObject.CoordsInObjectOnly(const AX, AY: TPLFloat): TPLBool;
+var
+  obj: TPLHTMLObject;
+begin
+  Result := CoordsInObject(AX, AY);
+
+  if Result then begin
+    for obj in Children do
+      if (obj.ZIndex >= FZIndex) and obj.CoordsInObjectOnly(AX, AY) then exit(false);
+  end;
 end;
 

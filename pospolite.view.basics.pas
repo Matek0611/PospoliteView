@@ -15,6 +15,7 @@ unit Pospolite.View.Basics;
 {$mode objfpc}{$H+}
 {$modeswitch advancedrecords}
 {$modeswitch TypeHelpers}
+{$modeswitch nestedprocvars}
 
 interface
 
@@ -46,6 +47,15 @@ type
   TPLBool = Boolean;
 
   // - Generics and normal types - //
+
+  TPLNestedProc = procedure is nested;
+  generic TPLNestedProcP1<T> = procedure(AParam: T) is nested;
+  generic TPLNestedProcPn<T> = procedure(AParams: array of T) is nested;
+  generic TPLNestedFunc<R> = function: R is nested;
+  generic TPLNestedFuncP1<R, T> = function(AParam: T): R is nested;
+  generic TPLNestedFuncPn<R, T> = function(AParams: array of T): R is nested;
+
+  TPLArrayOfConst = array of TVarRec;
 
   { TPLNumberRange }
 
@@ -375,6 +385,8 @@ type
   IPLHTMLObjects = specialize IPLObjectList<TPLHTMLObject>;
   TPLHTMLObjects = class(specialize TPLObjectList<TPLHTMLObject>, IPLHTMLObjects);
 
+  TPLNestedHTMLObjectProc = specialize TPLNestedProcP1<TPLHTMLObject>;
+
   { IPLHTMLObject }
 
   IPLHTMLObject = interface(specialize IPLCloneable<IPLHTMLObject>)
@@ -442,8 +454,6 @@ type
     FText: TPLString;
     FPosition: SizeInt;
     FNodeType: TPLHTMLObjectNodeType;
-  protected type
-    TArrayOfConst = array of TVarRec;
   private
     FZIndex: TPLInt;
 
@@ -496,12 +506,13 @@ type
     function GetRealTop: TPLFloat; virtual;
     function GetRealLeft: TPLFloat; virtual;
     function GetElementTarget: Pointer; virtual;
-    function GetArgsFor(const AType: TPLString): TArrayOfConst;
 
     function IsVisible: TPLBool; virtual;
     function Display: TPLString; virtual;
     function IsLink: TPLBool; virtual;
     function PositionType: TPLString; virtual;
+    function CoordsInObject(const AX, AY: TPLFloat): TPLBool;
+    function CoordsInObjectOnly(const AX, AY: TPLFloat): TPLBool;
 
     property Zoom: TPLFloat read GetZoom write SetZoom;
     property State: TPLCSSElementState read GetState write SetState;

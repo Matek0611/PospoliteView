@@ -13,6 +13,7 @@ unit Pospolite.View.Frame;
 }
 
 {$mode objfpc}{$H+}
+{$modeswitch nestedprocvars}
 
 interface
 
@@ -21,8 +22,8 @@ uses
   Pospolite.View.HTML.Events, Pospolite.View.HTML.Document,
   Pospolite.View.HTML.Layout, Pospolite.View.Drawing.Basics,
   Pospolite.View.Drawing.Renderer, Pospolite.View.CSS.StyleSheet,
-  Pospolite.View.CSS.MediaQuery, Pospolite.View.Threads, LMessages, LCLType,
-  LCLProc;
+  Pospolite.View.CSS.MediaQuery, Pospolite.View.Threads,
+  Pospolite.View.HTML.Basics, LMessages, LCLType, LCLProc;
 
 type
 
@@ -34,6 +35,7 @@ type
     FEventManager: TPLHTMLEventManager;
     FRenderingManager: TPLDrawingRendererManager;
     FStylesManager: TPLCSSStyleSheetManager;
+    FPointer: TPLPointF;
   protected
     procedure Paint; override;
     procedure UpdateEnvironment;
@@ -43,10 +45,20 @@ type
     procedure WMSetFocus(var Message: TLMSetFocus); message LM_SETFOCUS;
     procedure WMKillFocus(var Message: TLMKillFocus); message LM_KILLFOCUS;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseLeave; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer
       ); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
       override;
+    procedure KeyPress(var Key: char); override;
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+    procedure KeyUp(var Key: Word; Shift: TShiftState); override;
+    procedure Click; override;
+    procedure DblClick; override;
+    procedure TripleClick; override;
+    procedure QuadClick; override;
+    procedure DoContextPopup(MousePos: TPoint; var Handled: Boolean); override;
+    procedure EnumObjects(const AProc: TPLNestedHTMLObjectProc; const AObject: TPLHTMLObject);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -136,20 +148,201 @@ begin
 end;
 
 procedure TPLHTMLFrame.MouseMove(Shift: TShiftState; X, Y: Integer);
+
+  procedure AnalyzeProc(obj: TPLHTMLObject);
+  begin
+    if not Assigned(obj) then exit;
+
+    if obj.CoordsInObjectOnly(X, Y) then begin
+      if (obj.State = esNormal) then
+        FEventManager.DoEvent(obj, 'mouseenter', [X, Y, ShiftStateToInt(Shift)])
+      else
+        FEventManager.DoEvent(obj, 'mouseover', [X, Y, ShiftStateToInt(Shift)]);
+
+      obj.State := esHover;
+    end else if obj.State = esHover then begin
+      FEventManager.DoEvent(obj, 'mouseleave', [X, Y, ShiftStateToInt(Shift)]);
+      if not obj.CoordsInObject(X, Y) then
+        FEventManager.DoEvent(obj, 'mouseout', [X, Y, ShiftStateToInt(Shift)]);
+
+      obj.State := esNormal;
+    end;
+  end;
+
 begin
   inherited MouseMove(Shift, X, Y);
+
+  FPointer := TPLPointF.Create(X, Y);
+  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+end;
+
+procedure TPLHTMLFrame.MouseLeave;
+begin
+  inherited MouseLeave;
+
+  FPointer := TPLPointF.Create(-1, -1);
 end;
 
 procedure TPLHTMLFrame.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
   Y: Integer);
+
+  procedure AnalyzeProc(obj: TPLHTMLObject);
+  begin
+    if not Assigned(obj) then exit;
+
+    if obj.CoordsInObjectOnly(X, Y) then
+      FEventManager.DoEvent(obj, 'mousedown', [X, Y, Button, ShiftStateToInt(Shift)]);
+  end;
+
 begin
   inherited MouseDown(Button, Shift, X, Y);
+
+  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
 end;
 
 procedure TPLHTMLFrame.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
   Y: Integer);
+
+  procedure AnalyzeProc(obj: TPLHTMLObject);
+  begin
+    if not Assigned(obj) then exit;
+
+    if obj.CoordsInObjectOnly(X, Y) then
+      FEventManager.DoEvent(obj, 'mouseup', [X, Y, Button, ShiftStateToInt(Shift)]);
+  end;
+
 begin
   inherited MouseUp(Button, Shift, X, Y);
+
+  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+end;
+
+procedure TPLHTMLFrame.KeyPress(var Key: char);
+begin
+  inherited KeyPress(Key);
+
+  if Assigned(FEventManager.FocusedElement) then
+    FEventManager.DoEvent(FEventManager.FocusedElement, 'keypress', [Key]);
+end;
+
+procedure TPLHTMLFrame.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  inherited KeyDown(Key, Shift);
+
+  if Assigned(FEventManager.FocusedElement) then
+    FEventManager.DoEvent(FEventManager.FocusedElement, 'keydown', [Key, ShiftStateToInt(Shift)]);
+end;
+
+procedure TPLHTMLFrame.KeyUp(var Key: Word; Shift: TShiftState);
+begin
+  inherited KeyUp(Key, Shift);
+
+  if Assigned(FEventManager.FocusedElement) then
+    FEventManager.DoEvent(FEventManager.FocusedElement, 'keyup', [Key, ShiftStateToInt(Shift)]);
+end;
+
+procedure TPLHTMLFrame.Click;
+
+  procedure AnalyzeProc(obj: TPLHTMLObject);
+  begin
+    if not Assigned(obj) then exit;
+
+    if obj.CoordsInObjectOnly(FPointer.X, FPointer.Y) then
+      FEventManager.DoEvent(obj, 'click', [FPointer.X, FPointer.Y, 1]);
+  end;
+
+begin
+  inherited Click;
+
+  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+end;
+
+procedure TPLHTMLFrame.DblClick;
+
+  procedure AnalyzeProc(obj: TPLHTMLObject);
+  begin
+    if not Assigned(obj) then exit;
+
+    if obj.CoordsInObjectOnly(FPointer.X, FPointer.Y) then
+      FEventManager.DoEvent(obj, 'dblclick', [FPointer.X, FPointer.Y]);
+  end;
+
+begin
+  inherited DblClick;
+
+  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+end;
+
+procedure TPLHTMLFrame.TripleClick;
+
+  procedure AnalyzeProc(obj: TPLHTMLObject);
+  begin
+    if not Assigned(obj) then exit;
+
+    if obj.CoordsInObjectOnly(FPointer.X, FPointer.Y) then
+      FEventManager.DoEvent(obj, 'tripleclick', [FPointer.X, FPointer.Y]);
+  end;
+
+begin
+  inherited TripleClick;
+
+  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+end;
+
+procedure TPLHTMLFrame.QuadClick;
+
+  procedure AnalyzeProc(obj: TPLHTMLObject);
+  begin
+    if not Assigned(obj) then exit;
+
+    if obj.CoordsInObjectOnly(FPointer.X, FPointer.Y) then
+      FEventManager.DoEvent(obj, 'quadclick', [FPointer.X, FPointer.Y]);
+  end;
+
+begin
+  inherited QuadClick;
+
+  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+end;
+
+procedure TPLHTMLFrame.DoContextPopup(MousePos: TPoint; var Handled: Boolean);
+
+  procedure AnalyzeProc(obj: TPLHTMLObject);
+  var
+    ls: TPLHTMLEventListeners = nil;
+  begin
+    if not Assigned(obj) then exit;
+
+    if obj.CoordsInObjectOnly(MousePos.X, MousePos.Y) then begin
+      ls := TPLHTMLBasicObject(obj).EventTarget.GetEventListeners('contextmenu');
+      if Assigned(ls) and (ls.Count > 1) then Handled := true;
+      FEventManager.DoEvent(obj, 'contextmenu', [MousePos.X, MousePos.Y]);
+    end;
+  end;
+
+begin
+  inherited DoContextPopup(MousePos, Handled);
+
+  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+end;
+
+procedure TPLHTMLFrame.EnumObjects(const AProc: TPLNestedHTMLObjectProc;
+  const AObject: TPLHTMLObject);
+
+  procedure EnumChildren(obj: TPLHTMLObject);
+  var
+    ch: TPLHTMLObject;
+  begin
+    if not Assigned(obj) then exit;
+
+    AProc(obj);
+
+    for ch in obj.Children do
+      EnumChildren(ch);
+  end;
+
+begin
+  EnumChildren(AObject);
 end;
 
 constructor TPLHTMLFrame.Create(AOwner: TComponent);
@@ -162,6 +355,7 @@ begin
   TabStop := true;
 
   FDocument := TPLHTMLDocument.Create;
+  FPointer := TPLPointF.Create(-1, -1);
 
   FEventManager := TPLHTMLEventManager.Create;
   FStylesManager := TPLCSSStyleSheetManager.Create(FDocument);

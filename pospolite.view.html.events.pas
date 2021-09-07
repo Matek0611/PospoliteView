@@ -29,17 +29,6 @@ const
 
 type
 
-  { TPLHTMLPointerEventInfo }
-
-  PPLHTMLPointerEventInfo = ^TPLHTMLPointerEventInfo;
-  TPLHTMLPointerEventInfo = packed record
-  public
-    Button: TMouseButton;
-    Shift: TShiftState;
-    X, Y: Integer;
-    WheelDelta: Integer;
-  end;
-
   { TPLHTMLEventProperties }
 
   TPLHTMLEventProperties = packed record
@@ -54,6 +43,8 @@ type
   end;
 
 function GetDefaultEventProperties(const AType: TPLString): TPLHTMLEventProperties;
+function ShiftStateToInt(const AShiftState: TShiftState): QWord;
+function IntToShiftState(const AShiftState: QWord): TShiftState;
 
 const
   PLHTMLEventPropertiesTemplate: TPLHTMLEventProperties = (
@@ -135,12 +126,14 @@ type
     procedure AddEventListener(const AType: TPLString; AListener: TPLHTMLEventListener);
     procedure RemoveEventListener(const AType: TPLString; AListener: TPLHTMLEventListener);
     procedure DispatchEvent(AEvent: TPLHTMLEvent; AArgs: array of const);
-    procedure DispatchAllEventsFromListeners(const AType: TPLString);
+    procedure DispatchAllEventsFromListeners(const AType: TPLString; AArgs: array of const);
+    function GetEventListeners(const ATypeName: TPLString): TPLHTMLEventListeners;
 
     property Listeners: TPLHTMLEventListenerList read FListeners;
   end;
 
-  TPLHTMLEventManagerQueueItem = specialize TPLParameter<TPLHTMLObject, TPLString>;
+  TPLHTMLEventManagerQueueItemParts = specialize TPLParameter<TPLString, TPLArrayOfConst>;
+  TPLHTMLEventManagerQueueItem = specialize TPLParameter<TPLHTMLObject, TPLHTMLEventManagerQueueItemParts>;
   TPLHTMLEventManagerQueue = class(specialize TPLList<TPLHTMLEventManagerQueueItem>);
 
   { TPLHTMLEventManager }
@@ -162,7 +155,8 @@ type
 
     procedure StartEvents;
     procedure StopEvents;
-    procedure DoEvent(AObject: TPLHTMLObject; const AType: TPLString);
+    procedure DoEvent(AObject: TPLHTMLObject; const AType: TPLString;
+      const AParams: array of const);
 
     property Document: Pointer read FDocument write SetDocument;
     property Focused: TPLBool read FFocused write FFocused;
@@ -202,6 +196,48 @@ begin
       Result.detail := 1;
       Result.buttons[mbLeft] := true;
     end;
+  end;
+end;
+
+function ShiftStateToInt(const AShiftState: TShiftState): QWord;
+var
+  s: TShiftStateEnum;
+begin
+  Result := 0;
+
+  for s in AShiftState do case s of
+    ssShift: Result := Result or 1;
+    ssAlt: Result := Result or (1 << 1);
+    ssCtrl: Result := Result or (1 << 2);
+    ssLeft: Result := Result or (1 << 3);
+    ssRight: Result := Result or (1 << 4);
+    ssMiddle: Result := Result or (1 << 5);
+    ssDouble: Result := Result or (1 << 6);
+    ssMeta: Result := Result or (1 << 7);
+    ssSuper: Result := Result or (1 << 8);
+    ssHyper: Result := Result or (1 << 9);
+    ssAltGr: Result := Result or (1 << 10);
+    ssCaps: Result := Result or (1 << 11);
+    ssNum: Result := Result or (1 << 12);
+    ssScroll: Result := Result or (1 << 13);
+    ssTriple: Result := Result or (1 << 14);
+    ssQuad: Result := Result or (1 << 15);
+    ssExtra1: Result := Result or (1 << 16);
+    ssExtra2: Result := Result or (1 << 17);
+  end;
+end;
+
+function IntToShiftState(const AShiftState: QWord): TShiftState;
+var
+  b: byte = 1;
+  s: TShiftStateEnum;
+begin
+  Result := [];
+
+  for s in TShiftStateEnum do begin
+    if (AShiftState and (1 << b)) <> 0 then Result += [s];
+
+    Inc(b);
   end;
 end;
 
@@ -360,7 +396,7 @@ begin
 end;
 
 procedure TPLHTMLEventTarget.DispatchAllEventsFromListeners(
-  const AType: TPLString);
+  const AType: TPLString; AArgs: array of const);
 var
   id, x: SizeInt;
 begin
@@ -369,7 +405,18 @@ begin
   if id < 0 then exit;
 
   for x := 0 to FListeners[id].FList.Count-1 do
-    FListeners[id].FList[x].FEvent.Call(FObject.GetArgsFor(AType));
+    FListeners[id].FList[x].FEvent.Call(AArgs);
+end;
+
+function TPLHTMLEventTarget.GetEventListeners(const ATypeName: TPLString
+  ): TPLHTMLEventListeners;
+var
+  id: SizeInt;
+begin
+  id := TPLFuncsOfClassEventListenerItem.FastSearch(FListeners, ATypeName, @ComparatorForSearch);
+
+  if id < 0 then Result := nil else
+    Result := FListeners[id].FList;
 end;
 
 { TPLHTMLEventManager }
@@ -388,7 +435,7 @@ begin
     if not Assigned(FDocument) or not Assigned(FQueue) then break;
     if FQueue.Empty then continue;
 
-    TPLHTMLEventTarget(FQueue.First.Key.GetElementTarget).DispatchAllEventsFromListeners(FQueue.First.Value);
+    TPLHTMLEventTarget(FQueue.First.Key.GetElementTarget).DispatchAllEventsFromListeners(FQueue.First.Value.Key, FQueue.First.Value.Value);
     FQueue.Remove(FQueue.First);
   end;
 end;
@@ -434,9 +481,15 @@ begin
 end;
 
 procedure TPLHTMLEventManager.DoEvent(AObject: TPLHTMLObject;
-  const AType: TPLString);
+  const AType: TPLString; const AParams: array of const);
+var
+  p: TPLArrayOfConst;
+  i: SizeInt;
 begin
-  FQueue.Add(TPLHTMLEventManagerQueueItem.Create(AObject, AType));
+  SetLength(p, Length(AParams));
+  for i := Low(p) to High(p) do p[i] := AParams[i];
+
+  FQueue.Add(TPLHTMLEventManagerQueueItem.Create(AObject, TPLHTMLEventManagerQueueItemParts.Create(AType, p)));
 end;
 
 end.

@@ -57,12 +57,10 @@ type
   { TPLAsyncTaskThread }
 
   TPLAsyncTaskThread = class(TThread)
-  private type
-    array_of_const = array of TVarRec;
   private
     FOnNotify: TPLAsyncProc;
     FProc: TPLAsyncProc;
-    FArguments: array_of_const;
+    FArguments: TPLArrayOfConst;
     FTask: TPLAsyncTask;
   protected
     procedure DoTerminate; override;
@@ -72,7 +70,7 @@ type
     procedure Execute; override;
 
     property OnNotify: TPLAsyncProc read FOnNotify write FOnNotify;
-    property Arguments: array_of_const read FArguments write FArguments;
+    property Arguments: TPLArrayOfConst read FArguments write FArguments;
   end;
 
   { IPLAsyncTask }
