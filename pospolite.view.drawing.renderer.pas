@@ -728,7 +728,7 @@ end;
 procedure TPLDrawingRendererThread.UpdateRendering;
 begin
   if Assigned(FManager) and Assigned(FManager.FControl) then
-    FManager.FControl.Invalidate;
+    FManager.FControl.Refresh;
 end;
 
 constructor TPLDrawingRendererThread.Create(AManager: TPLDrawingRendererManager

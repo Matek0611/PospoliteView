@@ -149,6 +149,7 @@ type
 
     procedure SetDocument(AValue: Pointer);
     procedure AsyncProc(const {%H-}AArguments: array of const);
+    procedure SetFocusedElement(AValue: TPLHTMLObject);
   public
     constructor Create;
     destructor Destroy; override;
@@ -160,10 +161,12 @@ type
 
     property Document: Pointer read FDocument write SetDocument;
     property Focused: TPLBool read FFocused write FFocused;
-    property FocusedElement: TPLHTMLObject read FFocusedElement write FFocusedElement;
+    property FocusedElement: TPLHTMLObject read FFocusedElement write SetFocusedElement;
   end;
 
 implementation
+
+uses Pospolite.View.HTML.Basics;
 
 function GetDefaultEventProperties(const AType: TPLString
   ): TPLHTMLEventProperties;
@@ -438,6 +441,16 @@ begin
     TPLHTMLEventTarget(FQueue.First.Key.GetElementTarget).DispatchAllEventsFromListeners(FQueue.First.Value.Key, FQueue.First.Value.Value);
     FQueue.Remove(FQueue.First);
   end;
+end;
+
+procedure TPLHTMLEventManager.SetFocusedElement(AValue: TPLHTMLObject);
+begin
+  if FFocusedElement = AValue then exit;
+
+  if Assigned(FFocusedElement) then TPLHTMLBasicObject(FFocusedElement).Focused := false;
+  if Assigned(AValue) then TPLHTMLBasicObject(AValue).Focused := true;
+
+  FFocusedElement := AValue;
 end;
 
 constructor TPLHTMLEventManager.Create;

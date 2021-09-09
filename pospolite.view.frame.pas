@@ -50,6 +50,8 @@ type
       ); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
       override;
+    function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint
+      ): Boolean; override;
     procedure KeyPress(var Key: char); override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure KeyUp(var Key: Word; Shift: TShiftState); override;
@@ -59,6 +61,7 @@ type
     procedure QuadClick; override;
     procedure DoContextPopup(MousePos: TPoint; var Handled: Boolean); override;
     procedure EnumObjects(const AProc: TPLNestedHTMLObjectProc; const AObject: TPLHTMLObject);
+    procedure ChangeFocus(ATo: TPLHTMLBasicObject);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -92,21 +95,28 @@ uses variants, dialogs, Pospolite.View.CSS.Declaration;
 
 procedure TPLHTMLFrame.Paint;
 var
-  dr: IPLDrawingRenderer;
+  dr: TPLDrawingRenderer;
 begin
   Canvas.Brush.Color := clWhite;
   Canvas.FillRect(ClientRect);
 
   if csDesigning in ComponentState then exit;
 
-  dr := NewDrawingRenderer(self.Canvas);
+  try
+    dr := TPLDrawingRenderer.Create(self.Canvas);
+    try
+      if Assigned(FDocument) and Assigned(FDocument.Root) then
+        FDocument.Root.Draw(dr);
 
-  if Assigned(FDocument) and Assigned(FDocument.Root) then
-    FDocument.Root.Draw(dr);
-
-  // - tests -
-  dr.DrawBox(TPLRectF.Create(10, 10, 200, 50), TPLCSSDeclarations.Create('border-color: red; background-color: #bbb;'), nil, false, true); // rendering
-  //Canvas.TextOut(10, 10, FormatDateTime('hh:nn:ss,zzz', Now)); // fps
+      // - tests -
+      //dr.DrawBox(TPLRectF.Create(10, 10, 200, 50), TPLCSSDeclarations.Create('border-color: red; background-color: #bbb;'), nil, false, true); // rendering
+      //Canvas.TextOut(10, 10, FormatDateTime('hh:nn:ss,zzz', Now)); // fps
+    finally
+      dr.Free;
+    end;
+  except
+    on e: exception do Canvas.TextOut(10, 10, e.Message);
+  end;
 end;
 
 procedure TPLHTMLFrame.UpdateEnvironment;
@@ -183,10 +193,24 @@ begin
 end;
 
 procedure TPLHTMLFrame.MouseLeave;
+
+  procedure AnalyzeProc(obj: TPLHTMLObject);
+  begin
+    if not Assigned(obj) then exit;
+
+    if obj.State = esHover then begin
+      FEventManager.DoEvent(obj, 'mouseleave', [-1, -1, 0]);
+      FEventManager.DoEvent(obj, 'mouseout', [-1, -1, 0]);
+
+      obj.State := esNormal;
+    end;
+  end;
+
 begin
   inherited MouseLeave;
 
   FPointer := TPLPointF.Create(-1, -1);
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
@@ -219,6 +243,23 @@ procedure TPLHTMLFrame.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
 
 begin
   inherited MouseUp(Button, Shift, X, Y);
+
+  EnumObjects(@AnalyzeProc, FDocument.Body);
+end;
+
+function TPLHTMLFrame.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
+  MousePos: TPoint): Boolean;
+
+  procedure AnalyzeProc(obj: TPLHTMLObject);
+  begin
+    if not Assigned(obj) then exit;
+
+    if obj.CoordsInObjectOnly(MousePos.X, MousePos.Y) then
+      FEventManager.DoEvent(obj, 'mousewheel', [MousePos.X, MousePos.Y, ShiftStateToInt(Shift), WheelDelta]);
+  end;
+
+begin
+  Result := inherited DoMouseWheel(Shift, WheelDelta, MousePos);
 
   EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
@@ -356,6 +397,17 @@ procedure TPLHTMLFrame.EnumObjects(const AProc: TPLNestedHTMLObjectProc;
 
 begin
   EnumChildren(AObject);
+end;
+
+procedure TPLHTMLFrame.ChangeFocus(ATo: TPLHTMLBasicObject);
+begin
+  if Assigned(FEventManager.FocusedElement) then
+    FEventManager.DoEvent(FEventManager.FocusedElement, 'blur', []);
+
+  FEventManager.FocusedElement := ATo;
+
+  if Assigned(ATo) then
+    FEventManager.DoEvent(ATo, 'focus', []);
 end;
 
 constructor TPLHTMLFrame.Create(AOwner: TComponent);

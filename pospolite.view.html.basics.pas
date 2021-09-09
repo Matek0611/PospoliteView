@@ -33,9 +33,11 @@ type
   TPLHTMLBasicObject = class(TPLHTMLObject)
   private
     FEventTarget: TPLHTMLEventTarget;
+    FFocused: TPLBool;
     FRealPos: TPLPointF;
     FScrolling: TPLHTMLScrolling;
     FSize: TPLRectF;
+    procedure SetFocused(AValue: TPLBool);
   protected
     procedure InitStates; override;
     procedure DoneStates; override;
@@ -90,6 +92,7 @@ type
     property Size: TPLRectF read FSize write FSize;
     property RealPos: TPLPointF read FRealPos write FRealPos;
     property EventTarget: TPLHTMLEventTarget read FEventTarget;
+    property Focused: TPLBool read FFocused write SetFocused;
   end;
 
   { TPLHTMLRootObject }
@@ -171,6 +174,12 @@ uses Controls, Variants, Pospolite.View.Threads, Pospolite.View.CSS.Binder;
 
 { TPLHTMLBasicObject }
 
+procedure TPLHTMLBasicObject.SetFocused(AValue: TPLBool);
+begin
+  if FFocused = AValue then exit;
+  FFocused := AValue;
+end;
+
 procedure TPLHTMLBasicObject.InitStates;
 var
   s: TPLCSSElementState;
@@ -199,7 +208,8 @@ end;
 
 procedure TPLHTMLBasicObject.Render(ARenderer: TPLDrawingRenderer);
 begin
-  //...
+  // only for view object bounds (must be overriden)
+  ARenderer.DrawBox(FSize, TPLCSSDeclarations.Create(''), nil, false, true);
 end;
 
 procedure TPLHTMLBasicObject.InitEventTarget;
@@ -215,8 +225,8 @@ begin
   // basic events (more in the future)
   AddEventListener('click', @EventOnClick);
   AddEventListener('dblclick', @EventOnDblClick);
-  AddEventListener('tripleclick', @EventOnTripleClick);
-  AddEventListener('quadclick', @EventOnQuadClick);
+  AddEventListener('tripleclick', @EventOnTripleClick); // fpc+
+  AddEventListener('quadclick', @EventOnQuadClick); // fpc+
   AddEventListener('contextmenu', @EventOnContextMenu);
   AddEventListener('keydown', @EventOnKeyDown);
   AddEventListener('keypress', @EventOnKeyPress);
@@ -328,6 +338,7 @@ begin
 
   FNodeType := ontDocumentFragmentNode;
   FScrolling := TPLHTMLScrolling.Create(self);
+  FFocused := false;
 
   FEventTarget := TPLHTMLEventTarget.Create(self);
   InitEventTarget;
