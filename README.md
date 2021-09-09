@@ -41,9 +41,9 @@ States: ***🟩** - almost done, **🟨** - in progress, **🟧** - beginning*
 - [ ] 🟨 CSS Transitions
 - [ ] 🟨 CSS Media Queries Applying
 - [ ] 🟨 Properties Applying
+- [ ] 🟨 Rendering 
 - [ ] 🟧 Objects Scrolling
 - [ ] 🟧 Layouter
-- [ ] 🟧 Rendering
 - [ ] 🟧 D2D1 Text
 - [ ] 🟧 Style Sheets Parsing and Management
 - [ ] 🟧 Connections between HTML, CSS and JS Objects
