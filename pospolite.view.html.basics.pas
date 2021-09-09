@@ -210,6 +210,7 @@ procedure TPLHTMLBasicObject.Render(ARenderer: TPLDrawingRenderer);
 begin
   // only for view object bounds (must be overriden)
   ARenderer.DrawBox(FSize, TPLCSSDeclarations.Create(''), nil, false, true);
+  //ARenderer.Drawer.;
 end;
 
 procedure TPLHTMLBasicObject.InitEventTarget;

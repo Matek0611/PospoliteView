@@ -563,7 +563,10 @@ type
 
   { TPLCustomControl }
 
-  TPLCustomControl = class(TCustomControl);
+  TPLCustomControl = class(TCustomControl)
+  public
+    procedure Redraw; virtual; abstract;
+  end;
 
   // - Helpers - //
 

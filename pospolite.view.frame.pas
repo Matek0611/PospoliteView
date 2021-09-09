@@ -36,12 +36,15 @@ type
     FRenderingManager: TPLDrawingRendererManager;
     FStylesManager: TPLCSSStyleSheetManager;
     FPointer: TPLPointF;
+    FBuffer: Graphics.TBitmap;
   protected
     procedure Paint; override;
+    procedure RedrawBuffer;
     procedure UpdateEnvironment;
     procedure DoOnChangeBounds; override;
     procedure ManagersStop;
     procedure ManagersStart;
+    procedure Resize; override;
     procedure WMSetFocus(var Message: TLMSetFocus); message LM_SETFOCUS;
     procedure WMKillFocus(var Message: TLMKillFocus); message LM_KILLFOCUS;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
@@ -66,6 +69,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure AfterConstruction; override;
+    procedure Redraw; override;
 
     function QuerySelector(const AQuery: TPLString): TPLHTMLObject; inline;
     function QuerySelectorAll(const AQuery: TPLString): TPLHTMLObjects; inline;
@@ -94,29 +98,18 @@ uses variants, dialogs, Pospolite.View.CSS.Declaration;
 { TPLHTMLFrame }
 
 procedure TPLHTMLFrame.Paint;
-var
-  dr: TPLDrawingRenderer;
 begin
   Canvas.Brush.Color := clWhite;
   Canvas.FillRect(ClientRect);
 
   if csDesigning in ComponentState then exit;
 
-  try
-    dr := TPLDrawingRenderer.Create(self.Canvas);
-    try
-      if Assigned(FDocument) and Assigned(FDocument.Root) then
-        FDocument.Root.Draw(dr);
+  Canvas.Draw(0, 0, FBuffer);
+end;
 
-      // - tests -
-      //dr.DrawBox(TPLRectF.Create(10, 10, 200, 50), TPLCSSDeclarations.Create('border-color: red; background-color: #bbb;'), nil, false, true); // rendering
-      //Canvas.TextOut(10, 10, FormatDateTime('hh:nn:ss,zzz', Now)); // fps
-    finally
-      dr.Free;
-    end;
-  except
-    on e: exception do Canvas.TextOut(10, 10, e.Message);
-  end;
+procedure TPLHTMLFrame.RedrawBuffer;
+begin
+  FRenderingManager.QueueRedraw;
 end;
 
 procedure TPLHTMLFrame.UpdateEnvironment;
@@ -147,6 +140,16 @@ begin
   FEventManager.StartEvents;
   FStylesManager.StartStyling;
   FRenderingManager.StartRendering;
+end;
+
+procedure TPLHTMLFrame.Resize;
+begin
+  inherited Resize;
+
+  if csDesigning in ComponentState then begin
+    Invalidate;
+    exit;
+  end;
 end;
 
 procedure TPLHTMLFrame.WMSetFocus(var Message: TLMSetFocus);
@@ -418,6 +421,11 @@ begin
     csReplicatable] - [csAcceptsControls, csNoFocus, csNoStdEvents];
   Parent := AOwner as TWinControl;
   TabStop := true;
+  DoubleBuffered := true;
+
+  FBuffer := Graphics.TBitmap.Create;
+  FBuffer.PixelFormat := pf32bit;
+  FBuffer.SetSize(Width, Height);
 
   FDocument := TPLHTMLDocument.Create;
   FPointer := TPLPointF.Create(-1, -1);
@@ -439,6 +447,8 @@ begin
 
   FDocument.Free;
 
+  FBuffer.Free;
+
   inherited Destroy;
 end;
 
@@ -447,6 +457,32 @@ begin
   inherited AfterConstruction;
 
   FRenderingManager := TPLDrawingRendererManager.Create(self);
+end;
+
+procedure TPLHTMLFrame.Redraw;
+var
+  dr: TPLDrawingRenderer;
+begin
+  try
+    FBuffer.SetSize(Width, Height);
+    FBuffer.Canvas.Brush.Color := clWhite;
+    FBuffer.Canvas.FillRect(FBuffer.Canvas.ClipRect);
+
+    //FBuffer.Canvas.TextOut(0, 0, FormatDateTime('hh:nn:ss,zzz', Now)); // fps test
+
+    dr := TPLDrawingRenderer.Create(FBuffer.Canvas);
+    try
+      if Assigned(FDocument) and Assigned(FDocument.Root) then
+        FDocument.Root.Draw(dr);
+
+      // test 2.
+      //dr.DrawBox(TPLRectF.Create(50, 50, 200, 50), TPLCSSDeclarations.Create('border-color: red; background-color: #bbb;'), nil, false, true); // rendering
+    finally
+      dr.Free;
+    end;
+  except
+    on e: exception do FBuffer.Canvas.TextOut(10, 10, e.Message);
+  end;
 end;
 
 function TPLHTMLFrame.QuerySelector(const AQuery: TPLString): TPLHTMLObject;

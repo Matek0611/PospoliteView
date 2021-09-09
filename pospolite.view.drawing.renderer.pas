@@ -65,6 +65,26 @@ type
 
   TPLDrawingRendererManager = class;
 
+  { TPLDrawingRendererQueueThread }
+
+  TPLDrawingRendererQueueThread = class(TThread)
+  private
+    FEnabled: TPLBool;
+    FManager: TPLDrawingRendererManager;
+    FQueueCounter: QWord;
+
+    function GetEnabled: TPLBool;
+    procedure SetEnabled(AValue: TPLBool);
+    procedure Update;
+  public
+    constructor Create(AManager: TPLDrawingRendererManager);
+
+    procedure Execute; override;
+    procedure QueueRedraw;
+
+    property Enabled: TPLBool read GetEnabled write SetEnabled;
+  end;
+
   { TPLDrawingRendererThread }
 
   TPLDrawingRendererThread = class(TThread)
@@ -90,6 +110,7 @@ type
     FControl: TPLCustomControl;
     FMaxFPS: TPLDrawingRendererFPS;
     FThread: TPLDrawingRendererThread;
+    FQThread: TPLDrawingRendererQueueThread;
   public
     constructor Create(AControl: TPLCustomControl);
     destructor Destroy; override;
@@ -98,13 +119,15 @@ type
     procedure StopRendering;
     function IsRendering: TPLBool; //inline;
 
+    procedure QueueRedraw;
+
     property Control: TPLCustomControl read FControl write FControl;
     property MaxFPS: TPLDrawingRendererFPS read FMaxFPS write FMaxFPS default 60;
   end;
 
 implementation
 
-uses {$ifdef windows}Windows,{$endif} math, Dialogs;
+uses {$ifdef windows}Windows,{$endif} math, Dialogs, Forms;
 
 function NewDrawingMatrix: IPLDrawingMatrix; inline;
 begin
@@ -723,12 +746,67 @@ begin
   Result := TPLDrawingRenderer.Create(ACanvas);
 end;
 
+{ TPLDrawingRendererQueueThread }
+
+function TPLDrawingRendererQueueThread.GetEnabled: TPLBool;
+begin
+  Result := FEnabled;
+end;
+
+procedure TPLDrawingRendererQueueThread.SetEnabled(AValue: TPLBool);
+begin
+  if FEnabled = AValue then exit;
+
+  Suspended := not AValue;
+  FEnabled := AValue;
+end;
+
+procedure TPLDrawingRendererQueueThread.Update;
+begin
+  if Assigned(FManager) and Assigned(FManager.FControl) then begin
+    FManager.FControl.Redraw;
+    //Application.ProcessMessages;
+  end;
+end;
+
+constructor TPLDrawingRendererQueueThread.Create(
+  AManager: TPLDrawingRendererManager);
+begin
+  inherited Create(true);
+
+  FManager := AManager;
+  Suspended := true;
+  FreeOnTerminate := false;
+  FEnabled := false;
+  FQueueCounter := 0;
+end;
+
+procedure TPLDrawingRendererQueueThread.Execute;
+begin
+  while FEnabled and not Terminated do begin
+    if FQueueCounter > 0 then begin
+      Dec(FQueueCounter);
+
+      Synchronize(@Update);
+    end;
+
+    Sleep(1000 div FManager.FMaxFPS);
+  end;
+end;
+
+procedure TPLDrawingRendererQueueThread.QueueRedraw;
+begin
+  Inc(FQueueCounter);
+end;
+
 { TPLDrawingRendererThread }
 
 procedure TPLDrawingRendererThread.UpdateRendering;
 begin
-  if Assigned(FManager) and Assigned(FManager.FControl) then
-    FManager.FControl.Refresh;
+  if Assigned(FManager) and Assigned(FManager.FControl) then begin
+    FManager.FControl.Invalidate;
+    Application.ProcessMessages;
+  end;
 end;
 
 constructor TPLDrawingRendererThread.Create(AManager: TPLDrawingRendererManager
@@ -750,6 +828,7 @@ begin
 
   while FEnabled do begin
     Synchronize(@UpdateRendering);
+    FManager.QueueRedraw;
 
     Sleep(delay);
   end;
@@ -764,10 +843,15 @@ begin
   FControl := AControl;
   FMaxFPS := 30;
   FThread := TPLDrawingRendererThread.Create(self);
+  FQThread := TPLDrawingRendererQueueThread.Create(self);
 end;
 
 destructor TPLDrawingRendererManager.Destroy;
 begin
+  FQThread.Enabled := false;
+  FQThread.Terminate;
+  FQThread.Free;
+
   FThread.Enabled := false;
   FThread.Terminate;
   FThread.Free;
@@ -779,17 +863,27 @@ procedure TPLDrawingRendererManager.StartRendering;
 begin
   FThread.Enabled := true;
   FThread.Start;
+
+  FQThread.Enabled := true;
+  QueueRedraw;
 end;
 
 procedure TPLDrawingRendererManager.StopRendering;
 begin
   FThread.Enabled := false;
   FThread.Suspended := true;
+
+  FQThread.Enabled := false;
 end;
 
 function TPLDrawingRendererManager.IsRendering: TPLBool;
 begin
   Result := not FThread.Finished and not FThread.Suspended;
+end;
+
+procedure TPLDrawingRendererManager.QueueRedraw;
+begin
+  if IsRendering then FQThread.QueueRedraw;
 end;
 
 end.
