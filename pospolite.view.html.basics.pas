@@ -34,13 +34,13 @@ type
   private
     FEventTarget: TPLHTMLEventTarget;
     FRealPos: TPLPointF;
-    FRenderer: TPLDrawingRenderer;
     FScrolling: TPLHTMLScrolling;
     FSize: TPLRectF;
   protected
     procedure InitStates; override;
     procedure DoneStates; override;
-    procedure DoDraw; override;
+    procedure DoDraw(ADrawer: Pointer); override;
+    procedure Render(ARenderer: TPLDrawingRenderer); virtual;
   protected
     // https://developer.mozilla.org/en-US/docs/Web/Events
     procedure InitEventTarget; virtual;
@@ -62,7 +62,7 @@ type
     procedure EventOnFocus(const {%H-}AArguments: array of const); virtual;
     procedure EventOnBlur(const {%H-}AArguments: array of const); virtual;
   public
-    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer); virtual; reintroduce;
+    constructor Create(AParent: TPLHTMLBasicObject); virtual; reintroduce;
     destructor Destroy; override;
 
     function Clone: IPLHTMLObject; override;
@@ -82,13 +82,10 @@ type
     function GetRealLeft: TPLFloat; override;
     function GetElementTarget: Pointer; override;
 
-    procedure Draw; reintroduce;
-
     function IsVisible: TPLBool; override;
     function Display: TPLString; override;
     function PositionType: TPLString; override;
 
-    property Renderer: TPLDrawingRenderer read FRenderer;
     property Scrolling: TPLHTMLScrolling read FScrolling;
     property Size: TPLRectF read FSize write FSize;
     property RealPos: TPLPointF read FRealPos write FRealPos;
@@ -99,18 +96,19 @@ type
 
   TPLHTMLRootObject = class(TPLHTMLBasicObject)
   public
-    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
-      override;
+    constructor Create(AParent: TPLHTMLBasicObject); override;
+
+    function CoordsInObject(const AX, AY: TPLFloat): TPLBool; override;
   end;
 
   { TPLHTMLVoidObject }
 
   TPLHTMLVoidObject = class(TPLHTMLBasicObject)
   public
-    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
-      override;
+    constructor Create(AParent: TPLHTMLBasicObject); override;
 
     function ToHTML: TPLString; override;
+    function CoordsInObject(const AX, AY: TPLFloat): TPLBool; override;
   end;
 
   { TPLHTMLNormalObject }
@@ -121,7 +119,7 @@ type
     FBounds: TPLRectF;
     FBindings: TPLCSSSelectorBind;
   public
-    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
+    constructor Create(AParent: TPLHTMLBasicObject);
       override;
     destructor Destroy; override;
 
@@ -136,18 +134,19 @@ type
 
   TPLHTMLTextObject = class(TPLHTMLBasicObject)
   public
-    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
-      override;
+    constructor Create(AParent: TPLHTMLBasicObject); override;
 
     function ToHTML: TPLString; override;
+    function CoordsInObject(const AX, AY: TPLFloat): TPLBool; override;
   end;
 
   { TPLHTMLObjectDIV }
 
   TPLHTMLObjectDIV = class(TPLHTMLNormalObject)
+  protected
+    procedure Render(ARenderer: TPLDrawingRenderer); override;
   public
-    constructor Create(AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer);
-      override;
+    constructor Create(AParent: TPLHTMLBasicObject); override;
   end;
 
   { TPLHTMLObjectFactory }
@@ -159,8 +158,8 @@ type
       'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr'
     );
   public
-    class function CreateObjectByTagName(const ATagName: TPLString; AParent: TPLHTMLBasicObject;
-      ARenderer: TPLDrawingRenderer = nil): TPLHTMLBasicObject;
+    class function CreateObjectByTagName(const ATagName: TPLString;
+      AParent: TPLHTMLBasicObject): TPLHTMLBasicObject;
     class function GetTextNodes(AObject: TPLHTMLObject): TPLHTMLObjects;
     class function GetTextFromTextNodes(AObject: TPLHTMLObject): TPLString;
     class function GetTextNodesCount(AObject: TPLHTMLObject): SizeInt;
@@ -190,10 +189,17 @@ begin
     TPLCSSDeclarations(FStates[s]).Free;
 end;
 
-procedure TPLHTMLBasicObject.DoDraw;
+procedure TPLHTMLBasicObject.DoDraw(ADrawer: Pointer);
 begin
-  inherited DoDraw;
-  FScrolling.Draw;
+  inherited DoDraw(ADrawer);
+
+  Render(TPLDrawingRenderer(ADrawer));
+  FScrolling.Draw(TPLDrawingRenderer(ADrawer));
+end;
+
+procedure TPLHTMLBasicObject.Render(ARenderer: TPLDrawingRenderer);
+begin
+  //...
 end;
 
 procedure TPLHTMLBasicObject.InitEventTarget;
@@ -316,14 +322,12 @@ begin
 
 end;
 
-constructor TPLHTMLBasicObject.Create(AParent: TPLHTMLBasicObject;
-  ARenderer: TPLDrawingRenderer);
+constructor TPLHTMLBasicObject.Create(AParent: TPLHTMLBasicObject);
 begin
   inherited Create(AParent);
 
-  FRenderer := ARenderer;
   FNodeType := ontDocumentFragmentNode;
-  FScrolling := TPLHTMLScrolling.Create(self, FRenderer);
+  FScrolling := TPLHTMLScrolling.Create(self);
 
   FEventTarget := TPLHTMLEventTarget.Create(self);
   InitEventTarget;
@@ -339,7 +343,7 @@ end;
 
 function TPLHTMLBasicObject.Clone: IPLHTMLObject;
 begin
-  Result := TPLHTMLBasicObject.Create(Parent as TPLHTMLBasicObject, FRenderer);
+  Result := TPLHTMLBasicObject.Create(Parent as TPLHTMLBasicObject);
 end;
 
 function TPLHTMLBasicObject.CSS_InheritValueOf(APropName: TPLString; AId: TPLInt
@@ -411,13 +415,6 @@ begin
   Result := FEventTarget;
 end;
 
-procedure TPLHTMLBasicObject.Draw;
-begin
-  if not Assigned(FRenderer) then exit;
-
-  inherited Draw;
-end;
-
 function TPLHTMLBasicObject.IsVisible: TPLBool;
 var
   p: Pointer;
@@ -450,21 +447,24 @@ end;
 
 { TPLHTMLRootObject }
 
-constructor TPLHTMLRootObject.Create(AParent: TPLHTMLBasicObject;
-  ARenderer: TPLDrawingRenderer);
+constructor TPLHTMLRootObject.Create(AParent: TPLHTMLBasicObject);
 begin
-  inherited Create(AParent, ARenderer);
+  inherited Create(AParent);
 
   FName := 'internal_root_object';
   FNodeType := ontDocumentNode;
 end;
 
+function TPLHTMLRootObject.CoordsInObject(const AX, AY: TPLFloat): TPLBool;
+begin
+  Result := false;
+end;
+
 { TPLHTMLVoidObject }
 
-constructor TPLHTMLVoidObject.Create(AParent: TPLHTMLBasicObject;
-  ARenderer: TPLDrawingRenderer);
+constructor TPLHTMLVoidObject.Create(AParent: TPLHTMLBasicObject);
 begin
-  inherited Create(AParent, ARenderer);
+  inherited Create(AParent);
 
   FName := 'internal_void_object';
   FNodeType := ontDocumentFragmentNode;
@@ -495,12 +495,16 @@ begin
   Result := '<!' + ts + Text + te + '>';
 end;
 
+function TPLHTMLVoidObject.CoordsInObject(const AX, AY: TPLFloat): TPLBool;
+begin
+  Result := false;
+end;
+
 { TPLHTMLTextObject }
 
-constructor TPLHTMLTextObject.Create(AParent: TPLHTMLBasicObject;
-  ARenderer: TPLDrawingRenderer);
+constructor TPLHTMLTextObject.Create(AParent: TPLHTMLBasicObject);
 begin
-  inherited Create(AParent, ARenderer);
+  inherited Create(AParent);
 
   FName := 'internal_text_object';
   FNodeType := ontTextNode;
@@ -511,12 +515,16 @@ begin
   Result := Text;
 end;
 
+function TPLHTMLTextObject.CoordsInObject(const AX, AY: TPLFloat): TPLBool;
+begin
+  Result := false;
+end;
+
 { TPLHTMLNormalObject }
 
-constructor TPLHTMLNormalObject.Create(AParent: TPLHTMLBasicObject;
-  ARenderer: TPLDrawingRenderer);
+constructor TPLHTMLNormalObject.Create(AParent: TPLHTMLBasicObject);
 begin
-  inherited Create(AParent, ARenderer);
+  inherited Create(AParent);
 
   FName := 'internal_normal_object';
   FNodeType := ontElementNode;
@@ -543,10 +551,14 @@ end;
 
 { TPLHTMLObjectDIV }
 
-constructor TPLHTMLObjectDIV.Create(AParent: TPLHTMLBasicObject;
-  ARenderer: TPLDrawingRenderer);
+procedure TPLHTMLObjectDIV.Render(ARenderer: TPLDrawingRenderer);
 begin
-  inherited Create(AParent, ARenderer);
+  inherited Render(ARenderer);
+end;
+
+constructor TPLHTMLObjectDIV.Create(AParent: TPLHTMLBasicObject);
+begin
+  inherited Create(AParent);
 
   FName := 'div';
 end;
@@ -554,16 +566,13 @@ end;
 { TPLHTMLObjectFactory }
 
 class function TPLHTMLObjectFactory.CreateObjectByTagName(const ATagName: TPLString;
-  AParent: TPLHTMLBasicObject; ARenderer: TPLDrawingRenderer
-  ): TPLHTMLBasicObject;
+  AParent: TPLHTMLBasicObject): TPLHTMLBasicObject;
 begin
-  if not Assigned(ARenderer) then ARenderer := AParent.Renderer;
-
   case ATagName.ToLower of
-    'internal_text_object': Result := TPLHTMLTextObject.Create(AParent, ARenderer);
-    'div': Result := TPLHTMLObjectDIV.Create(AParent, ARenderer);
+    'internal_text_object': Result := TPLHTMLTextObject.Create(AParent);
+    'div': Result := TPLHTMLObjectDIV.Create(AParent);
     else begin
-      Result := TPLHTMLNormalObject.Create(AParent, ARenderer);
+      Result := TPLHTMLNormalObject.Create(AParent);
       Result.Name := ATagName;
     end;
   end;

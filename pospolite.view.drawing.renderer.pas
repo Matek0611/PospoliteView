@@ -26,7 +26,7 @@ type
   {$ifdef windows}
     TPLDrawingDrawerDef = TPLD2D1Drawer;
   {$else}
-    TPLDrawingDrawerDef = TPLAbstractDrawer;
+    TPLDrawingDrawerDef = TPLAbstractDrawer; // to do TPLNativeDrawer
   {$endif}
 
   { IPLDrawingRenderer }
@@ -762,7 +762,7 @@ begin
   inherited Create;
 
   FControl := AControl;
-  FMaxFPS := 60;
+  FMaxFPS := 30;
   FThread := TPLDrawingRendererThread.Create(self);
 end;
 

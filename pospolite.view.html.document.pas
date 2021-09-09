@@ -27,11 +27,12 @@ type
 
   TPLHTMLDocument = class(TInterfacedObject, IPLHTMLDocument)
   private
+    FBody: TPLHTMLObject;
     FFile: TPLString;
+    FHead: TPLHTMLObject;
     FIsLocal: TPLBool;
     FRoot: TPLHTMLRootObject;
     FMimeType: TPLString;
-    FRenderer: TPLDrawingRenderer;
     FIsLoading: TPLBool;
     function GetContent: TPLString;
     function GetMimeType: TPLString;
@@ -59,8 +60,9 @@ type
     property Content: TPLString read GetContent;
     property MimeType: TPLString read GetMimeType;
     property Root: TPLHTMLObject read GetRoot;
-    property Renderer: TPLDrawingRenderer read FRenderer write FRenderer;
     property IsLoading: TPLBool read FIsLoading;
+    property Body: TPLHTMLObject read FBody;
+    property Head: TPLHTMLObject read FHead;
   end;
 
 implementation
@@ -108,7 +110,7 @@ begin
   if not IsLoaded then exit;
 
   if Assigned(FRoot) then FreeAndNil(FRoot);
-  FRoot := TPLHTMLRootObject.Create(nil, FRenderer);
+  FRoot := TPLHTMLRootObject.Create(nil);
 
   if not FMimeType.Exists('html') then begin
     InternalLoadOther(ASource);
@@ -126,6 +128,9 @@ begin
         p.Parse(HTML_ERROR_TEMPLATE.Format(['Error', 'Error occured', e.Message]), FRoot);
       end;
     end;
+
+    FBody := querySelector('internal_root_object > html > body');
+    FHead := querySelector('internal_root_object > html > head');
   finally
     p.Free;
   end;
@@ -145,12 +150,13 @@ begin
   FIsLocal := true;
   FRoot := nil;
   FIsLoading := false;
+  FBody := nil;
+  FHead := nil;
 end;
 
 destructor TPLHTMLDocument.Destroy;
 begin
   if Assigned(FRoot) then FRoot.Free;
-  if Assigned(FRenderer) then FRenderer.Free;
 
   inherited Destroy;
 end;
@@ -164,6 +170,8 @@ begin
   FIsLocal := true;
   FFile := '';
   FRoot := nil;
+  FBody := nil;
+  FHead := nil;
 
   case TPLString(ExtractFileExt(AFileName)).ToLower.Replace('.', '') of
     'html', 'htm': FMimeType := 'text/html';
@@ -215,6 +223,8 @@ begin
   FIsLocal := false;
   FFile := '';
   FRoot := nil;
+  FBody := nil;
+  FHead := nil;
 
   try
     oc := OnlineClient;
@@ -244,6 +254,8 @@ begin
   FFile := '<string>';
   FMimeType := 'text/html';
   FRoot := nil;
+  FBody := nil;
+  FHead := nil;
 
   InternalLoad(AText);
   FIsLoading := false;

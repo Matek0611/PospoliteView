@@ -263,7 +263,7 @@ begin
   while not IsEOF and (FSource.SubStr(Position, l) <> AEnd) do MovePosForward;
 
   if FSource.SubStr(Position, l) = AEnd then begin
-    Result := TPLHTMLVoidObject.Create(AParent, AParent.Renderer);
+    Result := TPLHTMLVoidObject.Create(AParent);
     Result.Position := s;
     Result.Text := FSource.SubStr(s, Position - s).Trim;
     Result.Name := AName;

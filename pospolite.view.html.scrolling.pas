@@ -18,7 +18,8 @@ unit Pospolite.View.HTML.Scrolling;
 interface
 
 uses
-  Classes, SysUtils, math, Pospolite.View.Basics, Pospolite.View.Drawing.Basics;
+  Classes, SysUtils, math, Pospolite.View.Basics, Pospolite.View.Drawing.Basics,
+  Pospolite.View.Drawing.Renderer;
 
 type
 
@@ -50,17 +51,15 @@ type
     FRenderer: TObject;
     procedure SetInfo(AValue: TPLHTMLScrollingInfo);
   public
-    constructor Create(AObject: TPLHTMLObject; ARenderer: TObject);
+    constructor Create(AObject: TPLHTMLObject);
 
     procedure UpdateScrolling;
-    procedure Draw;
+    procedure Draw(ARenderer: TPLDrawingRenderer);
 
     property Info: TPLHTMLScrollingInfo read FInfo write SetInfo;
   end;
 
 implementation
-
-uses Pospolite.View.Drawing.Renderer;
 
 { TPLHTMLScrollingRealSize }
 
@@ -88,12 +87,11 @@ begin
   UpdateScrolling;
 end;
 
-constructor TPLHTMLScrolling.Create(AObject: TPLHTMLObject; ARenderer: TObject);
+constructor TPLHTMLScrolling.Create(AObject: TPLHTMLObject);
 begin
   inherited Create;
 
   FObject := AObject;
-  FRenderer := ARenderer;
 end;
 
 procedure TPLHTMLScrolling.UpdateScrolling;
@@ -115,12 +113,10 @@ begin
   end;
 end;
 
-procedure TPLHTMLScrolling.Draw;
+procedure TPLHTMLScrolling.Draw(ARenderer: TPLDrawingRenderer);
 var
-  r: TPLDrawingRenderer;
+  r: TPLDrawingRenderer absolute ARenderer;
 begin
-  r := TPLDrawingRenderer(FRenderer);
-
 
 end;
 

@@ -418,7 +418,7 @@ type
     procedure CSS_Set(APropName: TPLString; const APropValue); // set value to css property
 
     procedure UpdateScrollbars;
-    procedure Draw;
+    procedure Draw(ADrawer: Pointer);
     function ToHTML: TPLString;
     function ToObject: TPLHTMLObject;
     function PositionInParent: SizeInt;
@@ -476,7 +476,7 @@ type
     procedure SetText(AValue: TPLString);
     procedure SetZoom(AValue: TPLFloat);
   protected
-    procedure DoDraw; virtual;
+    procedure DoDraw(ADrawer: Pointer); virtual;
     function DoToHTMLChildren: TPLString;
     procedure InitStates; virtual;
     procedure DoneStates; virtual;
@@ -494,7 +494,7 @@ type
     procedure CSS_Set(APropName: TPLString; const APropValue); virtual;
 
     procedure UpdateScrollbars; virtual;
-    procedure Draw;
+    procedure Draw(ADrawer: Pointer);
     function ToHTML: TPLString; virtual;
     function ToObject: TPLHTMLObject;
     function PositionInParent: SizeInt;
@@ -511,7 +511,7 @@ type
     function Display: TPLString; virtual;
     function IsLink: TPLBool; virtual;
     function PositionType: TPLString; virtual;
-    function CoordsInObject(const AX, AY: TPLFloat): TPLBool;
+    function CoordsInObject(const AX, AY: TPLFloat): TPLBool; virtual;
     function CoordsInObjectOnly(const AX, AY: TPLFloat): TPLBool;
 
     property Zoom: TPLFloat read GetZoom write SetZoom;

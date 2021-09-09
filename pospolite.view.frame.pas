@@ -86,28 +86,34 @@ type
 
 implementation
 
-uses variants;
+uses variants, dialogs, Pospolite.View.CSS.Declaration;
 
 { TPLHTMLFrame }
 
 procedure TPLHTMLFrame.Paint;
+var
+  dr: IPLDrawingRenderer;
 begin
   Canvas.Brush.Color := clWhite;
   Canvas.FillRect(ClientRect);
 
   if csDesigning in ComponentState then exit;
 
-  if Assigned(FDocument) and Assigned(FDocument.Root) then
-    FDocument.Root.Draw;
+  dr := NewDrawingRenderer(self.Canvas);
 
-  //Canvas.TextOut(10, 10, FormatDateTime('hh:nn:ss,zzz', Now)); // for fps testing
+  if Assigned(FDocument) and Assigned(FDocument.Root) then
+    FDocument.Root.Draw(dr);
+
+  // - tests -
+  dr.DrawBox(TPLRectF.Create(10, 10, 200, 50), TPLCSSDeclarations.Create('border-color: red; background-color: #bbb;'), nil, false, true); // rendering
+  //Canvas.TextOut(10, 10, FormatDateTime('hh:nn:ss,zzz', Now)); // fps
 end;
 
 procedure TPLHTMLFrame.UpdateEnvironment;
 begin
   if not Assigned(FStylesManager) then exit;
 
-  FStylesManager.Environment.DocumentBody := FDocument.querySelector('internal_root_object > html > body');
+  FStylesManager.Environment.DocumentBody := FDocument.Body;
   FStylesManager.Environment.Viewport.Width := Width;
   FStylesManager.Environment.Viewport.Height := Height;
 end;
@@ -173,7 +179,7 @@ begin
   inherited MouseMove(Shift, X, Y);
 
   FPointer := TPLPointF.Create(X, Y);
-  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.MouseLeave;
@@ -197,7 +203,7 @@ procedure TPLHTMLFrame.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
 begin
   inherited MouseDown(Button, Shift, X, Y);
 
-  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
@@ -214,7 +220,7 @@ procedure TPLHTMLFrame.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
 begin
   inherited MouseUp(Button, Shift, X, Y);
 
-  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.KeyPress(var Key: char);
@@ -254,7 +260,7 @@ procedure TPLHTMLFrame.Click;
 begin
   inherited Click;
 
-  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.DblClick;
@@ -270,7 +276,7 @@ procedure TPLHTMLFrame.DblClick;
 begin
   inherited DblClick;
 
-  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.TripleClick;
@@ -279,14 +285,16 @@ procedure TPLHTMLFrame.TripleClick;
   begin
     if not Assigned(obj) then exit;
 
-    if obj.CoordsInObjectOnly(FPointer.X, FPointer.Y) then
+    if obj.CoordsInObjectOnly(FPointer.X, FPointer.Y) then begin
       FEventManager.DoEvent(obj, 'tripleclick', [FPointer.X, FPointer.Y]);
+      FEventManager.DoEvent(obj, 'click', [FPointer.X, FPointer.Y, 3]);
+    end;
   end;
 
 begin
   inherited TripleClick;
 
-  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.QuadClick;
@@ -295,14 +303,16 @@ procedure TPLHTMLFrame.QuadClick;
   begin
     if not Assigned(obj) then exit;
 
-    if obj.CoordsInObjectOnly(FPointer.X, FPointer.Y) then
+    if obj.CoordsInObjectOnly(FPointer.X, FPointer.Y) then begin
       FEventManager.DoEvent(obj, 'quadclick', [FPointer.X, FPointer.Y]);
+      FEventManager.DoEvent(obj, 'click', [FPointer.X, FPointer.Y, 4]);
+    end;
   end;
 
 begin
   inherited QuadClick;
 
-  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.DoContextPopup(MousePos: TPoint; var Handled: Boolean);
@@ -314,8 +324,11 @@ procedure TPLHTMLFrame.DoContextPopup(MousePos: TPoint; var Handled: Boolean);
     if not Assigned(obj) then exit;
 
     if obj.CoordsInObjectOnly(MousePos.X, MousePos.Y) then begin
-      ls := TPLHTMLBasicObject(obj).EventTarget.GetEventListeners('contextmenu');
-      if Assigned(ls) and (ls.Count > 1) then Handled := true;
+      if not Handled then begin
+        ls := TPLHTMLBasicObject(obj).EventTarget.GetEventListeners('contextmenu');
+        if Assigned(ls) and (ls.Count > 1) then Handled := true;
+      end;
+
       FEventManager.DoEvent(obj, 'contextmenu', [MousePos.X, MousePos.Y]);
     end;
   end;
@@ -323,7 +336,7 @@ procedure TPLHTMLFrame.DoContextPopup(MousePos: TPoint; var Handled: Boolean);
 begin
   inherited DoContextPopup(MousePos, Handled);
 
-  EnumObjects(@AnalyzeProc, FDocument.querySelector('internal_root_object > html > body'));
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.EnumObjects(const AProc: TPLNestedHTMLObjectProc;
@@ -381,7 +394,6 @@ procedure TPLHTMLFrame.AfterConstruction;
 begin
   inherited AfterConstruction;
 
-  FDocument.Renderer := TPLDrawingRenderer.Create(self.Canvas);
   FRenderingManager := TPLDrawingRendererManager.Create(self);
 end;
 

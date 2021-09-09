@@ -472,6 +472,8 @@ type
     procedure Clear; override;
   end;
 
+  //TPLDrawingText
+
 { Matrix math }
 
 const
@@ -543,7 +545,7 @@ var
 function RenderFactory: ID2D1Factory;
 begin
   if RenderFactoryInstance = nil then
-    D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, IID_ID2D1Factory, nil,
+    D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, IID_ID2D1Factory, nil,
       RenderFactoryInstance);
   Result := RenderFactoryInstance;
 end;
@@ -570,7 +572,6 @@ begin
   Result.pixelFormat := DefaultPixelFormat;
   Result.dpiX := 0;
   Result.dpiY := 0;
-  { TODO: Review performance of D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE }
   Result.usage := D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE;
   Result.minLevel := D2D1_FEATURE_LEVEL_DEFAULT;
 end;
@@ -698,7 +699,6 @@ begin
     I := Stops.Count;
   end;
   Gamma := D2D1_GAMMA_2_2;
-  //WriteLn(I);
   Target.CreateGradientStopCollection(S, I, Gamma, Wraps[Wrap], Collection);
   Target.CreateLinearGradientBrush(LineProp, @BrushProp, Collection, Result);
 end;

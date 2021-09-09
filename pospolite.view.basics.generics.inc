@@ -739,7 +739,7 @@ begin
   FZoom := AValue;
 end;
 
-procedure TPLHTMLObject.DoDraw;
+procedure TPLHTMLObject.DoDraw(ADrawer: Pointer);
 begin
   // ...
 end;
@@ -840,14 +840,19 @@ begin
   // ...
 end;
 
-procedure TPLHTMLObject.Draw;
+procedure TPLHTMLObject.Draw(ADrawer: Pointer);
 var
   obj: TPLHTMLObject;
+  wr: TPLBool;
 begin
   if not isVisible or (Display = 'none') then exit;
 
-  DoDraw;
-  for obj in FChildren do obj.DoDraw;
+  wr := Assigned(Parent) and (Parent.ZIndex <= ZIndex);
+
+  if wr then DoDraw(ADrawer);
+  for obj in FChildren do
+    obj.Draw(ADrawer);
+  if not wr then DoDraw(ADrawer);
 end;
 
 function TPLHTMLObject.ToHTML: TPLString;
@@ -931,8 +936,8 @@ end;
 
 function TPLHTMLObject.CoordsInObject(const AX, AY: TPLFloat): TPLBool;
 begin
-  Result := (AX >= GetLeft) and (AX <= GetLeft + GetWidth) and (AY >= GetTop)
-    and (AY <= GetTop + GetWidth);
+  Result := IsVisible and (Display <> 'none') and (AX >= GetLeft) and
+    (AX <= GetLeft + GetWidth) and (AY >= GetTop) and (AY <= GetTop + GetWidth);
 end;
 
 function TPLHTMLObject.CoordsInObjectOnly(const AX, AY: TPLFloat): TPLBool;
