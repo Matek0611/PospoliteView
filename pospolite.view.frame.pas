@@ -468,7 +468,7 @@ begin
     FBuffer.Canvas.Brush.Color := clWhite;
     FBuffer.Canvas.FillRect(FBuffer.Canvas.ClipRect);
 
-    //FBuffer.Canvas.TextOut(0, 0, FormatDateTime('hh:nn:ss,zzz', Now)); // fps test
+    FBuffer.Canvas.TextOut(0, 0, FormatDateTime('hh:nn:ss,zzz', Now)); // fps test
 
     dr := TPLDrawingRenderer.Create(FBuffer.Canvas);
     try

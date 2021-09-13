@@ -20,13 +20,10 @@ interface
 uses
   Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.Drawing.Renderer,
   Pospolite.View.Drawing.Basics, Pospolite.View.CSS.Declaration,
-  Pospolite.View.HTML.Scrolling, Pospolite.View.HTML.Events;
+  Pospolite.View.HTML.Scrolling, Pospolite.View.HTML.Events,
+  Pospolite.View.CSS.Binder;
 
 type
-
-  { TPLCSSSelectorBind }
-
-  TPLCSSSelectorBind = specialize TPLList<TPLCSSDeclarations>; // redef - avoiding circular unit reference
 
   { TPLHTMLBasicObject }
 
@@ -118,19 +115,18 @@ type
 
   TPLHTMLNormalObject = class(TPLHTMLBasicObject)
   private
-    FAnimationOverrides: TPLCSSDeclarations;
     FBounds: TPLRectF;
-    FBindings: TPLCSSSelectorBind;
+    FBindings: TPLCSSStyleBind;
   public
     constructor Create(AParent: TPLHTMLBasicObject);
       override;
     destructor Destroy; override;
 
     function ToHTML: TPLString; override;
+    function GetDefaultBindings: TPLCSSStyleBind;
 
     property Bounds: TPLRectF read FBounds write FBounds;
-    property AnimationOverrides: TPLCSSDeclarations read FAnimationOverrides;
-    property Bindings: TPLCSSSelectorBind read FBindings;
+    property Bindings: TPLCSSStyleBind read FBindings;
   end;
 
   { TPLHTMLTextObject }
@@ -170,7 +166,7 @@ type
 
 implementation
 
-uses Controls, Variants, Pospolite.View.Threads, Pospolite.View.CSS.Binder;
+uses Controls, Variants, Pospolite.View.Threads;
 
 { TPLHTMLBasicObject }
 
@@ -541,15 +537,11 @@ begin
   FName := 'internal_normal_object';
   FNodeType := ontElementNode;
   FBounds := TPLRectF.Create(0, 0, 0, 0);
-  FAnimationOverrides := TPLCSSDeclarations.Create();
-  FBindings := TPLCSSSelectorBind.Create;
+  FBindings := GetDefaultBindings;
 end;
 
 destructor TPLHTMLNormalObject.Destroy;
 begin
-  FAnimationOverrides.Free;
-  FBindings.Free;
-
   inherited Destroy;
 end;
 
@@ -559,6 +551,11 @@ begin
 
   if not (Name in TPLHTMLObjectFactory.VoidElements) then
     Result += Text + DoToHTMLChildren + '</' + Name + '>';
+end;
+
+function TPLHTMLNormalObject.GetDefaultBindings: TPLCSSStyleBind;
+begin
+  Result := Default(TPLCSSStyleBind);
 end;
 
 { TPLHTMLObjectDIV }

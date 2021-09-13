@@ -782,15 +782,18 @@ begin
 end;
 
 procedure TPLDrawingRendererQueueThread.Execute;
+var
+  delay: Cardinal;
 begin
+  delay := round(1000 / FManager.FMaxFPS);
+
   while FEnabled and not Terminated do begin
     if FQueueCounter > 0 then begin
       Dec(FQueueCounter);
-
       Synchronize(@Update);
     end;
 
-    Sleep(1000 div FManager.FMaxFPS);
+    Sleep(delay);
   end;
 end;
 
