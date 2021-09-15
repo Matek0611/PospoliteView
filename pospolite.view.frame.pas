@@ -102,7 +102,7 @@ begin
   Canvas.Brush.Color := clWhite;
   Canvas.FillRect(ClientRect);
 
-  if csDesigning in ComponentState then exit;
+  if (csDesigning in ComponentState) then exit;
 
   Canvas.Draw(0, 0, FBuffer);
 end;
@@ -464,14 +464,17 @@ var
   dr: TPLDrawingRenderer;
 begin
   try
-    FBuffer.SetSize(Width, Height);
+    if (Width <> FBuffer.Width) or (Height <> FBuffer.Height) then
+      FBuffer.SetSize(Width, Height);
     FBuffer.Canvas.Brush.Color := clWhite;
     FBuffer.Canvas.FillRect(FBuffer.Canvas.ClipRect);
 
     //FBuffer.Canvas.TextOut(0, 0, FormatDateTime('hh:nn:ss,zzz', Now)); // fps test
 
-    dr := TPLDrawingRenderer.Create(FBuffer.Canvas); // poważny bug! użycie CPU wzrasta o kilka setnych, mimo, że nie ma wycieków pamięci
+    dr := TPLDrawingRenderer.Create(FBuffer.Canvas);
     try
+      dr.Drawer.Surface.Clear(TPLColor.White); // NA RAZIE NAPRAWIONY BUG #D1 DZIĘKI TEJ LINII (#D1: Krytyczny - użycie CPU wzrasta co chwilę o kilka setnych MB mimo, że nie ma wycieków pamięci)
+
       if Assigned(FDocument) and Assigned(FDocument.Root) then
         FDocument.Root.Draw(dr);
 

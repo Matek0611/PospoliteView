@@ -808,7 +808,7 @@ procedure TPLDrawingRendererThread.UpdateRendering;
 begin
   if Assigned(FManager) and Assigned(FManager.FControl) then begin
     FManager.FControl.Invalidate;
-    Application.ProcessMessages;
+    //Application.ProcessMessages;
   end;
 end;
 
@@ -830,8 +830,8 @@ begin
   delay := round(1000 / FManager.FMaxFPS);
 
   while FEnabled do begin
-    Synchronize(@UpdateRendering);
     FManager.QueueRedraw;
+    Synchronize(@UpdateRendering);
 
     Sleep(delay);
   end;
