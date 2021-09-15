@@ -835,6 +835,25 @@ begin
   // ...
 end;
 
+function TPLHTMLObject.GetCSSProperty(const AName: TPLString;
+  AState: TPLCSSElementState; AUseCommonPrefixes: TPLBool): Pointer;
+begin
+  Result := nil;
+end;
+
+function TPLHTMLObject.GetCSSPropertyValue(const AName: TPLString;
+  AState: TPLCSSElementState; AUseCommonPrefixes: TPLBool; AIndex: SizeInt
+  ): Pointer;
+begin
+  Result := nil;
+end;
+
+procedure TPLHTMLObject.SetCSSPropertyValue(const AName: TPLString;
+  const AValue: Pointer; AState: TPLCSSElementState; AIndex: SizeInt);
+begin
+  // ...
+end;
+
 procedure TPLHTMLObject.UpdateScrollbars;
 begin
   // ...

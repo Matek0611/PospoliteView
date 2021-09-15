@@ -19,6 +19,16 @@ interface
 uses
   Classes, SysUtils, Pospolite.View.Basics;
 
+const
+  // https://developer.mozilla.org/en-US/docs/Glossary/Vendor_Prefix
+  PLCSSCommonPrefixes: array[0..4] of TPLString = (
+    '-webkit-', // Chrome, Safari, newer versions of Opera, almost all iOS browsers including Firefox for iOS; basically, any WebKit based browser
+    '-moz-', // Firefox
+    '-ms-', // Internet Explorer and Microsoft Edge
+    '-o-', // old pre-WebKit versions of Opera
+    '-pl-' // Pospolite View (for experimental features)
+  );
+
 procedure RemoveCSSComments(var ASource: TPLString);
 
 implementation

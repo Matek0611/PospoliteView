@@ -192,7 +192,7 @@ begin
   inherited MouseMove(Shift, X, Y);
 
   FPointer := TPLPointF.Create(X, Y);
-  EnumObjects(@AnalyzeProc, FDocument.Body);
+  //EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.MouseLeave;
@@ -213,7 +213,7 @@ begin
   inherited MouseLeave;
 
   FPointer := TPLPointF.Create(-1, -1);
-  EnumObjects(@AnalyzeProc, FDocument.Body);
+  //EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
@@ -230,7 +230,7 @@ procedure TPLHTMLFrame.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
 begin
   inherited MouseDown(Button, Shift, X, Y);
 
-  EnumObjects(@AnalyzeProc, FDocument.Body);
+  //EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
@@ -247,7 +247,7 @@ procedure TPLHTMLFrame.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
 begin
   inherited MouseUp(Button, Shift, X, Y);
 
-  EnumObjects(@AnalyzeProc, FDocument.Body);
+  //EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 function TPLHTMLFrame.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
@@ -264,7 +264,7 @@ function TPLHTMLFrame.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
 begin
   Result := inherited DoMouseWheel(Shift, WheelDelta, MousePos);
 
-  EnumObjects(@AnalyzeProc, FDocument.Body);
+  //EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.KeyPress(var Key: char);
@@ -304,7 +304,7 @@ procedure TPLHTMLFrame.Click;
 begin
   inherited Click;
 
-  EnumObjects(@AnalyzeProc, FDocument.Body);
+  //EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.DblClick;
@@ -320,7 +320,7 @@ procedure TPLHTMLFrame.DblClick;
 begin
   inherited DblClick;
 
-  EnumObjects(@AnalyzeProc, FDocument.Body);
+  //EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.TripleClick;
@@ -331,14 +331,14 @@ procedure TPLHTMLFrame.TripleClick;
 
     if obj.CoordsInObjectOnly(FPointer.X, FPointer.Y) then begin
       FEventManager.DoEvent(obj, 'tripleclick', [FPointer.X, FPointer.Y]);
-      FEventManager.DoEvent(obj, 'click', [FPointer.X, FPointer.Y, 3]);
+      //FEventManager.DoEvent(obj, 'click', [FPointer.X, FPointer.Y, 3]);
     end;
   end;
 
 begin
   inherited TripleClick;
 
-  EnumObjects(@AnalyzeProc, FDocument.Body);
+  //EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.QuadClick;
@@ -349,14 +349,14 @@ procedure TPLHTMLFrame.QuadClick;
 
     if obj.CoordsInObjectOnly(FPointer.X, FPointer.Y) then begin
       FEventManager.DoEvent(obj, 'quadclick', [FPointer.X, FPointer.Y]);
-      FEventManager.DoEvent(obj, 'click', [FPointer.X, FPointer.Y, 4]);
+      //FEventManager.DoEvent(obj, 'click', [FPointer.X, FPointer.Y, 4]);
     end;
   end;
 
 begin
   inherited QuadClick;
 
-  EnumObjects(@AnalyzeProc, FDocument.Body);
+  //EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.DoContextPopup(MousePos: TPoint; var Handled: Boolean);
@@ -380,7 +380,7 @@ procedure TPLHTMLFrame.DoContextPopup(MousePos: TPoint; var Handled: Boolean);
 begin
   inherited DoContextPopup(MousePos, Handled);
 
-  EnumObjects(@AnalyzeProc, FDocument.Body);
+  //EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.EnumObjects(const AProc: TPLNestedHTMLObjectProc;
@@ -468,9 +468,9 @@ begin
     FBuffer.Canvas.Brush.Color := clWhite;
     FBuffer.Canvas.FillRect(FBuffer.Canvas.ClipRect);
 
-    FBuffer.Canvas.TextOut(0, 0, FormatDateTime('hh:nn:ss,zzz', Now)); // fps test
+    //FBuffer.Canvas.TextOut(0, 0, FormatDateTime('hh:nn:ss,zzz', Now)); // fps test
 
-    dr := TPLDrawingRenderer.Create(FBuffer.Canvas);
+    dr := TPLDrawingRenderer.Create(FBuffer.Canvas); // poważny bug! użycie CPU wzrasta o kilka setnych, mimo, że nie ma wycieków pamięci
     try
       if Assigned(FDocument) and Assigned(FDocument.Root) then
         FDocument.Root.Draw(dr);

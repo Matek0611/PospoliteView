@@ -66,12 +66,12 @@ type
 
     function Clone: IPLHTMLObject; override;
 
-    function CSS_InheritValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; override;
-    function CSS_InitialValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; override;
-    function CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; override;
-    function CSS_RevertValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; override;
-    function CSS_Get(APropName: TPLString): Pointer; override;
-    procedure CSS_Set(APropName: TPLString; const APropValue); override;
+    function GetCSSProperty(const AName: TPLString; AState: TPLCSSElementState;
+      AUseCommonPrefixes: TPLBool = true): Pointer; override;
+    function GetCSSPropertyValue(const AName: TPLString; AState: TPLCSSElementState;
+      AUseCommonPrefixes: TPLBool = true; AIndex: SizeInt = 0): Pointer; override;
+    procedure SetCSSPropertyValue(const AName: TPLString; const AValue: Pointer;
+      AState: TPLCSSElementState; AIndex: SizeInt = 0); override;
 
     function GetHeight: TPLFloat; override;
     function GetWidth: TPLFloat; override;
@@ -166,7 +166,7 @@ type
 
 implementation
 
-uses Controls, Variants, Pospolite.View.Threads;
+uses Controls, Variants, Pospolite.View.Threads, Pospolite.View.CSS.Basics;
 
 { TPLHTMLBasicObject }
 
@@ -205,7 +205,7 @@ end;
 procedure TPLHTMLBasicObject.Render(ARenderer: TPLDrawingRenderer);
 begin
   // only for view object bounds (must be overriden)
-  ARenderer.DrawBox(FSize, TPLCSSDeclarations.Create(''), nil, false, true);
+  //ARenderer.DrawBox(FSize, TPLCSSDeclarations.Create(''), nil, false, true);
   //ARenderer.Drawer.;
 end;
 
@@ -354,38 +354,60 @@ begin
   Result := TPLHTMLBasicObject.Create(Parent as TPLHTMLBasicObject);
 end;
 
-function TPLHTMLBasicObject.CSS_InheritValueOf(APropName: TPLString; AId: TPLInt
-  ): TPLString;
-begin
-
-end;
-
-function TPLHTMLBasicObject.CSS_InitialValueOf(APropName: TPLString; AId: TPLInt
-  ): TPLString;
-begin
-
-end;
-
-function TPLHTMLBasicObject.CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt
-  ): TPLString;
-begin
-
-end;
-
-function TPLHTMLBasicObject.CSS_RevertValueOf(APropName: TPLString; AId: TPLInt
-  ): TPLString;
-begin
-
-end;
-
-function TPLHTMLBasicObject.CSS_Get(APropName: TPLString): Pointer;
+function TPLHTMLBasicObject.GetCSSProperty(const AName: TPLString;
+  AState: TPLCSSElementState; AUseCommonPrefixes: TPLBool): Pointer;
+var
+  i: SizeInt;
+  prop: TPLCSSProperty;
 begin
   Result := nil;
+
+  if TPLCSSDeclarations(FStates[AState]).Exists(AName, prop) then
+    Result := prop;
+
+  if AUseCommonPrefixes and not Assigned(Result) then begin
+    i := 0;
+    while (i < Length(PLCSSCommonPrefixes)) do begin
+      Result := GetCSSProperty(PLCSSCommonPrefixes[i] + AName, AState, false);
+      if Assigned(Result) then break;
+
+      Inc(i);
+    end;
+  end;
 end;
 
-procedure TPLHTMLBasicObject.CSS_Set(APropName: TPLString; const APropValue);
+function TPLHTMLBasicObject.GetCSSPropertyValue(const AName: TPLString;
+  AState: TPLCSSElementState; AUseCommonPrefixes: TPLBool; AIndex: SizeInt
+  ): Pointer;
+var
+  pv: TPLCSSPropertyValue;
 begin
+  if AIndex < 0 then exit(nil);
+  Result := GetCSSProperty(AName, AState, AUseCommonPrefixes);
 
+  if Assigned(Result) then begin
+    pv := TPLCSSProperty(Result).Value;
+    if AIndex < pv.Count then Result := pv[AIndex]
+    else Result := nil;
+  end;
+end;
+
+procedure TPLHTMLBasicObject.SetCSSPropertyValue(const AName: TPLString;
+  const AValue: Pointer; AState: TPLCSSElementState; AIndex: SizeInt);
+var
+  pv: TPLCSSPropertyValue;
+  p: Pointer;
+begin
+  if (AIndex < 0) or not Assigned(AValue) then exit;
+  p := GetCSSProperty(AName, AState, false);
+
+  if Assigned(p) then begin
+    pv := TPLCSSProperty(p).Value;
+    if AIndex < pv.Count then begin
+      pv[AIndex].Free;
+      pv[AIndex] := TPLCSSPropertyValuePart(AValue);
+    end else pv.Add(TPLCSSPropertyValuePart(AValue));
+  end;
 end;
 
 function TPLHTMLBasicObject.GetHeight: TPLFloat;
@@ -427,7 +449,7 @@ function TPLHTMLBasicObject.IsVisible: TPLBool;
 var
   p: Pointer;
 begin
-  p := CSS_Get('visibility');
+  p := GetCSSPropertyValue('visibility', FState, false);
   if not Assigned(p) then exit(true);
 
   Result := TPLCSSProperty(p).AsString.ToLower <> 'hidden';
@@ -437,7 +459,7 @@ function TPLHTMLBasicObject.Display: TPLString;
 var
   p: Pointer;
 begin
-  p := CSS_Get('display');
+  p := GetCSSPropertyValue('display', FState, false);
   if not Assigned(p) then exit('block');
 
   Result := TPLCSSProperty(p).AsString.ToLower;
@@ -447,7 +469,7 @@ function TPLHTMLBasicObject.PositionType: TPLString;
 var
   p: Pointer;
 begin
-  p := CSS_Get('position');
+  p := GetCSSPropertyValue('position', FState, false);
   if not Assigned(p) then exit('static');
 
   Result := TPLCSSProperty(p).AsString.ToLower;

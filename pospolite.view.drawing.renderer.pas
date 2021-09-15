@@ -790,7 +790,7 @@ begin
   while FEnabled and not Terminated do begin
     if FQueueCounter > 0 then begin
       Dec(FQueueCounter);
-      Synchronize(@Update);
+      Update;
     end;
 
     Sleep(delay);
@@ -868,7 +868,6 @@ begin
   FThread.Start;
 
   FQThread.Enabled := true;
-  QueueRedraw;
 end;
 
 procedure TPLDrawingRendererManager.StopRendering;

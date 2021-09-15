@@ -21,7 +21,6 @@ uses
   Classes, SysUtils, strutils, math, Pospolite.View.Basics;
 
 type
-
   TPLJSAtom = TPLUInt;
 
   TPLJSMode = (jsmStrict, jsmStrip, jsmMath);

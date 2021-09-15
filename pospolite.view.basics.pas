@@ -410,12 +410,19 @@ type
     procedure SetText(AValue: TPLString);
     procedure SetZoom(AValue: TPLFloat);
 
-    function CSS_InheritValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
-    function CSS_InitialValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
-    function CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
-    function CSS_RevertValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString;
-    function CSS_Get(APropName: TPLString): Pointer; // get as pointer to css property value part class
-    procedure CSS_Set(APropName: TPLString; const APropValue); // set value to css property
+    function CSS_InheritValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; deprecated;
+    function CSS_InitialValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; deprecated;
+    function CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; deprecated;
+    function CSS_RevertValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; deprecated;
+    function CSS_Get(APropName: TPLString): Pointer; deprecated; // get as pointer to css property value part class
+    procedure CSS_Set(APropName: TPLString; const APropValue); deprecated; // set value to css property
+
+    function GetCSSProperty(const AName: TPLString; AState: TPLCSSElementState;
+      AUseCommonPrefixes: TPLBool = true): Pointer;
+    function GetCSSPropertyValue(const AName: TPLString; AState: TPLCSSElementState;
+      AUseCommonPrefixes: TPLBool = true; AIndex: SizeInt = 0): Pointer;
+    procedure SetCSSPropertyValue(const AName: TPLString; const AValue: Pointer;
+      AState: TPLCSSElementState; AIndex: SizeInt = 0);
 
     procedure UpdateScrollbars;
     procedure Draw(ADrawer: Pointer);
@@ -486,12 +493,19 @@ type
 
     function Clone: IPLHTMLObject; virtual;
 
-    function CSS_InheritValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual;
-    function CSS_InitialValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual;
-    function CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual;
-    function CSS_RevertValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual;
-    function CSS_Get(APropName: TPLString): Pointer; virtual;
-    procedure CSS_Set(APropName: TPLString; const APropValue); virtual;
+    function CSS_InheritValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual; deprecated;
+    function CSS_InitialValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual; deprecated;
+    function CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual; deprecated;
+    function CSS_RevertValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual; deprecated;
+    function CSS_Get(APropName: TPLString): Pointer; virtual; deprecated;
+    procedure CSS_Set(APropName: TPLString; const APropValue); virtual; deprecated;
+
+    function GetCSSProperty(const AName: TPLString; AState: TPLCSSElementState;
+      AUseCommonPrefixes: TPLBool = true): Pointer; virtual;
+    function GetCSSPropertyValue(const AName: TPLString; AState: TPLCSSElementState;
+      AUseCommonPrefixes: TPLBool = true; AIndex: SizeInt = 0): Pointer; virtual;
+    procedure SetCSSPropertyValue(const AName: TPLString; const AValue: Pointer;
+      AState: TPLCSSElementState; AIndex: SizeInt = 0); virtual;
 
     procedure UpdateScrollbars; virtual;
     procedure Draw(ADrawer: Pointer);
