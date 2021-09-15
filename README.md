@@ -13,7 +13,7 @@ If you have any ideas or questions feel free to join the [discussions](https://g
 
  Code Name | Current/Planned Version | FPC Version | Start Date | Release Date | New Features
 :--------- | -----------------------:|:-----------:|:----------:|:------------:|:------------
-Iks | 0.5a / 1.0 | >= 3.0.4 | 09.2020 | 07.2022p | First release
+Iks | 0.5b / 1.0 | >= 3.0.4 | 09.2020 | 07.2022p | First release
 Iks | X / 1.1 | >= 3.0.4 | 07.2022p | 10.2022p | (new features etc.)
 
 \* **p** - planned, **a** - alpha, **b** - beta, **o** - omega
