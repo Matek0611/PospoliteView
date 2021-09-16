@@ -896,6 +896,11 @@ begin
   end;
 end;
 
+procedure TPLHTMLObject.RefreshStyles;
+begin
+  // ...
+end;
+
 function TPLHTMLObject.GetWidth: TPLFloat;
 begin
   Result := 0;

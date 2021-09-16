@@ -226,7 +226,6 @@ type
   TPLCSSStyleBind = packed record
   public
     Properties: array[TPLCSSElementState] of TPLCSSBindingProperties;
-    Current: TPLCSSBindingProperties;
   end;
 
   TPLCSSStyleBinder = class;
@@ -294,27 +293,6 @@ end;
 { TPLCSSStyleBinder }
 
 procedure TPLCSSStyleBinder.InternalUpdate;
-
-  procedure CheckAll(n: TPLHTMLBasicObject);
-  var
-    obj: TPLHTMLObject;
-    sb: TPLCSSStyleBind;
-    no: TPLHTMLNormalObject;
-  begin
-    if not (n is TPLHTMLNormalObject) then exit;
-    no := n as TPLHTMLNormalObject;
-
-    if not Assigned(no.Parent) or not (no.Parent is TPLHTMLNormalObject) then
-      sb := no.GetDefaultBindings
-    else if Assigned(no.Parent) then
-      sb := TPLHTMLNormalObject(no.Parent).Bindings;
-
-
-
-    for obj in n.Children do
-      CheckAll(obj as TPLHTMLBasicObject);
-  end;
-
 var
   b: TPLHTMLBasicObject;
 begin
@@ -322,7 +300,7 @@ begin
   b := TPLHTMLDocument(FDocument).Body as TPLHTMLBasicObject;
   if not Assigned(b) then exit;
 
-  CheckAll(b);
+  b.RefreshStyles;
 end;
 
 constructor TPLCSSStyleBinder.Create(ADocument: Pointer);

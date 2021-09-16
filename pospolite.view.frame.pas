@@ -18,12 +18,13 @@ unit Pospolite.View.Frame;
 interface
 
 uses
-  Classes, SysUtils, Controls, Graphics, Forms, Pospolite.View.Basics,
+  Classes, SysUtils, Controls, Graphics, Forms, LCLType, LCLProc, LMessages,
+  Pospolite.View.Basics, Pospolite.View.HTML.Basics,
   Pospolite.View.HTML.Events, Pospolite.View.HTML.Document,
   Pospolite.View.HTML.Layout, Pospolite.View.Drawing.Basics,
   Pospolite.View.Drawing.Renderer, Pospolite.View.CSS.StyleSheet,
   Pospolite.View.CSS.MediaQuery, Pospolite.View.Threads,
-  Pospolite.View.HTML.Basics, LMessages, LCLType, LCLProc;
+  Pospolite.View.Version;
 
 type
 
@@ -37,6 +38,7 @@ type
     FStylesManager: TPLCSSStyleSheetManager;
     FPointer: TPLPointF;
     FBuffer: Graphics.TBitmap;
+    function GetVersion: TPLString;
   protected
     procedure Paint; override;
     procedure RedrawBuffer;
@@ -89,6 +91,8 @@ type
     property EventManager: TPLHTMLEventManager read FEventManager;
     property RenderingManager: TPLDrawingRendererManager read FRenderingManager;
     property StylesManager: TPLCSSStyleSheetManager read FStylesManager;
+
+    property Version: TPLString read GetVersion;
   end;
 
 implementation
@@ -96,6 +100,11 @@ implementation
 uses variants, dialogs, Pospolite.View.CSS.Declaration;
 
 { TPLHTMLFrame }
+
+function TPLHTMLFrame.GetVersion: TPLString;
+begin
+  Result := TPLViewVersion.Name + ' ' + TPLViewVersion.Version + ' by ' + TPLViewVersion.Author;
+end;
 
 procedure TPLHTMLFrame.Paint;
 begin
@@ -192,7 +201,7 @@ begin
   inherited MouseMove(Shift, X, Y);
 
   FPointer := TPLPointF.Create(X, Y);
-  //EnumObjects(@AnalyzeProc, FDocument.Body);
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.MouseLeave;
@@ -213,7 +222,7 @@ begin
   inherited MouseLeave;
 
   FPointer := TPLPointF.Create(-1, -1);
-  //EnumObjects(@AnalyzeProc, FDocument.Body);
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
@@ -230,7 +239,7 @@ procedure TPLHTMLFrame.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
 begin
   inherited MouseDown(Button, Shift, X, Y);
 
-  //EnumObjects(@AnalyzeProc, FDocument.Body);
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
@@ -247,7 +256,7 @@ procedure TPLHTMLFrame.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
 begin
   inherited MouseUp(Button, Shift, X, Y);
 
-  //EnumObjects(@AnalyzeProc, FDocument.Body);
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 function TPLHTMLFrame.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
@@ -264,7 +273,7 @@ function TPLHTMLFrame.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
 begin
   Result := inherited DoMouseWheel(Shift, WheelDelta, MousePos);
 
-  //EnumObjects(@AnalyzeProc, FDocument.Body);
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.KeyPress(var Key: char);
@@ -304,7 +313,7 @@ procedure TPLHTMLFrame.Click;
 begin
   inherited Click;
 
-  //EnumObjects(@AnalyzeProc, FDocument.Body);
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.DblClick;
@@ -320,7 +329,7 @@ procedure TPLHTMLFrame.DblClick;
 begin
   inherited DblClick;
 
-  //EnumObjects(@AnalyzeProc, FDocument.Body);
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.TripleClick;
@@ -338,7 +347,7 @@ procedure TPLHTMLFrame.TripleClick;
 begin
   inherited TripleClick;
 
-  //EnumObjects(@AnalyzeProc, FDocument.Body);
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.QuadClick;
@@ -356,7 +365,7 @@ procedure TPLHTMLFrame.QuadClick;
 begin
   inherited QuadClick;
 
-  //EnumObjects(@AnalyzeProc, FDocument.Body);
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.DoContextPopup(MousePos: TPoint; var Handled: Boolean);
@@ -380,7 +389,7 @@ procedure TPLHTMLFrame.DoContextPopup(MousePos: TPoint; var Handled: Boolean);
 begin
   inherited DoContextPopup(MousePos, Handled);
 
-  //EnumObjects(@AnalyzeProc, FDocument.Body);
+  EnumObjects(@AnalyzeProc, FDocument.Body);
 end;
 
 procedure TPLHTMLFrame.EnumObjects(const AProc: TPLNestedHTMLObjectProc;

@@ -429,6 +429,7 @@ type
     function ToHTML: TPLString;
     function ToObject: TPLHTMLObject;
     function PositionInParent: SizeInt;
+    procedure RefreshStyles;
 
     property Zoom: TPLFloat read GetZoom write SetZoom;
 
@@ -512,6 +513,7 @@ type
     function ToHTML: TPLString; virtual;
     function ToObject: TPLHTMLObject;
     function PositionInParent: SizeInt;
+    procedure RefreshStyles; virtual;
 
     function GetWidth: TPLFloat; virtual;
     function GetHeight: TPLFloat; virtual;

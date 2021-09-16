@@ -82,6 +82,7 @@ type
     procedure Cancel;
     procedure Suspend;
     procedure Resume;
+    procedure Sleep(const AMilliseconds: Cardinal);
     function IsRunning: TPLBool;
     function IsCancelled: TPLBool;
     function IsFailed: TPLBool;
@@ -112,6 +113,7 @@ type
     procedure Cancel;
     procedure Suspend;
     procedure Resume;
+    procedure Sleep(const AMilliseconds: Cardinal); inline;
     function IsRunning: TPLBool; inline;
     function IsCancelled: TPLBool; inline;
     function IsFailed: TPLBool; inline;
@@ -355,6 +357,11 @@ end;
 procedure TPLAsyncTask.Resume;
 begin
   if FRunning and FThread.Suspended then FThread.Suspended := false;
+end;
+
+procedure TPLAsyncTask.Sleep(const AMilliseconds: Cardinal);
+begin
+  FThread.Sleep(AMilliseconds);
 end;
 
 function TPLAsyncTask.IsRunning: TPLBool;

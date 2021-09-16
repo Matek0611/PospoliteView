@@ -435,6 +435,8 @@ end;
 procedure TPLHTMLEventManager.AsyncProc(const AArguments: array of const);
 begin
   while FEnabled do begin
+    FTask.Sleep(1); // opt
+
     if not Assigned(FDocument) or not Assigned(FQueue) then break;
     if FQueue.Empty then continue;
 

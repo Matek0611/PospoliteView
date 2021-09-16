@@ -24,6 +24,7 @@ type
   TPLHTMLViewer = class(TPLHTMLFrame)
   published
 
+    property Version;
   end;
 
 procedure Register;

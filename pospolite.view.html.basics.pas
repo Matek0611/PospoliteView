@@ -123,7 +123,9 @@ type
     destructor Destroy; override;
 
     function ToHTML: TPLString; override;
+
     function GetDefaultBindings: TPLCSSStyleBind;
+    procedure RefreshStyles; override;
 
     property Bounds: TPLRectF read FBounds write FBounds;
     property Bindings: TPLCSSStyleBind read FBindings;
@@ -578,6 +580,19 @@ end;
 function TPLHTMLNormalObject.GetDefaultBindings: TPLCSSStyleBind;
 begin
   Result := Default(TPLCSSStyleBind);
+end;
+
+procedure TPLHTMLNormalObject.RefreshStyles;
+var
+  obj: TPLHTMLObject;
+  st: TPLCSSElementState;
+begin
+  for st in TPLCSSElementState do begin
+
+  end;
+
+  for obj in Children do
+    obj.RefreshStyles;
 end;
 
 { TPLHTMLObjectDIV }
