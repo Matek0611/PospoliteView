@@ -50,6 +50,7 @@ States: ***🟩** - almost done, **🟨** - in progress, **🟧** - beginning*
 
 ### Planned
 
+- [ ] Demo
 - [ ] CSS Animations
 - [ ] D2D1 Image 
 - [ ] JavaScript Interpreter
