@@ -26,6 +26,10 @@ type
 
   TPLCSSSimpleUnitValue = specialize TPLParameter<TPLFloat, TPLString>;
 
+operator := (const AValue: TPLFloat) r: TPLCSSSimpleUnitValue;
+
+type
+
   { TPLCSSSimpleUnit }
 
   TPLCSSSimpleUnit = packed record
@@ -39,9 +43,20 @@ type
     class operator :=(a: TPLCSSSimpleUnit) r: Variant;
 
     function IsAuto: TPLBool; inline;
+    class function Auto: TPLCSSSimpleUnit; static;
   end;
 
   TPLCSSSimpleUnitFuncs = specialize TPLFuncs<TPLCSSSimpleUnit>;
+
+  { TPLCSSSimpleUnitRect }
+
+  TPLCSSSimpleUnitRect = record
+  public
+    Left, Right, Top, Bottom: TPLCSSSimpleUnit;
+  public
+    constructor Create(const ALeft, ARight, ATop, ABottom: TPLCSSSimpleUnit);
+    constructor Create(const AWhole: TPLCSSSimpleUnit);
+  end;
 
   { TPLCSSBindingProperties }
 
@@ -75,6 +90,7 @@ type
     TListStyleType = (lstDisc, lstCircle, lstSquare, lstDecimal, lstDecimalLeadingZero,
       lstLowerRoman, lstUpperRoman, lstLowerGreek, lstLowerLatin, lstUpperLatin,
       lstArmenian, lstGeorgian, lstLowerAlpha, lstUpperAlpha, lstNone);
+    TPageBreakType = (pbtAuto, pbtAlways, pbtAvoid, pbtLeft, pbtRight);
     TTextDecorationStyleType = (tdstSolid, tdstDouble, tdstDotted, tdstDashed, tdstWavy);
     TTextTransformType = (tttCapitalize, tttLowercase, tttNone, tttUppercase);
     TTransformFunctionType = record
@@ -123,7 +139,7 @@ type
     Clear: TClearType;
     Color: TPLColor;
     Column: record
-      Count: TPLInt;
+      Count: TPLInt; // auto = -1
       Fill: TColumnFillType;
       Gap: TPLCSSSimpleUnit; // normal = 1em
       Rule: record
@@ -132,18 +148,18 @@ type
         Width: TPLCSSSimpleUnit;
       end;
       Span: TPLBool;
-      Width: TPLCSSSimpleUnit; // auto = -1
+      Width: TPLCSSSimpleUnit;
     end;
     Content: TPLString;
     Counter: record
-      Increment: Variant;
+      Increment: array of Variant;
       Reset: Variant;
     end;
     Cursor: TCursor;
     Direction: TPLString;
     EmptyCells: TPLBool;
     Flex: record
-      Basis: TPLInt;
+      Basis: TPLCSSSimpleUnit;
       Direction: TFlexDirectionType;
       Grow: TPLInt;
       Shrink: TPLInt;
@@ -151,7 +167,7 @@ type
     end;
     Float: TFloatType;
     Font: record
-      Name: array of TPLString;
+      Family: array of TPLString;
       Size: TPLCSSSimpleUnit;
       Adjust: TPLCSSSimpleUnit; // Firefox supports it only, so no need for supporting it here
       Stretch: TPLDrawingFontStretch;
@@ -162,34 +178,34 @@ type
     Height: TPLCSSSimpleUnit;
     JustifyContent: TJustifyContentType;
     Left: TPLCSSSimpleUnit;
-    LetterSpacing: TPLCSSSimpleUnit;
+    LetterSpacing: TPLCSSSimpleUnit; // auto = normal
     LineHeight: TPLCSSSimpleUnit;
     ListStyle: record
       Image: IPLDrawingBitmap;
       Position: TListStylePositionType;
       Kind: TListStyleType; // = list-style-type
     end;
-    Margin: TPLRectF;
-    Max: TSimpleSizeType; // max-width/height
-    Min: TSimpleSizeType; // min-width/height
+    Margin: TPLCSSSimpleUnitRect;
+    Max: TSimpleSizeType; // max-width/height  none = auto
+    Min: TSimpleSizeType; // min-width/height  -//-
     Opacity: TPLFloat;
     Order: TPLInt;
     Outline: record
-      Color: TPLColor;
+      Color: TPLString; // TPLColor or 'invert'
       Offset: TPLCSSSimpleUnit;
       Style: TPLDrawingBorderStyle;
       Width: TPLCSSSimpleUnit;
     end;
     Overflow: array[0..1] of TPLString; // x, y
-    Padding: TPLRectF;
+    Padding: TPLCSSSimpleUnitRect;
     PageBreak: record
-      After: TPLString;
-      Before: TPLString;
-      Inside: TPLString;
+      After: TPageBreakType;
+      Before: TPageBreakType;
+      Inside: TPageBreakType; // 'auto' and 'avoid' only
     end;
     Perspective: record
-      Main: TPLFloat;
-      Origin: TPLPointF;
+      Main: TPLCSSSimpleUnit;
+      Origin: array[0..1] of Variant;
     end;
     Quotes: array of array[0..1] of TPLString;
     Resize: TPLString;
@@ -212,13 +228,13 @@ type
     Top: TPLCSSSimpleUnit;
     Transform: record
       Main: TTransformFunctionType;
-      Origin: TPLPointF;
+      Origin: array[0..2] of TPLCSSSimpleUnit;
       Style: TPLUInt;
     end;
     Transition: record
       Delay: TPLInt;
       Duration: TPLInt;
-      &Property: TPLString;
+      &Property: array of TPLString; // if empty = all
       TimingFunction: TTimingFunctionType;
     end;
     UnicodeBidi: TPLUInt; // no support
@@ -227,7 +243,7 @@ type
     Width: TPLCSSSimpleUnit;
     Word: record
       &Break: TPLUInt; // no support
-      Spacing: TPLCSSSimpleUnit;
+      Spacing: TPLCSSSimpleUnit; // auto = normal
       Wrap: TPLBool;
     end;
   public
@@ -280,6 +296,11 @@ implementation
 
 uses Pospolite.View.HTML.Document, Pospolite.View.HTML.Basics;
 
+operator :=(const AValue: TPLFloat) r: TPLCSSSimpleUnitValue;
+begin
+  r := TPLCSSSimpleUnitValue.Create(AValue, '');
+end;
+
 { TPLCSSSimpleUnit }
 
 constructor TPLCSSSimpleUnit.Create(AValue: TPLCSSSimpleUnitValue;
@@ -302,6 +323,27 @@ end;
 function TPLCSSSimpleUnit.IsAuto: TPLBool;
 begin
   Result := Value.Value = 'auto';
+end;
+
+class function TPLCSSSimpleUnit.Auto: TPLCSSSimpleUnit;
+begin
+  Result := TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(0, 'auto'));
+end;
+
+{ TPLCSSSimpleUnitRect }
+
+constructor TPLCSSSimpleUnitRect.Create(const ALeft, ARight, ATop,
+  ABottom: TPLCSSSimpleUnit);
+begin
+  Left := ALeft;
+  Right := ARight;
+  Top := ATop;
+  Bottom := ABottom;
+end;
+
+constructor TPLCSSSimpleUnitRect.Create(const AWhole: TPLCSSSimpleUnit);
+begin
+  Create(AWhole, AWhole, AWhole, AWhole);
 end;
 
 { TPLCSSBindingProperties }
@@ -344,14 +386,128 @@ begin
       TPLCSSSimpleUnitFuncs.FillArray(Units[1], TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(0, 'px')));
       Spacing := TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(0, 'px'));
     end;
-    Bottom := TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(0, 'auto'));
+    Bottom := TPLCSSSimpleUnit.Auto;
     BoxShadow := Null;
     BoxSizing := bmtContentBox;
     CaptionSide := cstTop;
     Clear := ctNone;
     Color := TPLColor.Black;
     with Column do begin
-
+      Count := -1;
+      Fill := cftBalance;
+      Gap := TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(1, 'em'));
+      with Rule do begin
+        Color := TPLColor.Black;
+        Style := dbsNone;
+        Width := TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(3, 'px')); // medium
+      end;
+      Span := false;
+      Width := TPLCSSSimpleUnit.Auto;
+    end;
+    Content := 'normal';
+    with Counter do begin
+      SetLength(Increment, 0);
+      Reset := 'none';
+    end;
+    Cursor := crDefault;
+    Direction := 'ltr';
+    EmptyCells := true;
+    with Flex do begin
+      Basis := TPLCSSSimpleUnit.Auto;
+      Direction := fdtRow;
+      Grow := 0;
+      Shrink := 1;
+      Wrap := fwtNowrap;
+    end;
+    Float := ftNone;
+    with Font do begin
+      SetLength(Family, 1);
+      Family[0] := 'sans-serif';
+      Size := TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(16, 'px'));
+      Adjust := TPLCSSSimpleUnit.Auto;
+      Stretch := dfstNormal;
+      Style := dfsNormal;
+      SmallCaps := false;
+      Weight := dfwNormal;
+    end;
+    Height := TPLCSSSimpleUnit.Auto;
+    JustifyContent := jctFlexStart;
+    Left := TPLCSSSimpleUnit.Auto;
+    LetterSpacing := TPLCSSSimpleUnit.Auto;
+    LineHeight := TPLCSSSimpleUnit.Auto;
+    with ListStyle do begin
+      Image := nil;
+      Position := lsptOutside;
+      Kind := lstDisc;
+    end;
+    Margin := TPLCSSSimpleUnitRect.Create(TPLCSSSimpleUnit.Create(0));
+    with Max do begin
+      Width := TPLCSSSimpleUnit.Auto;
+      Height := TPLCSSSimpleUnit.Auto;
+    end;
+    with Min do begin
+      Width := TPLCSSSimpleUnit.Auto;
+      Height := TPLCSSSimpleUnit.Auto;
+    end;
+    Opacity := 1;
+    Order := 0;
+    with Outline do begin
+      Color := 'invert';
+      Offset := TPLCSSSimpleUnit.Create(0);
+      Style := dbsNone;
+      Width := TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(3, 'px'));
+    end;
+    TPLStringFuncs.FillArray(Overflow, 'auto');
+    Padding := TPLCSSSimpleUnitRect.Create(TPLCSSSimpleUnit.Create(0));
+    with PageBreak do begin
+      After := pbtAuto;
+      Before := pbtAuto;
+      Inside := pbtAuto;
+    end;
+    with Perspective do begin
+      Main := TPLCSSSimpleUnit.Auto;
+      TPLVariantFuncs.FillArray(Origin, '0%');
+    end;
+    SetLength(Quotes, 0);
+    Resize := 'none';
+    Right := TPLCSSSimpleUnit.Auto;
+    TableLayout := 0;
+    TabSize := TPLCSSSimpleUnit.Create(8);
+    with Text do begin
+      Align := tdLeft;
+      AlignLast := tdLeft;
+      with Decoration do begin
+        Color := TPLColor.Black;
+        Line := [dfdUnderline];
+        Style := tdstSolid;
+      end;
+      Indent := TPLCSSSimpleUnit.Create(0);
+      Overflow := 'clip';
+      Shadow := Null;
+      Transform := tttNone;
+    end;
+    Top := TPLCSSSimpleUnit.Auto;
+    with Transform do begin
+      Main.Name := '';
+      SetLength(Main.Args, 0);
+      TPLCSSSimpleUnitFuncs.FillArray(Origin, TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(0, '%')));
+      Style := 0;
+    end;
+    with Transition do begin
+      Delay := 0;
+      Duration := 0;
+      SetLength(&Property, 0);
+      TimingFunction.Name := 'ease';
+      TPLFloatFuncs.FillArray(TimingFunction.Args, 0);
+    end;
+    UnicodeBidi := 0;
+    VerticalAlign := 'baseline';
+    WhiteSpace := 0;
+    Width := TPLCSSSimpleUnit.Auto;
+    with Word do begin
+      &Break := 0;
+      Spacing := TPLCSSSimpleUnit.Auto;
+      Wrap := true;
     end;
   end;
 end;
