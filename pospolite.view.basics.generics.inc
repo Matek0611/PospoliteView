@@ -445,6 +445,14 @@ begin
   Result += ']';
 end;
 
+class procedure TPLFuncs.FillArray(var ATab: array of T; const AValue: T);
+var
+  i: SizeInt;
+begin
+  for i := Low(ATab) to High(ATab) do
+    ATab[i] := AValue;
+end;
+
 { TPLFuncsOfClass }
 
 class function TPLFuncsOfClass.DefaultComparator(const AObject: T;
@@ -897,6 +905,21 @@ begin
 end;
 
 procedure TPLHTMLObject.RefreshStyles;
+begin
+  // ...
+end;
+
+procedure TPLHTMLObject.UpdateLayoutForAll;
+var
+  obj: TPLHTMLObject;
+begin
+  UpdateOwnLayout;
+
+  for obj in Children do
+    obj.UpdateLayoutForAll;
+end;
+
+procedure TPLHTMLObject.UpdateOwnLayout;
 begin
   // ...
 end;

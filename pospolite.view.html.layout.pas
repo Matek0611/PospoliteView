@@ -22,14 +22,39 @@ uses
 
 type
 
-  { TPLHTMLObjectLayout }
+  { TPLHTMLObjectLayouter }
 
-  TPLHTMLObjectLayout{er?} = packed record
+  TPLHTMLObjectLayouter = packed class
+  private
+    FBody: TPLHTMLObject;
+    procedure UpdateLayout;
   public
-    //
+    constructor Create;
+    destructor Destroy; override;
+
+    property Body: TPLHTMLObject read FBody write FBody;
   end;
 
 implementation
+
+{ TPLHTMLObjectLayouter }
+
+procedure TPLHTMLObjectLayouter.UpdateLayout;
+begin
+  if Assigned(FBody) then FBody.UpdateLayoutForAll;
+end;
+
+constructor TPLHTMLObjectLayouter.Create;
+begin
+  inherited Create;
+
+
+end;
+
+destructor TPLHTMLObjectLayouter.Destroy;
+begin
+  inherited Destroy;
+end;
 
 end.
 

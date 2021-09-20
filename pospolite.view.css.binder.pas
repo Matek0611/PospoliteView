@@ -24,13 +24,24 @@ uses
 
 type
 
+  TPLCSSSimpleUnitValue = specialize TPLParameter<TPLFloat, TPLString>;
+
   { TPLCSSSimpleUnit }
 
   TPLCSSSimpleUnit = packed record
   public
-    Value: specialize TPLParameter<TPLFloat, TPLString>;
+    Value: TPLCSSSimpleUnitValue;
     Calculated: TPLFloat;
+  public
+    constructor Create(AValue: TPLCSSSimpleUnitValue; ACalculated: TPLFloat = 0);
+
+    class operator =(a, b: TPLCSSSimpleUnit) r: TPLBool;
+    class operator :=(a: TPLCSSSimpleUnit) r: Variant;
+
+    function IsAuto: TPLBool; inline;
   end;
+
+  TPLCSSSimpleUnitFuncs = specialize TPLFuncs<TPLCSSSimpleUnit>;
 
   { TPLCSSBindingProperties }
 
@@ -98,9 +109,9 @@ type
       Origin: TBoxModelType;
       Position: array[0..1] of Variant;
       &Repeat: TBackgroundRepeatType;
-      Size: Variant;
+      Size: array[0..1] of Variant;
     end;
-    Borders: record
+    Border: record
       Calculated: TPLDrawingBorders;
       Units: array[0..1] of array[0..3] of TPLCSSSimpleUnit; // 0 - width, 1 - radius
       Spacing: TPLCSSSimpleUnit;
@@ -219,6 +230,8 @@ type
       Spacing: TPLCSSSimpleUnit;
       Wrap: TPLBool;
     end;
+  public
+    class function GetDefault: TPLCSSBindingProperties; static;
   end;
 
   { TPLCSSStyleBind }
@@ -226,6 +239,8 @@ type
   TPLCSSStyleBind = packed record
   public
     Properties: array[TPLCSSElementState] of TPLCSSBindingProperties;
+  public
+    procedure RestoreDefault;
   end;
 
   TPLCSSStyleBinder = class;
@@ -264,6 +279,92 @@ type
 implementation
 
 uses Pospolite.View.HTML.Document, Pospolite.View.HTML.Basics;
+
+{ TPLCSSSimpleUnit }
+
+constructor TPLCSSSimpleUnit.Create(AValue: TPLCSSSimpleUnitValue;
+  ACalculated: TPLFloat);
+begin
+  Value := AValue;
+  Calculated := ACalculated;
+end;
+
+class operator TPLCSSSimpleUnit.=(a, b: TPLCSSSimpleUnit) r: TPLBool;
+begin
+  r := a.Calculated = b.Calculated;
+end;
+
+class operator TPLCSSSimpleUnit.:=(a: TPLCSSSimpleUnit) r: Variant;
+begin
+  r := TPLString(a.Value.Key) + a.Value.Value;
+end;
+
+function TPLCSSSimpleUnit.IsAuto: TPLBool;
+begin
+  Result := Value.Value = 'auto';
+end;
+
+{ TPLCSSBindingProperties }
+
+class function TPLCSSBindingProperties.GetDefault: TPLCSSBindingProperties;
+begin
+  Result := Default(TPLCSSBindingProperties);
+
+  with Result do begin
+    with Align do begin
+      Content := actStretch;
+      Items := aitStretch;
+      Self := astAuto;
+    end;
+    with Animation do begin
+      Delay := 0;
+      Direction := adtNormal;
+      Duration := 0;
+      FillMode := afmtNone;
+      IterationCount := 1;
+      Name := '';
+      PlayState := pstRunning;
+      TimingFunction.Name := 'ease';
+      TPLFloatFuncs.FillArray(TimingFunction.Args, 0);
+    end;
+    BackfaceVisibility := true;
+    with Background do begin
+      Attachment := batScroll;
+      Clip := bmtBorderBox;
+      Color := TPLColor.Transparent;
+      Image := nil;
+      Origin := bmtPaddingBox;
+      TPLVariantFuncs.FillArray(Position, '0%');
+      &Repeat := brtRepeat;
+      TPLVariantFuncs.FillArray(Size, 'auto');
+    end;
+    with Border do begin
+      Calculated := PLDrawingBordersDef;
+      TPLCSSSimpleUnitFuncs.FillArray(Units[0], TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(0, 'px')));
+      TPLCSSSimpleUnitFuncs.FillArray(Units[1], TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(0, 'px')));
+      Spacing := TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(0, 'px'));
+    end;
+    Bottom := TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(0, 'auto'));
+    BoxShadow := Null;
+    BoxSizing := bmtContentBox;
+    CaptionSide := cstTop;
+    Clear := ctNone;
+    Color := TPLColor.Black;
+    with Column do begin
+
+    end;
+  end;
+end;
+
+{ TPLCSSStyleBind }
+
+procedure TPLCSSStyleBind.RestoreDefault;
+var
+  st: TPLCSSElementState;
+begin
+  for st in TPLCSSElementState do
+    Properties[st] := TPLCSSBindingProperties.GetDefault;
+end;
 
 { TPLCSSStyleBinderThread }
 

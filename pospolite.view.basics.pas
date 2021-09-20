@@ -248,12 +248,14 @@ type
     class function NewArray(ATab: array of T): specialize TArray<T>;
     class function NewList(ATab: array of T): specialize TPLList<T>;
     class function ToString(ATab: specialize TArray<T>): TPLString; reintroduce;
+    class procedure FillArray(var ATab: array of T; const AValue: T);
   end;
 
   TPLStringFuncs = specialize TPLFuncs<TPLString>;
   TPLIntFuncs = specialize TPLFuncs<TPLInt>;
   TPLFloatFuncs = specialize TPLFuncs<TPLFloat>;
   TPLPointerFuncs = specialize TPLFuncs<Pointer>;
+  TPLVariantFuncs = specialize TPLFuncs<Variant>;
 
   generic TPLFuncsOfClassComparator<T: class> = function(const AObject: T;
     const ACriteria: Variant): TPLSign of object;
@@ -430,6 +432,8 @@ type
     function ToObject: TPLHTMLObject;
     function PositionInParent: SizeInt;
     procedure RefreshStyles;
+    procedure UpdateLayoutForAll;
+    procedure UpdateOwnLayout;
 
     property Zoom: TPLFloat read GetZoom write SetZoom;
 
@@ -514,6 +518,8 @@ type
     function ToObject: TPLHTMLObject;
     function PositionInParent: SizeInt;
     procedure RefreshStyles; virtual;
+    procedure UpdateLayoutForAll;
+    procedure UpdateOwnLayout; virtual;
 
     function GetWidth: TPLFloat; virtual;
     function GetHeight: TPLFloat; virtual;

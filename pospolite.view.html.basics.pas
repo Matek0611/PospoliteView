@@ -579,7 +579,7 @@ end;
 
 function TPLHTMLNormalObject.GetDefaultBindings: TPLCSSStyleBind;
 begin
-  Result := Default(TPLCSSStyleBind);
+  Result.RestoreDefault;
 end;
 
 procedure TPLHTMLNormalObject.RefreshStyles;
