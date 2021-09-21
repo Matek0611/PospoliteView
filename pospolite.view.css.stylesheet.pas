@@ -7,7 +7,8 @@ interface
 uses
   Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.HTML.Document,
   Pospolite.View.CSS.Declaration, Pospolite.View.CSS.Selector,
-  Pospolite.View.CSS.MediaQuery;
+  Pospolite.View.CSS.MediaQuery, Pospolite.View.CSS.Binder,
+  Pospolite.View.Internet;
 
 type
 
@@ -40,6 +41,8 @@ type
     property Properties: TPLCSSDeclarations read FProperties;
   end;
 
+  TPLCSSStyleSheetPartSelectors = class(specialize TPLObjectList<TPLCSSStyleSheetPartSelector>);
+
   TPLCSSStyleSheetPartRule = class;
   TPLCSSStyleSheetPartRules = class(specialize TPLObjectList<TPLCSSStyleSheetPartRule>);
 
@@ -63,36 +66,73 @@ type
 
   TPLCSSStyleSheet = packed class
   private
+    FCharset: TPLString;
     FFileName: TPLString;
-    FParts: TPLCSSStyleSheetParts;
+    FFontFaces: TPLCSSStyleSheetPartSelectors;
+    FImports: TPLCSSStyleSheetPartRules;
+    FKeyframes: TPLCSSStyleSheetPartRules;
+    FMedias: TPLCSSStyleSheetPartRules;
+    FPages: TPLCSSStyleSheetPartSelectors;
+    FSelectors: TPLCSSDeclarationsList;
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure Load(ASource: TPLString);
-    procedure Import(const AURL: TPLString);
-    procedure Merge(ASheet: TPLCSSStyleSheet);
+    procedure Load(ASource: TPLString; const AMerge: TPLBool = true);
+    procedure Clean;
 
-    property Parts: TPLCSSStyleSheetParts read FParts;
+    property Charset: TPLString read FCharset write FCharset;
+    property FontFaces: TPLCSSStyleSheetPartSelectors read FFontFaces;
+    property Imports: TPLCSSStyleSheetPartRules read FImports;
+    property Keyframes: TPLCSSStyleSheetPartRules read FKeyframes;
+    property Medias: TPLCSSStyleSheetPartRules read FMedias;
+    property Pages: TPLCSSStyleSheetPartSelectors read FPages;
+
+    property Selectors: TPLCSSDeclarationsList read FSelectors;
+
     property FileName: TPLString read FFileName write FFileName;
   end;
 
+  TPLFuncsOfClassCSSStyleSheet = specialize TPLFuncsOfClass<TPLCSSStyleSheet>;
   TPLCSSStyleSheetList = packed class(specialize TPLObjectList<TPLCSSStyleSheet>);
+
+  TPLCSSStyleSheetManager = class;
+
+  { TPLCSSStylingThread }
+
+  TPLCSSStylingThread = class(TThread)
+  private
+    FEnabled: TPLBool;
+    FManager: TPLCSSStyleSheetManager;
+
+    procedure UpdateStyles;
+  public
+    constructor Create(AManager: TPLCSSStyleSheetManager);
+
+    procedure Execute; override;
+
+    property Enabled: TPLBool read FEnabled write FEnabled;
+  end;
 
   { TPLCSSStyleSheetManager }
 
   TPLCSSStyleSheetManager = class
   private
+    FBinder: TPLCSSStyleBinder;
     FExternals: TPLCSSStyleSheetList;
     FInternal: TPLCSSStyleSheet;
     FDocument: TPLHTMLDocument;
+    FStyling: TPLCSSStylingThread;
 
-    procedure ParseStyleSheet(ASource: TPLString; var ASheet: TPLCSSStyleSheet);
+    function ComparatorForSearch(const AObject: TPLCSSStyleSheet;
+      const ACriteria: Variant): TPLSign;
+    function ComparatorForSort(a, b: TPLCSSStyleSheet): TPLSign;
+    procedure Rebind;
   public
     constructor Create(ADocument: TPLHTMLDocument);
     destructor Destroy; override;
 
-    procedure AddToInternal(AStyle: TPLString);
+    procedure AddToInternal(AStyle: TPLString); inline;
     procedure AddExternal(AURL: TPLString);
 
     procedure StartStyling;
@@ -101,6 +141,9 @@ type
 
     property Internal: TPLCSSStyleSheet read FInternal;
     property Externals: TPLCSSStyleSheetList read FExternals;
+
+    property Binder: TPLCSSStyleBinder read FBinder;
+    property Styling: TPLCSSStylingThread read FStyling;
   public
     Environment: TPLCSSMediaQueriesEnvironment;
 
@@ -109,7 +152,7 @@ type
 
 implementation
 
-uses Pospolite.View.CSS.Basics;
+uses Variants, Pospolite.View.CSS.Basics;
 
 { TPLCSSStyleSheetPart }
 
@@ -163,40 +206,95 @@ constructor TPLCSSStyleSheet.Create;
 begin
   inherited Create;
 
-  FParts := TPLCSSStyleSheetParts.Create(true);
   FFileName := '';
+
+  FSelectors := TPLCSSDeclarationsList.Create(true);
+  FFontFaces := TPLCSSStyleSheetPartSelectors.Create(true);
+  FImports := TPLCSSStyleSheetPartRules.Create(true);
+  FKeyframes := TPLCSSStyleSheetPartRules.Create(true);
+  FMedias := TPLCSSStyleSheetPartRules.Create(true);
+  FPages := TPLCSSStyleSheetPartSelectors.Create(true);
+
+  Clean;
 end;
 
 destructor TPLCSSStyleSheet.Destroy;
 begin
-  FParts.Free;
+  FSelectors.Free;
+  FFontFaces.Free;
+  FImports.Free;
+  FKeyframes.Free;
+  FMedias.Free;
+  FPages.Free;
 
   inherited Destroy;
 end;
 
-procedure TPLCSSStyleSheet.Load(ASource: TPLString);
+procedure TPLCSSStyleSheet.Load(ASource: TPLString; const AMerge: TPLBool);
 begin
   RemoveCSSComments(ASource);
 
 
 end;
 
-procedure TPLCSSStyleSheet.Import(const AURL: TPLString);
+procedure TPLCSSStyleSheet.Clean;
+begin
+  FCharset := '';
+
+  FSelectors.Clear;
+  FFontFaces.Clear;
+  FImports.Clear;
+  FKeyframes.Clear;
+  FMedias.Clear;
+  FPages.Clear;
+end;
+
+{ TPLCSSStylingThread }
+
+procedure TPLCSSStylingThread.UpdateStyles;
 begin
 
 end;
 
-procedure TPLCSSStyleSheet.Merge(ASheet: TPLCSSStyleSheet);
+constructor TPLCSSStylingThread.Create(AManager: TPLCSSStyleSheetManager);
+begin
+  inherited Create(true);
+
+  FManager := AManager;
+  FEnabled := false;
+end;
+
+procedure TPLCSSStylingThread.Execute;
 begin
 
 end;
 
 { TPLCSSStyleSheetManager }
 
-procedure TPLCSSStyleSheetManager.ParseStyleSheet(ASource: TPLString;
-  var ASheet: TPLCSSStyleSheet);
+function TPLCSSStyleSheetManager.ComparatorForSearch(
+  const AObject: TPLCSSStyleSheet; const ACriteria: Variant): TPLSign;
+var
+  s: TPLString;
 begin
+  s := VarToStr(ACriteria).ToLower;
 
+  if AObject.FFileName < s then Result := -1
+  else if AObject.FFileName > s then Result := 1
+  else Result := 0;
+end;
+
+function TPLCSSStyleSheetManager.ComparatorForSort(a, b: TPLCSSStyleSheet
+  ): TPLSign;
+begin
+  if a.FFileName < b.FFileName then Result := -1
+  else if a.FFileName > b.FFileName then Result := 1
+  else Result := 0;
+end;
+
+procedure TPLCSSStyleSheetManager.Rebind;
+begin
+  FBinder.Annihilate;
+  FBinder := TPLCSSStyleBinder.Create(FDocument);
 end;
 
 constructor TPLCSSStyleSheetManager.Create(ADocument: TPLHTMLDocument);
@@ -205,10 +303,16 @@ begin
 
   FInternal := TPLCSSStyleSheet.Create;
   FExternals := TPLCSSStyleSheetList.Create(true);
+
+  FBinder := TPLCSSStyleBinder.Create(ADocument);
+  FStyling := TPLCSSStylingThread.Create(self);
 end;
 
 destructor TPLCSSStyleSheetManager.Destroy;
 begin
+  FBinder.Free;
+  FStyling.Free;
+
   FInternal.Free;
   FExternals.Free;
 
@@ -217,29 +321,45 @@ end;
 
 procedure TPLCSSStyleSheetManager.AddToInternal(AStyle: TPLString);
 begin
-  ParseStyleSheet(AStyle, FInternal);
+  FInternal.Load(AStyle);
 end;
 
 procedure TPLCSSStyleSheetManager.AddExternal(AURL: TPLString);
 var
-  ss: TPLCSSStyleSheet;
+  ss: TPLCSSStyleSheet = nil;
+  s: TPLString;
 begin
+  if TPLFuncsOfClassCSSStyleSheet.FastSearch(FExternals, AURL,
+    @ComparatorForSearch) > -1 then exit;
 
+  try
+    s := OnlineClient.Download(AURL);
+
+    ss := TPLCSSStyleSheet.Create;
+    ss.FileName := AURL.ToLower;
+    ss.Load(s);
+
+    FExternals.Add(ss);
+    FExternals.Sort(@ComparatorForSort);
+  except
+    if Assigned(ss) then ss.Free;
+  end;
 end;
 
 procedure TPLCSSStyleSheetManager.StartStyling;
 begin
-
+  FStyling.Enabled := true;
 end;
 
 procedure TPLCSSStyleSheetManager.StopStyling;
 begin
-
+  FStyling.Enabled := false;
+  Rebind;
 end;
 
 procedure TPLCSSStyleSheetManager.Rebuilt;
 begin
-
+  FBinder.UpdateBindings;
 end;
 
 function TPLCSSStyleSheetManager.EnvironmentPrinter: TPLCSSMediaQueriesEnvironment;

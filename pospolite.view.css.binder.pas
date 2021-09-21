@@ -285,11 +285,15 @@ type
     FDocument: Pointer;
 
     procedure InternalUpdate;
+    procedure SetDocument(AValue: Pointer);
   public
     constructor Create(ADocument: Pointer);
     destructor Destroy; override;
 
     procedure UpdateBindings;
+    procedure Annihilate;
+
+    property Document: Pointer read FDocument write SetDocument;
   end;
 
 implementation
@@ -560,6 +564,13 @@ begin
   b.RefreshStyles;
 end;
 
+procedure TPLCSSStyleBinder.SetDocument(AValue: Pointer);
+begin
+  if (FDocument = AValue) or (FThread.Enabled) then exit;
+
+  FDocument := AValue;
+end;
+
 constructor TPLCSSStyleBinder.Create(ADocument: Pointer);
 begin
   inherited Create;
@@ -580,6 +591,11 @@ end;
 procedure TPLCSSStyleBinder.UpdateBindings;
 begin
   FThread.Enabled := true;
+end;
+
+procedure TPLCSSStyleBinder.Annihilate;
+begin
+  Free;
 end;
 
 end.

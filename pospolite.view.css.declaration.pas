@@ -152,6 +152,7 @@ type
 
   TPLCSSDeclarations = class(specialize TPLObjectList<TPLCSSProperty>, IPLCSSDeclarations)
   private
+    FSelector: TPLString;
     function Compare(a, b: T): TPLBool; inline;
     function CompareSort(a, b: T): TPLSign;
     function GetProperties(AName: TPLString): TPLCSSProperty;
@@ -170,6 +171,7 @@ type
     procedure Delete(AName: TPLString);
 
     property Properties[AName: TPLString]: TPLCSSProperty read GetProperties;
+    property Selector: TPLString read FSelector write FSelector;
   end;
 
   TPLCSSDeclarationsList = class(specialize TPLObjectList<TPLCSSDeclarations>);
@@ -485,6 +487,8 @@ end;
 constructor TPLCSSDeclarations.Create(const AValue: TPLString);
 begin
   inherited Create(true);
+
+  FSelector := '';
 
   if not AValue.IsEmpty then SetDeclarations(AValue);
 end;
