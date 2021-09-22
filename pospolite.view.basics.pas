@@ -431,7 +431,7 @@ type
     function ToHTML: TPLString;
     function ToObject: TPLHTMLObject;
     function PositionInParent: SizeInt;
-    procedure RefreshStyles;
+    procedure RefreshStyles(const AParentStyles);
     procedure UpdateLayoutForAll;
     procedure UpdateOwnLayout;
 
@@ -517,7 +517,7 @@ type
     function ToHTML: TPLString; virtual;
     function ToObject: TPLHTMLObject;
     function PositionInParent: SizeInt;
-    procedure RefreshStyles; virtual;
+    procedure RefreshStyles(const AParentStyles); virtual;
     procedure UpdateLayoutForAll;
     procedure UpdateOwnLayout; virtual;
 

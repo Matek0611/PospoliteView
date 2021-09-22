@@ -111,14 +111,16 @@ type
   end;
 
   TPLCSSPropertyValue = TPLCSSPropertyValueParts;
+  TPLCSSProperty = class;
 
   { TPLCSSProperty }
 
-  TPLCSSProperty = packed class
+  TPLCSSProperty = class(TInterfacedObject, specialize IPLCloneable<TPLCSSProperty>)
   private
     FImportant: TPLBool;
     FName: TPLString;
     FValue: TPLCSSPropertyValue;
+    FRaw: TPLString;
     procedure SetName(AValue: TPLString);
   public
     constructor Create(const AName, AValue: TPLString);
@@ -129,6 +131,7 @@ type
     procedure SetValue(AValue: TPLString);
 
     function AsString: TPLString;
+    function Clone: TPLCSSProperty;
 
     property Name: TPLString read FName write SetName;
     property Value: TPLCSSPropertyValue read FValue write FValue;
@@ -384,6 +387,7 @@ begin
   FName := '';
   Name := AName;
   FValue := TPLCSSPropertyValue.Create;
+  FRaw := AValue;
   TPLCSSPropertyParser.ParsePropertyValue(AValue, FValue);
 end;
 
@@ -406,11 +410,13 @@ end;
 
 procedure TPLCSSProperty.SetProperty(const AValue: TPLString);
 begin
+  FRaw := AValue;
   TPLCSSPropertyParser.ParseFullProperty(AValue, self);
 end;
 
 procedure TPLCSSProperty.SetValue(AValue: TPLString);
 begin
+  FRaw := AValue;
   RemoveCSSComments(AValue);
   TPLCSSPropertyParser.ParsePropertyValue(AValue, FValue);
 end;
@@ -426,6 +432,11 @@ begin
     if i < FValue.Count-1 then Result += ' '
     else if FImportant then Result += ' !important';
   end;
+end;
+
+function TPLCSSProperty.Clone: TPLCSSProperty;
+begin
+  Result := TPLCSSProperty.Create(FName, FRaw);
 end;
 
 { TPLCSSDeclarations }

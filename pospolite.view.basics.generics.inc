@@ -904,7 +904,7 @@ begin
   end;
 end;
 
-procedure TPLHTMLObject.RefreshStyles;
+procedure TPLHTMLObject.RefreshStyles(const AParentStyles);
 begin
   // ...
 end;

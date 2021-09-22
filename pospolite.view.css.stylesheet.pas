@@ -79,7 +79,7 @@ type
     destructor Destroy; override;
 
     procedure Load(ASource: TPLString; const AMerge: TPLBool = true);
-    procedure Clean;
+    procedure CleanUp;
 
     property Charset: TPLString read FCharset write FCharset;
     property FontFaces: TPLCSSStyleSheetPartSelectors read FFontFaces;
@@ -215,7 +215,7 @@ begin
   FMedias := TPLCSSStyleSheetPartRules.Create(true);
   FPages := TPLCSSStyleSheetPartSelectors.Create(true);
 
-  Clean;
+  CleanUp;
 end;
 
 destructor TPLCSSStyleSheet.Destroy;
@@ -233,11 +233,12 @@ end;
 procedure TPLCSSStyleSheet.Load(ASource: TPLString; const AMerge: TPLBool);
 begin
   RemoveCSSComments(ASource);
+  if not AMerge then CleanUp;
 
 
 end;
 
-procedure TPLCSSStyleSheet.Clean;
+procedure TPLCSSStyleSheet.CleanUp;
 begin
   FCharset := '';
 

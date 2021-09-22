@@ -34,8 +34,11 @@ type
     FRealPos: TPLPointF;
     FScrolling: TPLHTMLScrolling;
     FSize: TPLRectF;
+
     procedure SetFocused(AValue: TPLBool);
   protected
+    FCustomProps: TPLCSSDeclarations;
+
     procedure InitStates; override;
     procedure DoneStates; override;
     procedure DoDraw(ADrawer: Pointer); override;
@@ -90,6 +93,7 @@ type
     property RealPos: TPLPointF read FRealPos write FRealPos;
     property EventTarget: TPLHTMLEventTarget read FEventTarget;
     property Focused: TPLBool read FFocused write SetFocused;
+    property CustomProperties: TPLCSSDeclarations read FCustomProps;
   end;
 
   { TPLHTMLRootObject }
@@ -125,7 +129,7 @@ type
     function ToHTML: TPLString; override;
 
     function GetDefaultBindings: TPLCSSStyleBind;
-    procedure RefreshStyles; override;
+    procedure RefreshStyles(const AParentStyles); override;
 
     property Bounds: TPLRectF read FBounds write FBounds;
     property Bindings: TPLCSSStyleBind read FBindings;
@@ -341,12 +345,16 @@ begin
 
   FEventTarget := TPLHTMLEventTarget.Create(self);
   InitEventTarget;
+
+  FCustomProps := TPLCSSDeclarations.Create();
 end;
 
 destructor TPLHTMLBasicObject.Destroy;
 begin
   FreeAndNil(FEventTarget);
   FreeAndNil(FScrolling);
+
+  FCustomProps.Free;
 
   inherited Destroy;
 end;
@@ -582,17 +590,43 @@ begin
   Result.RestoreDefault;
 end;
 
-procedure TPLHTMLNormalObject.RefreshStyles;
+procedure TPLHTMLNormalObject.RefreshStyles(const AParentStyles);
 var
   obj: TPLHTMLObject;
   st: TPLCSSElementState;
-begin
-  for st in TPLCSSElementState do begin
+  dcl: TPLCSSDeclarations;
+  p: TPLCSSProperty;
 
+  function ParentCurrentBinding: TPLCSSBindingProperties; inline;
+  begin
+    Result := TPLCSSStyleBind(AParentStyles).Properties[st];
+  end;
+
+begin
+  FCustomProps.Clear;
+
+  for st in TPLCSSElementState do begin
+    dcl := TPLCSSDeclarations(FStates[st]);
+
+    for p in dcl do begin
+      if p.Name.StartsWith('--') then FCustomProps.Add(p.Clone) else
+      case WithoutCommonPrefix(p.Name).ToLower of
+        'align-content': if p.Value.Count = 1 then begin
+          case p.Value[0].AsString.ToLower of
+            'initial', 'revert': FBindings.Properties[st].Align.Content := GetDefaultBindings.Properties[st].Align.Content;
+            'inherit', 'unset': FBindings.Properties[st].Align.Content := ParentCurrentBinding.Align.Content;
+            else FBindings.Properties[st].Align.Content := p.Value[0].AsString;
+          end;
+        end;
+        // ... dodać resztę
+        'background': ;
+        // ...
+      end;
+    end;
   end;
 
   for obj in Children do
-    obj.RefreshStyles;
+    obj.RefreshStyles(FBindings);
 end;
 
 { TPLHTMLObjectDIV }

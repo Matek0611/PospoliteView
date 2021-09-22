@@ -296,6 +296,8 @@ type
     property Document: Pointer read FDocument write SetDocument;
   end;
 
+  operator :=(s: TPLString) r: TPLCSSBindingProperties.TAlignContentType;
+
 implementation
 
 uses Pospolite.View.HTML.Document, Pospolite.View.HTML.Basics;
@@ -303,6 +305,19 @@ uses Pospolite.View.HTML.Document, Pospolite.View.HTML.Basics;
 operator :=(const AValue: TPLFloat) r: TPLCSSSimpleUnitValue;
 begin
   r := TPLCSSSimpleUnitValue.Create(AValue, '');
+end;
+
+operator :=(s: TPLString) r: TPLCSSBindingProperties.TAlignContentType;
+begin
+  case s.ToLower.Trim of
+    'center': r := actCenter;
+    'flex-start': r := actFlexStart;
+    'flex-end': r := actFlexEnd;
+    'space-between': r := actSpaceBetween;
+    'space-around': r := actSpaceAround;
+    'stretch': r := actStretch;
+    else r := actStretch;
+  end;
 end;
 
 { TPLCSSSimpleUnit }
@@ -556,12 +571,14 @@ end;
 procedure TPLCSSStyleBinder.InternalUpdate;
 var
   b: TPLHTMLBasicObject;
+  defs: TPLCSSStyleBind;
 begin
   if not Assigned(FDocument) then exit;
   b := TPLHTMLDocument(FDocument).Body as TPLHTMLBasicObject;
   if not Assigned(b) then exit;
 
-  b.RefreshStyles;
+  defs.RestoreDefault;
+  b.RefreshStyles(defs);
 end;
 
 procedure TPLCSSStyleBinder.SetDocument(AValue: Pointer);

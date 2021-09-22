@@ -30,6 +30,7 @@ const
   );
 
 procedure RemoveCSSComments(var ASource: TPLString);
+function WithoutCommonPrefix(const AName: TPLString): TPLString;
 
 implementation
 
@@ -61,6 +62,19 @@ begin
 
     Inc(i);
   end;
+end;
+
+function WithoutCommonPrefix(const AName: TPLString): TPLString;
+var
+  s: TPLString;
+begin
+  Result := AName;
+
+  for s in PLCSSCommonPrefixes do
+    if Result.StartsWith(s, true) then begin
+      Result := Result.SubStr(s.Length + 1);
+      break;
+    end;
 end;
 
 end.
