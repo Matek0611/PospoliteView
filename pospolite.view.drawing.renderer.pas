@@ -111,6 +111,7 @@ type
     FMaxFPS: TPLDrawingRendererFPS;
     FThread: TPLDrawingRendererThread;
     FQThread: TPLDrawingRendererQueueThread;
+    FCanRepaint: TPLBool;
   public
     constructor Create(AControl: TPLCustomControl);
     destructor Destroy; override;
@@ -765,7 +766,6 @@ procedure TPLDrawingRendererQueueThread.Update;
 begin
   if Assigned(FManager) and Assigned(FManager.FControl) then begin
     FManager.FControl.Redraw;
-    //Application.ProcessMessages;
   end;
 end;
 
@@ -788,7 +788,7 @@ begin
   delay := round(1000 / FManager.FMaxFPS);
 
   while FEnabled and not Terminated do begin
-    if FQueueCounter > 0 then begin
+    if (FQueueCounter > 0) and (FManager.FCanRepaint) then begin
       Dec(FQueueCounter);
       Update;
     end;
@@ -808,7 +808,6 @@ procedure TPLDrawingRendererThread.UpdateRendering;
 begin
   if Assigned(FManager) and Assigned(FManager.FControl) then begin
     FManager.FControl.Invalidate;
-    //Application.ProcessMessages;
   end;
 end;
 
@@ -831,7 +830,10 @@ begin
 
   while FEnabled do begin
     FManager.QueueRedraw;
+
+    FManager.FCanRepaint := true;
     Synchronize(@UpdateRendering);
+    FManager.FCanRepaint := false;
 
     Sleep(delay);
   end;
