@@ -102,7 +102,6 @@ type
 
   TPLCSSStylingThread = class(TThread)
   private
-    FEnabled: TPLBool;
     FManager: TPLCSSStyleSheetManager;
 
     procedure UpdateStyles;
@@ -111,7 +110,8 @@ type
 
     procedure Execute; override;
 
-    property Enabled: TPLBool read FEnabled write FEnabled;
+    procedure UpdateStyling;
+    procedure Annihilate;
   end;
 
   { TPLCSSStyleSheetManager }
@@ -128,6 +128,7 @@ type
       const ACriteria: Variant): TPLSign;
     function ComparatorForSort(a, b: TPLCSSStyleSheet): TPLSign;
     procedure Rebind;
+    procedure Restyle;
   public
     constructor Create(ADocument: TPLHTMLDocument);
     destructor Destroy; override;
@@ -262,12 +263,30 @@ begin
   inherited Create(true);
 
   FManager := AManager;
-  FEnabled := false;
 end;
 
 procedure TPLCSSStylingThread.Execute;
+var
+  delay: Cardinal = 1000 div 30;
 begin
+  FManager.Binder.UpdateBindings;
 
+  while not Terminated do begin
+    UpdateStyles;
+
+    Sleep(delay);
+  end;
+end;
+
+procedure TPLCSSStylingThread.UpdateStyling;
+begin
+  Start;
+end;
+
+procedure TPLCSSStylingThread.Annihilate;
+begin
+  Terminate;
+  Free;
 end;
 
 { TPLCSSStyleSheetManager }
@@ -298,6 +317,12 @@ begin
   FBinder := TPLCSSStyleBinder.Create(FDocument);
 end;
 
+procedure TPLCSSStyleSheetManager.Restyle;
+begin
+  FStyling.Annihilate;
+  FStyling := TPLCSSStylingThread.Create(self);
+end;
+
 constructor TPLCSSStyleSheetManager.Create(ADocument: TPLHTMLDocument);
 begin
   inherited Create;
@@ -311,8 +336,8 @@ end;
 
 destructor TPLCSSStyleSheetManager.Destroy;
 begin
-  FBinder.Free;
-  FStyling.Free;
+  FStyling.Annihilate;
+  FBinder.Annihilate;
 
   FInternal.Free;
   FExternals.Free;
@@ -349,18 +374,19 @@ end;
 
 procedure TPLCSSStyleSheetManager.StartStyling;
 begin
-  FStyling.Enabled := true;
+  FStyling.UpdateStyling;
 end;
 
 procedure TPLCSSStyleSheetManager.StopStyling;
 begin
-  FStyling.Enabled := false;
+  Restyle;
   Rebind;
 end;
 
 procedure TPLCSSStyleSheetManager.Rebuilt;
 begin
-  FBinder.UpdateBindings;
+  if FStyling.Suspended then
+    FBinder.UpdateBindings;
 end;
 
 function TPLCSSStyleSheetManager.EnvironmentPrinter: TPLCSSMediaQueriesEnvironment;
