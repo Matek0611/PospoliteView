@@ -71,6 +71,7 @@ type
     FFontFaces: TPLCSSStyleSheetPartSelectors;
     FImports: TPLCSSStyleSheetPartRules;
     FKeyframes: TPLCSSStyleSheetPartRules;
+    FMediaQuery: TPLString;
     FMedias: TPLCSSStyleSheetPartRules;
     FPages: TPLCSSStyleSheetPartSelectors;
     FSelectors: TPLCSSDeclarationsList;
@@ -80,6 +81,7 @@ type
 
     procedure Load(ASource: TPLString; const AMerge: TPLBool = true);
     procedure CleanUp;
+    function MediaAccepts(const AEnvironment: TPLCSSMediaQueriesEnvironment): TPLBool;
 
     property Charset: TPLString read FCharset write FCharset;
     property FontFaces: TPLCSSStyleSheetPartSelectors read FFontFaces;
@@ -91,6 +93,7 @@ type
     property Selectors: TPLCSSDeclarationsList read FSelectors;
 
     property FileName: TPLString read FFileName write FFileName;
+    property MediaQuery: TPLString read FMediaQuery write FMediaQuery;
   end;
 
   TPLFuncsOfClassCSSStyleSheet = specialize TPLFuncsOfClass<TPLCSSStyleSheet>;
@@ -105,6 +108,7 @@ type
     FManager: TPLCSSStyleSheetManager;
 
     procedure UpdateStyles;
+    procedure LoadAllStyles;
   public
     constructor Create(AManager: TPLCSSStyleSheetManager);
 
@@ -140,6 +144,8 @@ type
     procedure StopStyling;
     procedure Rebuilt;
 
+    procedure ClearStyles;
+
     property Internal: TPLCSSStyleSheet read FInternal;
     property Externals: TPLCSSStyleSheetList read FExternals;
 
@@ -153,7 +159,7 @@ type
 
 implementation
 
-uses Variants, Pospolite.View.CSS.Basics;
+uses Variants, Pospolite.View.CSS.Basics, Pospolite.View.HTML.Basics;
 
 { TPLCSSStyleSheetPart }
 
@@ -208,6 +214,7 @@ begin
   inherited Create;
 
   FFileName := '';
+  FMediaQuery := '';
 
   FSelectors := TPLCSSDeclarationsList.Create(true);
   FFontFaces := TPLCSSStyleSheetPartSelectors.Create(true);
@@ -251,11 +258,63 @@ begin
   FPages.Clear;
 end;
 
+function TPLCSSStyleSheet.MediaAccepts(
+  const AEnvironment: TPLCSSMediaQueriesEnvironment): TPLBool;
+var
+  mq: TPLCSSMediaQueries;
+begin
+  if TPLString.IsNullOrEmpty(FMediaQuery) then exit(true);
+
+  mq := TPLCSSMediaQueries.Create(true);
+  try
+    TPLCSSMediaQueryParser.ParseMediaQueries(FMediaQuery, mq);
+    Result := mq.Evaluate(AEnvironment);
+  finally
+    mq.Free;
+  end;
+end;
+
 { TPLCSSStylingThread }
 
 procedure TPLCSSStylingThread.UpdateStyles;
 begin
+  // tutaj dać dodatkowo czytanie z atrybutu "style", a reszta to chyba wiadomo
 
+
+end;
+
+procedure TPLCSSStylingThread.LoadAllStyles;
+var
+  lst: IPLHTMLObjects;
+  obj: TPLHTMLObject;
+  m: TPLHTMLObjectAttribute;
+  s: TPLCSSStyleSheet;
+begin
+  FManager.ClearStyles;
+
+  // internal
+  lst := FManager.FDocument.querySelectorAll('style');
+  lst.SetObjectsFreeing(false);
+
+  for obj in lst do begin
+    FManager.Internal.Load(TPLHTMLObjectFactory.GetTextFromTextNodes(obj));
+  end;
+
+  // external
+  lst := FManager.FDocument.querySelectorAll('link[rel=stylesheet]');
+  lst.SetObjectsFreeing(false);
+
+  for obj in lst do begin // pamiętaj o atrybucie "media"! , all = ''
+    FManager.Externals.Add(TPLCSSStyleSheet.Create);
+    s := FManager.Externals.Last;
+    s.FileName := obj.Attributes.Href.Value;
+    m := obj.Attributes.Get('media');
+
+    if (m <> Default(TPLHTMLObjectAttribute)) and (not TPLString.IsNullOrEmpty(m.Value))
+      and (m.Value.ToLower <> 'all') then s.MediaQuery := m.Value;
+
+    s.Load(OnlineClient.Download(s.FileName));
+  end;
 end;
 
 constructor TPLCSSStylingThread.Create(AManager: TPLCSSStyleSheetManager);
@@ -269,6 +328,7 @@ procedure TPLCSSStylingThread.Execute;
 var
   delay: Cardinal = 1000 div 30;
 begin
+  LoadAllStyles;
   FManager.Binder.UpdateBindings;
 
   while not Terminated do begin
@@ -285,7 +345,7 @@ end;
 
 procedure TPLCSSStylingThread.Annihilate;
 begin
-  Terminate;
+  Suspended := true;
   Free;
 end;
 
@@ -387,6 +447,12 @@ procedure TPLCSSStyleSheetManager.Rebuilt;
 begin
   if FStyling.Suspended then
     FBinder.UpdateBindings;
+end;
+
+procedure TPLCSSStyleSheetManager.ClearStyles;
+begin
+  FInternal.CleanUp;
+  FExternals.Clear;
 end;
 
 function TPLCSSStyleSheetManager.EnvironmentPrinter: TPLCSSMediaQueriesEnvironment;

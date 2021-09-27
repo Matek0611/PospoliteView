@@ -599,7 +599,7 @@ end;
 destructor TPLCSSStyleBinder.Destroy;
 begin
   FThread.Enabled := false;
-  FThread.Terminate;
+  FThread.Suspended := true;
   FThread.Free;
 
   inherited Destroy;
