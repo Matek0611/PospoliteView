@@ -278,43 +278,50 @@ end;
 
 procedure TPLCSSStylingThread.UpdateStyles;
 begin
-  // tutaj dać dodatkowo czytanie z atrybutu "style", a reszta to chyba wiadomo
-
+  // tutaj coś powinno być, ale nie może kłócić się to z przejściami
 
 end;
 
 procedure TPLCSSStylingThread.LoadAllStyles;
-var
-  lst: IPLHTMLObjects;
-  obj: TPLHTMLObject;
-  m: TPLHTMLObjectAttribute;
-  s: TPLCSSStyleSheet;
+
+  procedure EnumStyles(obj: TPLHTMLObject);
+  var
+    e: TPLHTMLObject;
+    m: TPLHTMLObjectAttribute;
+    s: TPLCSSStyleSheet;
+  begin
+    if not Assigned(obj) then exit;
+
+    if obj.Name = 'style' then
+      // internal
+      FManager.Internal.Load(obj.Text)
+    else if (obj.Name = 'link') and (obj.Attributes.Rel <> Default(TPLHTMLObjectAttribute)) then begin
+      // external
+      FManager.Externals.Add(TPLCSSStyleSheet.Create);
+      s := FManager.Externals.Last;
+      s.FileName := obj.Attributes.Href.Value;
+      m := obj.Attributes.Get('media');
+
+      if (m <> Default(TPLHTMLObjectAttribute)) and (not TPLString.IsNullOrEmpty(m.Value))
+        and (m.Value.ToLower <> 'all') then s.MediaQuery := m.Value;
+
+      s.Load(OnlineClient.Download(s.FileName));
+    end else begin
+      // inline (style + class)
+      if obj.Attributes.Style <> Default(TPLHTMLObjectAttribute) then begin
+
+      end else if obj.Attributes.&Class <> Default(TPLHTMLObjectAttribute) then begin
+
+      end;
+    end;
+
+    for e in obj.Children do
+      EnumStyles(e);
+  end;
+
 begin
   FManager.ClearStyles;
-
-  // internal
-  lst := FManager.FDocument.querySelectorAll('style');
-  lst.SetObjectsFreeing(false);
-
-  for obj in lst do begin
-    FManager.Internal.Load(TPLHTMLObjectFactory.GetTextFromTextNodes(obj));
-  end;
-
-  // external
-  lst := FManager.FDocument.querySelectorAll('link[rel=stylesheet]');
-  lst.SetObjectsFreeing(false);
-
-  for obj in lst do begin // pamiętaj o atrybucie "media"! , all = ''
-    FManager.Externals.Add(TPLCSSStyleSheet.Create);
-    s := FManager.Externals.Last;
-    s.FileName := obj.Attributes.Href.Value;
-    m := obj.Attributes.Get('media');
-
-    if (m <> Default(TPLHTMLObjectAttribute)) and (not TPLString.IsNullOrEmpty(m.Value))
-      and (m.Value.ToLower <> 'all') then s.MediaQuery := m.Value;
-
-    s.Load(OnlineClient.Download(s.FileName));
-  end;
+  EnumStyles(FManager.FDocument.Body); // faster than query selector
 end;
 
 constructor TPLCSSStylingThread.Create(AManager: TPLCSSStyleSheetManager);
@@ -386,6 +393,8 @@ end;
 constructor TPLCSSStyleSheetManager.Create(ADocument: TPLHTMLDocument);
 begin
   inherited Create;
+
+  FDocument := ADocument;
 
   FInternal := TPLCSSStyleSheet.Create;
   FExternals := TPLCSSStyleSheetList.Create(true);
