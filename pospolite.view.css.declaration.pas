@@ -172,6 +172,7 @@ type
       = nil): SizeInt; override;
     function Exists(AName: TPLString; out AProperty: TPLCSSProperty): TPLBool;
     procedure Delete(AName: TPLString);
+    function IsFor(const AObject: TPLHTMLObject): TPLBool;
 
     property Properties[AName: TPLString]: TPLCSSProperty read GetProperties;
     property Selector: TPLString read FSelector write FSelector;
@@ -189,7 +190,7 @@ type
 
 implementation
 
-uses Pospolite.View.CSS.Basics;
+uses Pospolite.View.CSS.Basics, Pospolite.View.CSS.Selector;
 
 { TPLCSSPropertyValuePart }
 
@@ -595,6 +596,21 @@ var
   p: TPLCSSProperty;
 begin
   if Exists(AName, p) then Remove(p);
+end;
+
+function TPLCSSDeclarations.IsFor(const AObject: TPLHTMLObject): TPLBool;
+var
+  s: TPLCSSSelectors = nil;
+  sel: TPLCSSSelector;
+begin
+  if TPLString.IsNullOrEmpty(FSelector) then exit(true);
+
+  try
+    s := TPLCSSSelectorParser.ParseSelector(FSelector);
+    //for sel in s do sel.; // coś tu trzeba zrobić na wrór query selector (trzeba go przyspieszyć!)
+  finally
+    if Assigned(s) then s.Free;
+  end;
 end;
 
 { TPLCSSPropertyParser }

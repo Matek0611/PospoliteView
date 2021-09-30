@@ -277,9 +277,41 @@ end;
 { TPLCSSStylingThread }
 
 procedure TPLCSSStylingThread.UpdateStyles;
-begin
-  // tutaj coś powinno być, ale nie może kłócić się to z przejściami
 
+  procedure EnumStyleUpdates(obj: TPLHTMLObject);
+
+    procedure ApplyStylesheet(css: TPLCSSStyleSheet);
+    var
+      pr: TPLCSSStyleSheetPartRule;
+      ps: TPLCSSStyleSheetPartSelector;
+      pd: TPLCSSDeclarations;
+    begin
+      if not css.MediaAccepts(FManager.Environment) then exit;
+
+      for pd in css.Selectors do begin
+        if not pd.IsFor(obj) then continue;
+
+
+      end;
+    end;
+
+  var
+    e: TPLHTMLObject;
+    st: TPLCSSStyleSheet;
+  begin
+    if not Assigned(obj) then exit;
+
+    ApplyStylesheet(FManager.Internal);
+    for st in FManager.Externals do
+      ApplyStylesheet(st);
+
+    for e in obj.Children do
+      EnumStyleUpdates(e);
+  end;
+
+begin
+  // aktualizacja styli - nie może kłócić się to z przejściami
+  EnumStyleUpdates(FManager.FDocument.Body);
 end;
 
 procedure TPLCSSStylingThread.LoadAllStyles;
@@ -306,13 +338,9 @@ procedure TPLCSSStylingThread.LoadAllStyles;
         and (m.Value.ToLower <> 'all') then s.MediaQuery := m.Value;
 
       s.Load(OnlineClient.Download(s.FileName));
-    end else begin
-      // inline (style + class)
-      if obj.Attributes.Style <> Default(TPLHTMLObjectAttribute) then begin
+    end else if obj.Attributes.Style <> Default(TPLHTMLObjectAttribute) then begin
+      // inline
 
-      end else if obj.Attributes.&Class <> Default(TPLHTMLObjectAttribute) then begin
-
-      end;
     end;
 
     for e in obj.Children do
@@ -321,7 +349,7 @@ procedure TPLCSSStylingThread.LoadAllStyles;
 
 begin
   FManager.ClearStyles;
-  EnumStyles(FManager.FDocument.Body); // faster than query selector
+  EnumStyles(FManager.FDocument.Root); // faster than query selector
 end;
 
 constructor TPLCSSStylingThread.Create(AManager: TPLCSSStyleSheetManager);
