@@ -32,6 +32,7 @@ type
       ): TPLHTMLObject;
     class function querySelectorAll(const AQuery: TPLString; AObject: TPLHTMLObject
       ): TPLHTMLObjects; inline;
+    class function isQuerySelectorFor(const AObject: TPLHTMLObject; const AQuery: TPLString): TPLBool;
   end;
 
 implementation
@@ -181,6 +182,51 @@ class function TPLHTMLDocumentQueries.querySelectorAll(const AQuery: TPLString;
   AObject: TPLHTMLObject): TPLHTMLObjects;
 begin
   Result := querySelectorX(AQuery, AObject, false);
+end;
+
+class function TPLHTMLDocumentQueries.isQuerySelectorFor(
+  const AObject: TPLHTMLObject; const AQuery: TPLString): TPLBool;
+var
+  sel: IPLCSSSelectors;
+  s: TPLCSSSelector;
+  id, idc: SizeInt;
+  ssp: TPLCSSSimpleSelectorPattern;
+  obj: TPLHTMLObject;
+  cb: TPLCSSSelectorCombinatorItem;
+
+  function FindOutside(where: TPLHTMLObject): TPLBool;
+  var
+    b: SizeInt;
+  begin
+    //if (where.Parent) then exit(true);
+             //?
+  end;
+
+begin
+  if TPLString.IsNullOrEmpty(AQuery) then exit(true);
+  sel := TPLCSSSelectorParser.ParseSelector(AQuery);
+  Result := false;
+
+  for s in sel do begin
+    if s.SimpleSelectors.Empty or (s.Combinators.Count < s.SimpleSelectors.Count div 2) then continue;
+    obj := AObject;
+    idc := s.Combinators.Count-1;
+
+    for id := s.SimpleSelectors.Count-1 downto 0 do begin // ?
+      ssp := s.SimpleSelectors[id];
+      cb := s.Combinators[idc];
+
+      if not ssp.AppliesTo(obj, obj) then break;
+
+      case cb.Value of
+        scDescendant: begin
+          if not FindOutside(obj) then break;
+        end;
+      end;
+    end;
+
+    if Result then break;
+  end;
 end;
 
 end.

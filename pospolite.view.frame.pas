@@ -41,7 +41,6 @@ type
     function GetVersion: TPLString;
   protected
     procedure Paint; override;
-    procedure RedrawBuffer;
     procedure UpdateEnvironment;
     procedure DoOnChangeBounds; override;
     procedure ManagersStop;
@@ -114,11 +113,6 @@ begin
   if (csDesigning in ComponentState) then exit;
 
   Canvas.Draw(0, 0, FBuffer);
-end;
-
-procedure TPLHTMLFrame.RedrawBuffer;
-begin
-  FRenderingManager.QueueRedraw;
 end;
 
 procedure TPLHTMLFrame.UpdateEnvironment;
@@ -488,7 +482,7 @@ begin
         FDocument.Root.Draw(dr);
 
       // test 2.
-      //dr.DrawBox(TPLRectF.Create(50, 50, 200, 50), TPLCSSDeclarations.Create('border-color: red; background-color: #bbb;'), nil, false, true); // rendering
+      dr.DrawBox(TPLRectF.Create(50, 50, 200, 50), TPLCSSDeclarations.Create('border-color: red; background-color: #bbb;'), nil, false, true); // rendering
     finally
       dr.Free;
     end;

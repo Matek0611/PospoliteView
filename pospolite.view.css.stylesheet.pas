@@ -337,7 +337,7 @@ procedure TPLCSSStylingThread.LoadAllStyles;
       if (m <> Default(TPLHTMLObjectAttribute)) and (not TPLString.IsNullOrEmpty(m.Value))
         and (m.Value.ToLower <> 'all') then s.MediaQuery := m.Value;
 
-      s.Load(OnlineClient.Download(s.FileName));
+      //s.Load(OnlineClient.Download(s.FileName)); // może załadować przy wczytywaniu dokumentu?
     end else if obj.Attributes.Style <> Default(TPLHTMLObjectAttribute) then begin
       // inline
 
@@ -363,7 +363,7 @@ procedure TPLCSSStylingThread.Execute;
 var
   delay: Cardinal = 1000 div 30;
 begin
-  LoadAllStyles;
+  LoadAllStyles;  exit; // temp
   FManager.Binder.UpdateBindings;
 
   while not Terminated do begin

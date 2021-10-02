@@ -190,7 +190,7 @@ type
 
 implementation
 
-uses Pospolite.View.CSS.Basics, Pospolite.View.CSS.Selector;
+uses Pospolite.View.CSS.Basics, Pospolite.View.DOM.Document;
 
 { TPLCSSPropertyValuePart }
 
@@ -599,18 +599,9 @@ begin
 end;
 
 function TPLCSSDeclarations.IsFor(const AObject: TPLHTMLObject): TPLBool;
-var
-  s: TPLCSSSelectors = nil;
-  sel: TPLCSSSelector;
 begin
   if TPLString.IsNullOrEmpty(FSelector) then exit(true);
-
-  try
-    s := TPLCSSSelectorParser.ParseSelector(FSelector);
-    //for sel in s do sel.; // coś tu trzeba zrobić na wrór query selector (trzeba go przyspieszyć!)
-  finally
-    if Assigned(s) then s.Free;
-  end;
+  Result := TPLHTMLDocumentQueries.isQuerySelectorFor(AObject, FSelector);
 end;
 
 { TPLCSSPropertyParser }
