@@ -361,9 +361,9 @@ end;
 
 procedure TPLCSSStylingThread.Execute;
 var
-  delay: Cardinal = 1000 div 30;
+  delay: Cardinal = 1000 * 60;
 begin
-  LoadAllStyles;  exit; // temp
+  LoadAllStyles;
   FManager.Binder.UpdateBindings;
 
   while not Terminated do begin
