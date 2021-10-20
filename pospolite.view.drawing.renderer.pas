@@ -732,7 +732,7 @@ end;
 procedure TPLDrawingRendererThread.UpdateRendering;
 begin
   if Assigned(FManager) and Assigned(FManager.FControl) then begin
-    FManager.FControl.Invalidate;
+    FManager.FControl.Refresh;
   end;
 end;
 
@@ -753,13 +753,11 @@ var
 begin
   delay := round(1000 / FManager.FMaxFPS);
 
-  while FEnabled do begin
-    if not FManager.RenderingFlag then
-      FManager.FControl.Redraw;
-
+  while FEnabled and not Terminated do begin
     FManager.RenderingFlag := true;
     UpdateRendering;
     FManager.RenderingFlag := false;
+    FManager.FControl.Redraw;
 
     Sleep(delay);
   end;

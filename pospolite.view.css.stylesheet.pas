@@ -305,6 +305,8 @@ procedure TPLCSSStylingThread.UpdateStyles;
     for st in FManager.Externals do
       ApplyStylesheet(st);
 
+    if Suspended then exit;
+
     for e in obj.Children do
       EnumStyleUpdates(e);
   end;
@@ -366,8 +368,8 @@ begin
   LoadAllStyles;
   FManager.Binder.UpdateBindings;
 
-  while not Terminated do begin
-    UpdateStyles;
+  while not Terminated and not Suspended do begin
+    Synchronize(@UpdateStyles);
 
     Sleep(delay);
   end;
