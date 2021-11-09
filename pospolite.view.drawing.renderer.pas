@@ -731,8 +731,8 @@ end;
 
 procedure TPLDrawingRendererThread.UpdateRendering;
 begin
-  if Assigned(FManager) and Assigned(FManager.FControl) then begin
-    FManager.FControl.Refresh;
+  if Assigned(FManager) and Assigned(FManager.FControl) and FManager.RenderingFlag then begin
+    FManager.FControl.Repaint;
   end;
 end;
 
@@ -754,10 +754,13 @@ begin
   delay := round(1000 / FManager.FMaxFPS);
 
   while FEnabled and not Terminated do begin
-    FManager.RenderingFlag := true;
-    UpdateRendering;
-    FManager.RenderingFlag := false;
-    FManager.FControl.Redraw;
+    if not FManager.Control.IsResizing then begin
+
+      FManager.RenderingFlag := not FManager.RenderingFlag;
+
+      if not FManager.RenderingFlag then UpdateRendering
+      else FManager.FControl.Redraw;
+    end;
 
     Sleep(delay);
   end;
