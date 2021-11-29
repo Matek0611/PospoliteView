@@ -158,6 +158,8 @@ type
     destructor Destroy; override;
 
     procedure Add(AItem: T); virtual;
+    procedure Insert(AIndex: SizeInt; AItem: T);
+    procedure Replace(AIndex1, AIndex2: SizeInt);
     procedure Remove(AItem: T); virtual;
     function Find(AItem: T; AComparator: specialize TPLObjectListFindCompare<T> = nil): SizeInt; virtual;
     procedure Sort(AComparator: specialize TPLObjectListSortCompare<T>); inline;

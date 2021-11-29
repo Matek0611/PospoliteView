@@ -175,6 +175,32 @@ begin
   FSize += 1;
 end;
 
+procedure TPLObjectList.Insert(AIndex: SizeInt; AItem: T);
+var
+  i: SizeInt;
+begin
+  Add(AItem);
+
+  if Empty then exit;
+
+  if AIndex < 0 then AIndex := 0
+  else if AIndex > Count-1 then AIndex := max(0, Count-1);
+
+  if AIndex < Count-1 then Replace(AIndex, Count-1);
+end;
+
+procedure TPLObjectList.Replace(AIndex1, AIndex2: SizeInt);
+var
+  pom: T;
+begin
+  if (AIndex1 = AIndex2) or (AIndex1 < 0) or (AIndex2 < 0) or (AIndex1 >= Count)
+    or (AIndex2 >= Count) then exit;
+
+  pom := Item[AIndex1];
+  Item[AIndex1] := Item[AIndex2];
+  Item[AIndex2] := pom;
+end;
+
 procedure TPLObjectList.Remove(AItem: T);
 var
   id, i: SizeInt;
