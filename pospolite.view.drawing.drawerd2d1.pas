@@ -32,10 +32,7 @@ type
     constructor Create(ACanvas: TCanvas); override;
     destructor Destroy; override;
 
-    procedure DrawBox(ARect: TPLRectF; ABackground: IPLDrawingBrush;
-      ABorders: TPLDrawingBorders); override;
-    procedure DrawText(const AText: TPLString; ARect: TPLRectF;
-      AFont: IPLDrawingFont; ADirection: TPLTextDirection); override;
+
   end;
 
 var
@@ -2154,199 +2151,199 @@ begin
   inherited Destroy;
 end;
 
-procedure TPLD2D1Drawer.DrawBox(ARect: TPLRectF; ABackground: IPLDrawingBrush;
-  ABorders: TPLDrawingBorders);
-
-  procedure CorrectRadius(var w: TPLFloat);
-  var
-    r: TPLFloat;
-  begin
-    r := min(ARect.Width, ARect.Height) / 2;
-    if w < 0 then w := 0
-    else if w > r then w := r;
-  end;
-
-  function DoublePenSize(s: TPLFloat): TPLFloat; inline;
-  begin
-    Result := ceil64(s / 3);
-  end;
-
-  procedure StrokePen(opts: TPLDrawingBorder; APart: byte = 1);
-  var
-    pen: IPLDrawingPen;
-  begin
-    if Assigned(ABorders.Image) and (opts.Style <> dbsNone) then begin
-      pen := NewDrawingPenD2D(ABorders.Image, opts.Width);
-      FSurface.Stroke(pen);
-      exit;
-    end;
-
-    case opts.Style of
-      dbsNone: begin
-        // nothing
-      end;
-      dbsSolid: begin
-        pen := NewDrawingPenD2D(opts.Color, opts.Width);
-        FSurface.Stroke(pen);
-      end;
-      dbsDashed: begin
-        pen := NewDrawingPenD2D(opts.Color, opts.Width);
-        pen.SetStyle(dpsDash);
-        FSurface.Stroke(pen);
-      end;
-      dbsDotted: begin
-        pen := NewDrawingPenD2D(opts.Color, opts.Width);
-        pen.SetStyle(dpsDot);
-        FSurface.Stroke(pen);
-      end;
-      dbsDouble: begin
-        pen := NewDrawingPenD2D(opts.Color, DoublePenSize(opts.Width / 3));
-        FSurface.Stroke(pen);
-      end;
-      dbsInset: begin
-        if APart in [1, 4] then pen := NewDrawingPenD2D(opts.Color.ChangeLightness(-0.3), opts.Width) else
-          pen := NewDrawingPenD2D(opts.Color, opts.Width);
-        FSurface.Stroke(pen);
-      end;
-      dbsOutset: begin
-        if APart in [2, 3] then pen := NewDrawingPenD2D(opts.Color.ChangeLightness(-0.3), opts.Width) else
-          pen := NewDrawingPenD2D(opts.Color, opts.Width);
-        FSurface.Stroke(pen);
-      end;
-    end;
-  end;
-
-const
-  _x_const = 0.2928932188134524755991556; // 1 - sqrt(2)/2
-
-var
-  x, r: TPLFloat;
-
-  procedure DoPart(t: byte; cr: TPLRectF; dr: TPLFloat = 1);
-  begin
-    case t of
-      1 {left}: begin
-        r := ABorders.Radius[1] * dr;
-        x := _x_const * r;
-        FSurface.MoveTo(cr.Left + x, cr.Top + x);
-        FSurface.ArcTo(TPLRectF.Create(cr.Left, cr.Top, r * 2, r * 2), -pi/4, -pi/2);
-
-        r := ABorders.Radius[3] * dr;
-        FSurface.LineTo(cr.Left, cr.Bottom - r);
-        if r > 0 then
-          FSurface.ArcTo(TPLRectF.Create(cr.Left, cr.Bottom - 2 * r, r * 2, r * 2), -pi/2, -3*pi/4)
-        else
-          FSurface.LineTo(cr.Left + ABorders.Left.Width / 2, cr.Bottom);
-      end;
-      2 {bottom}: begin
-        r := ABorders.Radius[3] * dr;
-        x := _x_const * r;
-        //FSurface.MoveTo(cr.Left + x, cr.Bottom - x);
-        FSurface.ArcTo(TPLRectF.Create(cr.Left, cr.Bottom - 2 * r, r * 2, r * 2), 5*pi/4, pi);
-
-        r := ABorders.Radius[4] * dr;
-        FSurface.LineTo(cr.Right - r, cr.Bottom);
-        if r > 0 then
-          FSurface.ArcTo(TPLRectF.Create(cr.Right - 2 * r, cr.Bottom - 2 * r, r * 2, r * 2), pi, 3*pi/4)
-        else
-          FSurface.LineTo(cr.Right - r, cr.Bottom - ABorders.Bottom.Width / 2);
-      end;
-      3 {right}: begin
-        r := ABorders.Radius[4] * dr;
-        x := _x_const * r;
-        //FSurface.MoveTo(cr.Right - x, cr.Bottom - x);
-        FSurface.ArcTo(TPLRectF.Create(cr.Right - 2 * r, cr.Bottom - 2 * r, r * 2, r * 2), 3*pi/4, pi/2);
-
-        r := ABorders.Radius[2] * dr;
-        if r = 0 then FSurface.LineTo(cr.Right, cr.Top + 2 * r);
-        if r > 0 then
-          FSurface.ArcTo(TPLRectF.Create(cr.Right - 2 * r, cr.Top, r * 2, r * 2), pi/2, pi/4)
-        else
-          FSurface.LineTo(cr.Right - ABorders.Bottom.Width / 2, cr.Top);
-      end;
-      4 {top}: begin
-        r := ABorders.Radius[2] * dr;
-        x := _x_const * r;
-        //FSurface.MoveTo(cr.Right - x, cr.Top + x);
-        FSurface.ArcTo(TPLRectF.Create(cr.Right - 2 * r, cr.Top, r * 2, r * 2), pi/4, 0);
-
-        r := ABorders.Radius[1] * dr;
-        if r = 0 then FSurface.LineTo(cr.Left + 2 * r, cr.Top);
-        if r > 0 then
-          FSurface.ArcTo(TPLRectF.Create(cr.Left, cr.Top, r * 2, r * 2), 0, -pi/4)
-        else
-          FSurface.LineTo(cr.Left, cr.Top + ABorders.Bottom.Width / 2);
-      end;
-    end;
-  end;
-
-var
-  rec: TPLRectF;
-
-begin
-  CorrectRadius(ABorders.Radius[1]);
-  CorrectRadius(ABorders.Radius[2]);
-  CorrectRadius(ABorders.Radius[3]);
-  CorrectRadius(ABorders.Radius[4]);
-
-  if Assigned(ABackground) then begin
-    DoPart(1, ARect);
-    DoPart(2, ARect);
-    DoPart(3, ARect);
-    DoPart(4, ARect);
-    FSurface.Path.Add;
-    FSurface.Fill(ABackground);
-    FSurface.Path.Remove;
-  end;
-
-  rec := ARect.Inflate(DoublePenSize(ABorders.Left.Width), DoublePenSize(ABorders.Top.Width), DoublePenSize(ABorders.Left.Width) + DoublePenSize(ABorders.Right.Width), DoublePenSize(ABorders.Top.Width) + DoublePenSize(ABorders.Bottom.Width));
-
-  if ABorders.Left.Width > 0 then begin
-    DoPart(1, ARect);
-    StrokePen(ABorders.Left, 1);
-    if ABorders.Left.Style = dbsDouble then begin
-      DoPart(1, rec, rec.Width / ARect.Width);
-      StrokePen(ABorders.Left);
-    end;
-    FSurface.Path.Remove;
-  end;
-
-  if ABorders.Bottom.Width > 0 then begin
-    DoPart(2, ARect);
-    StrokePen(ABorders.Bottom, 2);
-    if ABorders.Bottom.Style = dbsDouble then begin
-      DoPart(2, rec, rec.Height / ARect.Height);
-      StrokePen(ABorders.Bottom);
-    end;
-    FSurface.Path.Remove;
-  end;
-
-  if ABorders.Right.Width > 0 then begin
-    DoPart(3, ARect);
-    StrokePen(ABorders.Right, 3);
-    if ABorders.Right.Style = dbsDouble then begin
-      DoPart(3, rec, rec.Width / ARect.Width);
-      StrokePen(ABorders.Right);
-    end;
-    FSurface.Path.Remove;
-  end;
-
-  if ABorders.Top.Width > 0 then begin
-    DoPart(4, ARect);
-    StrokePen(ABorders.Top, 4);
-    if ABorders.Top.Style = dbsDouble then begin
-      DoPart(4, rec, rec.Height / ARect.Height);
-      StrokePen(ABorders.Top);
-    end;
-    FSurface.Path.Remove;
-  end;
-end;
-
-procedure TPLD2D1Drawer.DrawText(const AText: TPLString; ARect: TPLRectF;
-  AFont: IPLDrawingFont; ADirection: TPLTextDirection);
-begin
-  inherited DrawText(AText, ARect, AFont, ADirection);
-end;
+//procedure TPLD2D1Drawer.DrawBox(ARect: TPLRectF; ABackground: IPLDrawingBrush;
+//  ABorders: TPLDrawingBorders);
+//
+//  procedure CorrectRadius(var w: TPLFloat);
+//  var
+//    r: TPLFloat;
+//  begin
+//    r := min(ARect.Width, ARect.Height) / 2;
+//    if w < 0 then w := 0
+//    else if w > r then w := r;
+//  end;
+//
+//  function DoublePenSize(s: TPLFloat): TPLFloat; inline;
+//  begin
+//    Result := ceil64(s / 3);
+//  end;
+//
+//  procedure StrokePen(opts: TPLDrawingBorder; APart: byte = 1);
+//  var
+//    pen: IPLDrawingPen;
+//  begin
+//    if Assigned(ABorders.Image) and (opts.Style <> dbsNone) then begin
+//      pen := NewDrawingPenD2D(ABorders.Image, opts.Width);
+//      FSurface.Stroke(pen);
+//      exit;
+//    end;
+//
+//    case opts.Style of
+//      dbsNone: begin
+//        // nothing
+//      end;
+//      dbsSolid: begin
+//        pen := NewDrawingPenD2D(opts.Color, opts.Width);
+//        FSurface.Stroke(pen);
+//      end;
+//      dbsDashed: begin
+//        pen := NewDrawingPenD2D(opts.Color, opts.Width);
+//        pen.SetStyle(dpsDash);
+//        FSurface.Stroke(pen);
+//      end;
+//      dbsDotted: begin
+//        pen := NewDrawingPenD2D(opts.Color, opts.Width);
+//        pen.SetStyle(dpsDot);
+//        FSurface.Stroke(pen);
+//      end;
+//      dbsDouble: begin
+//        pen := NewDrawingPenD2D(opts.Color, DoublePenSize(opts.Width / 3));
+//        FSurface.Stroke(pen);
+//      end;
+//      dbsInset: begin
+//        if APart in [1, 4] then pen := NewDrawingPenD2D(opts.Color.ChangeLightness(-0.3), opts.Width) else
+//          pen := NewDrawingPenD2D(opts.Color, opts.Width);
+//        FSurface.Stroke(pen);
+//      end;
+//      dbsOutset: begin
+//        if APart in [2, 3] then pen := NewDrawingPenD2D(opts.Color.ChangeLightness(-0.3), opts.Width) else
+//          pen := NewDrawingPenD2D(opts.Color, opts.Width);
+//        FSurface.Stroke(pen);
+//      end;
+//    end;
+//  end;
+//
+//const
+//  _x_const = 0.2928932188134524755991556; // 1 - sqrt(2)/2
+//
+//var
+//  x, r: TPLFloat;
+//
+//  procedure DoPart(t: byte; cr: TPLRectF; dr: TPLFloat = 1);
+//  begin
+//    case t of
+//      1 {left}: begin
+//        r := ABorders.Radius[1] * dr;
+//        x := _x_const * r;
+//        FSurface.MoveTo(cr.Left + x, cr.Top + x);
+//        FSurface.ArcTo(TPLRectF.Create(cr.Left, cr.Top, r * 2, r * 2), -pi/4, -pi/2);
+//
+//        r := ABorders.Radius[3] * dr;
+//        FSurface.LineTo(cr.Left, cr.Bottom - r);
+//        if r > 0 then
+//          FSurface.ArcTo(TPLRectF.Create(cr.Left, cr.Bottom - 2 * r, r * 2, r * 2), -pi/2, -3*pi/4)
+//        else
+//          FSurface.LineTo(cr.Left + ABorders.Left.Width / 2, cr.Bottom);
+//      end;
+//      2 {bottom}: begin
+//        r := ABorders.Radius[3] * dr;
+//        x := _x_const * r;
+//        //FSurface.MoveTo(cr.Left + x, cr.Bottom - x);
+//        FSurface.ArcTo(TPLRectF.Create(cr.Left, cr.Bottom - 2 * r, r * 2, r * 2), 5*pi/4, pi);
+//
+//        r := ABorders.Radius[4] * dr;
+//        FSurface.LineTo(cr.Right - r, cr.Bottom);
+//        if r > 0 then
+//          FSurface.ArcTo(TPLRectF.Create(cr.Right - 2 * r, cr.Bottom - 2 * r, r * 2, r * 2), pi, 3*pi/4)
+//        else
+//          FSurface.LineTo(cr.Right - r, cr.Bottom - ABorders.Bottom.Width / 2);
+//      end;
+//      3 {right}: begin
+//        r := ABorders.Radius[4] * dr;
+//        x := _x_const * r;
+//        //FSurface.MoveTo(cr.Right - x, cr.Bottom - x);
+//        FSurface.ArcTo(TPLRectF.Create(cr.Right - 2 * r, cr.Bottom - 2 * r, r * 2, r * 2), 3*pi/4, pi/2);
+//
+//        r := ABorders.Radius[2] * dr;
+//        if r = 0 then FSurface.LineTo(cr.Right, cr.Top + 2 * r);
+//        if r > 0 then
+//          FSurface.ArcTo(TPLRectF.Create(cr.Right - 2 * r, cr.Top, r * 2, r * 2), pi/2, pi/4)
+//        else
+//          FSurface.LineTo(cr.Right - ABorders.Bottom.Width / 2, cr.Top);
+//      end;
+//      4 {top}: begin
+//        r := ABorders.Radius[2] * dr;
+//        x := _x_const * r;
+//        //FSurface.MoveTo(cr.Right - x, cr.Top + x);
+//        FSurface.ArcTo(TPLRectF.Create(cr.Right - 2 * r, cr.Top, r * 2, r * 2), pi/4, 0);
+//
+//        r := ABorders.Radius[1] * dr;
+//        if r = 0 then FSurface.LineTo(cr.Left + 2 * r, cr.Top);
+//        if r > 0 then
+//          FSurface.ArcTo(TPLRectF.Create(cr.Left, cr.Top, r * 2, r * 2), 0, -pi/4)
+//        else
+//          FSurface.LineTo(cr.Left, cr.Top + ABorders.Bottom.Width / 2);
+//      end;
+//    end;
+//  end;
+//
+//var
+//  rec: TPLRectF;
+//
+//begin
+//  CorrectRadius(ABorders.Radius[1]);
+//  CorrectRadius(ABorders.Radius[2]);
+//  CorrectRadius(ABorders.Radius[3]);
+//  CorrectRadius(ABorders.Radius[4]);
+//
+//  if Assigned(ABackground) then begin
+//    DoPart(1, ARect);
+//    DoPart(2, ARect);
+//    DoPart(3, ARect);
+//    DoPart(4, ARect);
+//    FSurface.Path.Add;
+//    FSurface.Fill(ABackground);
+//    FSurface.Path.Remove;
+//  end;
+//
+//  rec := ARect.Inflate(DoublePenSize(ABorders.Left.Width), DoublePenSize(ABorders.Top.Width), DoublePenSize(ABorders.Left.Width) + DoublePenSize(ABorders.Right.Width), DoublePenSize(ABorders.Top.Width) + DoublePenSize(ABorders.Bottom.Width));
+//
+//  if ABorders.Left.Width > 0 then begin
+//    DoPart(1, ARect);
+//    StrokePen(ABorders.Left, 1);
+//    if ABorders.Left.Style = dbsDouble then begin
+//      DoPart(1, rec, rec.Width / ARect.Width);
+//      StrokePen(ABorders.Left);
+//    end;
+//    FSurface.Path.Remove;
+//  end;
+//
+//  if ABorders.Bottom.Width > 0 then begin
+//    DoPart(2, ARect);
+//    StrokePen(ABorders.Bottom, 2);
+//    if ABorders.Bottom.Style = dbsDouble then begin
+//      DoPart(2, rec, rec.Height / ARect.Height);
+//      StrokePen(ABorders.Bottom);
+//    end;
+//    FSurface.Path.Remove;
+//  end;
+//
+//  if ABorders.Right.Width > 0 then begin
+//    DoPart(3, ARect);
+//    StrokePen(ABorders.Right, 3);
+//    if ABorders.Right.Style = dbsDouble then begin
+//      DoPart(3, rec, rec.Width / ARect.Width);
+//      StrokePen(ABorders.Right);
+//    end;
+//    FSurface.Path.Remove;
+//  end;
+//
+//  if ABorders.Top.Width > 0 then begin
+//    DoPart(4, ARect);
+//    StrokePen(ABorders.Top, 4);
+//    if ABorders.Top.Style = dbsDouble then begin
+//      DoPart(4, rec, rec.Height / ARect.Height);
+//      StrokePen(ABorders.Top);
+//    end;
+//    FSurface.Path.Remove;
+//  end;
+//end;
+//
+//procedure TPLD2D1Drawer.DrawText(const AText: TPLString; ARect: TPLRectF;
+//  AFont: IPLDrawingFont; ADirection: TPLTextDirection);
+//begin
+//  inherited DrawText(AText, ARect, AFont, ADirection);
+//end;
 
 
 // public functions

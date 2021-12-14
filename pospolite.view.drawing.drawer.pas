@@ -388,9 +388,21 @@ type
     function GetCanvas: TCanvas;
     function GetSurface: IPLDrawingSurface;
 
-    procedure DrawBox(ARect: TPLRectF; ABackground: IPLDrawingBrush; ABorders: TPLDrawingBorders);
-    procedure DrawText(const AText: TPLString; ARect: TPLRectF; AFont: IPLDrawingFont;
-      ADirection: TPLTextDirection);
+    //procedure FillRect(const ARect: TPLRectF; const ABrush: IPLDrawingBrush);
+    //procedure StrokeRect(const ARect: TPLRectF; const APen: IPLDrawingPen);
+    //procedure Line(const AFrom, ATo: TPLPointF; const APen: IPLDrawingPen);
+
+    procedure DrawObjectFully(const AObject: TPLHTMLObject; const ADebug: boolean = false);
+    procedure DrawObjectBackground(const AObject: TPLHTMLObject);
+    procedure DrawObjectBorder(const AObject: TPLHTMLObject);
+    procedure DrawObjectOutline(const AObject: TPLHTMLObject);
+    procedure DrawObjectOutlineText(const AObject: TPLHTMLObject);
+    procedure DrawObjectText(const AObject: TPLHTMLObject);
+    procedure DrawObjectDebug(const AObject: TPLHTMLObject);
+    procedure DrawObjectShadow(const AObject: TPLHTMLObject);
+    procedure DrawObjectTextShadow(const AObject: TPLHTMLObject);
+    procedure DrawObjectPseudoBefore(const AObject: TPLHTMLObject);
+    procedure DrawObjectPseudoAfter(const AObject: TPLHTMLObject);
 
     property Canvas: TCanvas read GetCanvas;
     property Surface: IPLDrawingSurface read GetSurface;
@@ -408,10 +420,17 @@ type
   public
     constructor Create(ACanvas: TCanvas); virtual;
 
-    procedure DrawBox(ARect: TPLRectF; ABackground: IPLDrawingBrush;
-      ABorders: TPLDrawingBorders); virtual;
-    procedure DrawText(const AText: TPLString; ARect: TPLRectF; AFont: IPLDrawingFont;
-      ADirection: TPLTextDirection); virtual;
+    procedure DrawObjectBackground(const AObject: TPLHTMLObject); virtual;
+    procedure DrawObjectBorder(const AObject: TPLHTMLObject); virtual;
+    procedure DrawObjectDebug(const AObject: TPLHTMLObject); virtual;
+    procedure DrawObjectFully(const AObject: TPLHTMLObject; const ADebug: boolean = false);
+    procedure DrawObjectOutline(const AObject: TPLHTMLObject); virtual;
+    procedure DrawObjectOutlineText(const AObject: TPLHTMLObject); virtual;
+    procedure DrawObjectPseudoAfter(const AObject: TPLHTMLObject); virtual;
+    procedure DrawObjectPseudoBefore(const AObject: TPLHTMLObject); virtual;
+    procedure DrawObjectShadow(const AObject: TPLHTMLObject); virtual;
+    procedure DrawObjectText(const AObject: TPLHTMLObject); virtual;
+    procedure DrawObjectTextShadow(const AObject: TPLHTMLObject); virtual;
 
     property Canvas: TCanvas read GetCanvas;
     property Surface: IPLDrawingSurface read GetSurface;
@@ -618,16 +637,73 @@ begin
   FCanvas := ACanvas;
 end;
 
-procedure TPLAbstractDrawer.DrawBox(ARect: TPLRectF;
-  ABackground: IPLDrawingBrush; ABorders: TPLDrawingBorders);
+procedure TPLAbstractDrawer.DrawObjectBackground(const AObject: TPLHTMLObject);
 begin
-  //
+  if not Assigned(AObject) then exit;
 end;
 
-procedure TPLAbstractDrawer.DrawText(const AText: TPLString;
-  ARect: TPLRectF; AFont: IPLDrawingFont; ADirection: TPLTextDirection);
+procedure TPLAbstractDrawer.DrawObjectBorder(const AObject: TPLHTMLObject);
 begin
-  //
+  if not Assigned(AObject) then exit;
+end;
+
+procedure TPLAbstractDrawer.DrawObjectDebug(const AObject: TPLHTMLObject);
+begin
+  if not Assigned(AObject) then exit;
+end;
+
+procedure TPLAbstractDrawer.DrawObjectFully(const AObject: TPLHTMLObject;
+  const ADebug: boolean);
+begin
+  if not Assigned(AObject) then exit;
+
+  DrawObjectShadow(AObject);
+  DrawObjectBackground(AObject);
+  DrawObjectBorder(AObject);
+  DrawObjectOutline(AObject);
+  DrawObjectTextShadow(AObject);
+  DrawObjectOutlineText(AObject);
+  DrawObjectText(AObject);
+  DrawObjectPseudoBefore(AObject);
+  DrawObjectPseudoAfter(AObject);
+
+  if ADebug then DrawObjectDebug(AObject);
+end;
+
+procedure TPLAbstractDrawer.DrawObjectOutline(const AObject: TPLHTMLObject);
+begin
+  if not Assigned(AObject) then exit;
+end;
+
+procedure TPLAbstractDrawer.DrawObjectOutlineText(const AObject: TPLHTMLObject);
+begin
+  if not Assigned(AObject) then exit;
+end;
+
+procedure TPLAbstractDrawer.DrawObjectPseudoAfter(const AObject: TPLHTMLObject);
+begin
+  if not Assigned(AObject) then exit;
+end;
+
+procedure TPLAbstractDrawer.DrawObjectPseudoBefore(const AObject: TPLHTMLObject
+  );
+begin
+  if not Assigned(AObject) then exit;
+end;
+
+procedure TPLAbstractDrawer.DrawObjectShadow(const AObject: TPLHTMLObject);
+begin
+  if not Assigned(AObject) then exit;
+end;
+
+procedure TPLAbstractDrawer.DrawObjectText(const AObject: TPLHTMLObject);
+begin
+  if not Assigned(AObject) then exit;
+end;
+
+procedure TPLAbstractDrawer.DrawObjectTextShadow(const AObject: TPLHTMLObject);
+begin
+  if not Assigned(AObject) then exit;
 end;
 
 end.

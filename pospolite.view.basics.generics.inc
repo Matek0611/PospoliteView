@@ -175,18 +175,36 @@ begin
   FSize += 1;
 end;
 
-procedure TPLObjectList.Insert(AIndex: SizeInt; AItem: T);
+procedure TPLObjectList.CustomInsert(AIndex: SizeInt; AItem, ATempItem: T);
 var
   i: SizeInt;
 begin
-  Add(AItem);
-
-  if Empty then exit;
+  if Empty then begin
+    Add(AItem);
+    if Assigned(ATempItem) then ATempItem.Free;
+    exit;
+  end;
 
   if AIndex < 0 then AIndex := 0
-  else if AIndex > Count-1 then AIndex := max(0, Count-1);
+  else if AIndex > Count-1 then AIndex := max(0, Count);
 
-  if AIndex < Count-1 then Replace(AIndex, Count-1);
+  if AIndex < Count then begin
+    SetLength(FArray, Count+1);
+    FArray[Count] := ATempItem;
+
+    for i := High(FArray) downto AIndex do
+      FArray[i] := FArray[i-1];
+
+    FArray[AIndex] := AItem;
+    FSize += 1;
+  end else Add(AItem);
+
+  if Assigned(ATempItem) then ATempItem.Free;
+end;
+
+procedure TPLObjectList.Insert(AIndex: SizeInt; AItem: T);
+begin
+  CustomInsert(AIndex, AItem, nil);
 end;
 
 procedure TPLObjectList.Replace(AIndex1, AIndex2: SizeInt);

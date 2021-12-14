@@ -480,9 +480,6 @@ begin
 
       if Assigned(FDocument) and Assigned(FDocument.Root) then
         FDocument.Root.Draw(dr);
-
-      // test 2.
-      dr.DrawBox(TPLRectF.Create(50, 50, 200, 50), TPLCSSDeclarations.Create('border-color: red; background-color: #bbb;'), nil, false, true); // rendering
     finally
       dr.Free;
     end;

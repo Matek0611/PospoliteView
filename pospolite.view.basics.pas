@@ -137,7 +137,7 @@ type
   generic TPLObjectList<T: class> = class(TInterfacedObject, specialize IPLObjectList<T>)
   private type
     TListOfT = array of T;
-  private
+  protected
     FArray: TListOfT;
     FFreeObjects: TPLBool;
     FSize: SizeInt;
@@ -158,6 +158,7 @@ type
     destructor Destroy; override;
 
     procedure Add(AItem: T); virtual;
+    procedure CustomInsert(AIndex: SizeInt; AItem, ATempItem: T);
     procedure Insert(AIndex: SizeInt; AItem: T);
     procedure Replace(AIndex1, AIndex2: SizeInt);
     procedure Remove(AItem: T); virtual;

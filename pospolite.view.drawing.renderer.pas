@@ -23,40 +23,39 @@ uses
 
 type
 
-  {$ifdef windows}
-    TPLDrawingDrawerDef = TPLD2D1Drawer;
-  {$else}
-    TPLDrawingDrawerDef = TPLAbstractDrawer; // to do TPLNativeDrawer
-  {$endif}
+  TPLDrawingDrawerClass = class of TPLAbstractDrawer;
 
   { IPLDrawingRenderer }
 
   IPLDrawingRenderer = interface
     ['{23939734-BAA9-459A-91D0-FC34700E3833}']
-    function GetDrawer: TPLDrawingDrawerDef;
+    function GetDebugMode: boolean;
+    function GetDrawer: TPLAbstractDrawer;
+    procedure SetDebugMode(AValue: boolean);
 
-    procedure DrawBox(ARect: TPLRectF; AProperties: TPLCSSDeclarations;
-      AHTMLObject: TPLHTMLObject = nil; ADrawOutline: TPLBool = False;
-      AFreePropertiesAfterDrawing: TPLBool = False);
+    procedure DrawHTMLObject(const AHTMLObject: TPLHTMLObject);
 
-    property Drawer: TPLDrawingDrawerDef read GetDrawer;
+    property Drawer: TPLAbstractDrawer read GetDrawer;
+    property DebugMode: boolean read GetDebugMode write SetDebugMode;
   end;
 
   { TPLDrawingRenderer }
 
   TPLDrawingRenderer = class(TInterfacedObject, IPLDrawingRenderer)
   private
-    FDrawer: TPLDrawingDrawerDef;
-    function GetDrawer: TPLDrawingDrawerDef;
+    FDrawer: TPLAbstractDrawer;
+    FDebugMode: boolean;
+    function GetDebugMode: boolean;
+    function GetDrawer: TPLAbstractDrawer;
+    procedure SetDebugMode(AValue: boolean);
   public
     constructor Create(ACanvas: TCanvas);
     destructor Destroy; override;
 
-    procedure DrawBox(ARect: TPLRectF; AProperties: TPLCSSDeclarations;
-      AHTMLObject: TPLHTMLObject = nil; ADrawOutline: TPLBool = False;
-      AFreePropertiesAfterDrawing: TPLBool = False);
+    procedure DrawHTMLObject(const AHTMLObject: TPLHTMLObject);
 
-    property Drawer: TPLDrawingDrawerDef read GetDrawer;
+    property Drawer: TPLAbstractDrawer read GetDrawer;
+    property DebugMode: boolean read GetDebugMode write SetDebugMode;
   end;
 
   function NewDrawingRenderer(ACanvas: TCanvas): IPLDrawingRenderer;
@@ -215,7 +214,7 @@ begin
     Result := TPLColor.Transparent;
 end;
 
-function ExtractCSSGradientLinear(part: TPLCSSPropertyValuePartFunction;
+{function ExtractCSSGradientLinear(part: TPLCSSPropertyValuePartFunction;
   ARect: TPLRectF; AHTMLObject: TPLHTMLObject = nil): IPLDrawingBrushGradientLinear;
 
   procedure CorrectPoint(var pt: TPLPointF);
@@ -660,19 +659,38 @@ begin
     end;
   end;      // co gdy border: image ...; bez width a border-image-width jest ustawione???
 end;
+}
 
 { TPLDrawingRenderer }
 
-function TPLDrawingRenderer.GetDrawer: TPLDrawingDrawerDef;
+function TPLDrawingRenderer.GetDrawer: TPLAbstractDrawer;
 begin
   Result := FDrawer;
+end;
+
+function TPLDrawingRenderer.GetDebugMode: boolean;
+begin
+  Result := FDebugMode;
+end;
+
+procedure TPLDrawingRenderer.SetDebugMode(AValue: boolean);
+begin
+  if FDebugMode = AValue then exit;
+
+  FDebugMode := AValue;
 end;
 
 constructor TPLDrawingRenderer.Create(ACanvas: TCanvas);
 begin
   inherited Create;
 
-  FDrawer := TPLDrawingDrawerDef.Create(ACanvas);
+  FDrawer :=
+    {$ifdef windows}
+      TPLD2D1Drawer
+    {$else}
+      TPLAbstractDrawer // to do TPLNativeDrawer
+    {$endif}.Create(ACanvas);
+  FDebugMode := false;
 end;
 
 destructor TPLDrawingRenderer.Destroy;
@@ -682,45 +700,50 @@ begin
   inherited Destroy;
 end;
 
-procedure TPLDrawingRenderer.DrawBox(ARect: TPLRectF;
-  AProperties: TPLCSSDeclarations; AHTMLObject: TPLHTMLObject;
-  ADrawOutline: TPLBool; AFreePropertiesAfterDrawing: TPLBool);
-var
-  brd, brdn: TPLDrawingBorders;
-  i: TPLInt;
-  prop: TPLCSSProperty;
-  v: TPLFloat;
+procedure TPLDrawingRenderer.DrawHTMLObject(const AHTMLObject: TPLHTMLObject);
 begin
-  brd := ExtractCSSBorder(AProperties, AHTMLObject);
-  brdn := brd;
-  brdn.Left.Width := 0;
-  brdn.Top.Width := 0;
-  brdn.Right.Width := 0;
-  brdn.Bottom.Width := 0;
-
-  FDrawer.DrawBox(ARect, ExtractCSSBackground(AProperties, 'color', ARect), brdn);
-  if AProperties.Exists('background-image', prop) then begin
-    for i := 0 to prop.Value.Count-1 do
-      FDrawer.DrawBox(ARect, ExtractCSSBackground(AProperties, 'image', ARect, AHTMLObject, i), brdn);
-  end;
-
-  FDrawer.DrawBox(ARect, nil, brd);
-
-  if ADrawOutline then begin
-    if AProperties.Exists('outline-offset', prop) then begin
-      if prop.Value.Count > 0 then begin
-        v := 0;
-        if prop.Value[0] is TPLCSSPropertyValuePartNumber then v := TPLCSSPropertyValuePartNumber(prop.Value[0]).Value
-        else if prop.Value[0] is TPLCSSPropertyValuePartDimension then v := AutoLengthToPx(TPLCSSPropertyValuePartDimension(prop.Value[0]).Value, TPLCSSPropertyValuePartDimension(prop.Value[0]).&Unit);
-        ARect := ARect.Inflate(-v, -v);
-      end;
-    end;
-    ARect := ARect.Inflate(-brd.AverageBorderSize, -brd.AverageBorderSize);
-    FDrawer.DrawBox(ARect, nil, ExtractCSSBorder(AProperties, AHTMLObject, 'outline'));
-  end;
-
-  if AFreePropertiesAfterDrawing then AProperties.Free;
+  FDrawer.DrawObjectFully(AHTMLObject, FDebugMode);
 end;
+
+//procedure TPLDrawingRenderer.DrawBox(ARect: TPLRectF;
+//  AProperties: TPLCSSDeclarations; AHTMLObject: TPLHTMLObject;
+//  ADrawOutline: TPLBool; AFreePropertiesAfterDrawing: TPLBool);
+//var
+//  brd, brdn: TPLDrawingBorders;
+//  i: TPLInt;
+//  prop: TPLCSSProperty;
+//  v: TPLFloat;
+//begin
+//  brd := ExtractCSSBorder(AProperties, AHTMLObject);
+//  brdn := brd;
+//  brdn.Left.Width := 0;
+//  brdn.Top.Width := 0;
+//  brdn.Right.Width := 0;
+//  brdn.Bottom.Width := 0;
+//
+//  FDrawer.DrawBox(ARect, ExtractCSSBackground(AProperties, 'color', ARect), brdn);
+//  if AProperties.Exists('background-image', prop) then begin
+//    for i := 0 to prop.Value.Count-1 do
+//      FDrawer.DrawBox(ARect, ExtractCSSBackground(AProperties, 'image', ARect, AHTMLObject, i), brdn);
+//  end;
+//
+//  FDrawer.DrawBox(ARect, nil, brd);
+//
+//  if ADrawOutline then begin
+//    if AProperties.Exists('outline-offset', prop) then begin
+//      if prop.Value.Count > 0 then begin
+//        v := 0;
+//        if prop.Value[0] is TPLCSSPropertyValuePartNumber then v := TPLCSSPropertyValuePartNumber(prop.Value[0]).Value
+//        else if prop.Value[0] is TPLCSSPropertyValuePartDimension then v := AutoLengthToPx(TPLCSSPropertyValuePartDimension(prop.Value[0]).Value, TPLCSSPropertyValuePartDimension(prop.Value[0]).&Unit);
+//        ARect := ARect.Inflate(-v, -v);
+//      end;
+//    end;
+//    ARect := ARect.Inflate(-brd.AverageBorderSize, -brd.AverageBorderSize);
+//    FDrawer.DrawBox(ARect, nil, ExtractCSSBorder(AProperties, AHTMLObject, 'outline'));
+//  end;
+//
+//  if AFreePropertiesAfterDrawing then AProperties.Free;
+//end;
 
 function NewDrawingRenderer(ACanvas: TCanvas): IPLDrawingRenderer;
 begin

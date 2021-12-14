@@ -203,6 +203,7 @@ end;
 procedure TPLHTMLBasicObject.DoDraw(ADrawer: Pointer);
 begin
   inherited DoDraw(ADrawer);
+  if (GetRealLeft + GetWidth < 0) or (GetRealTop + GetHeight < 0) or not IsVisible then exit;
 
   Render(TPLDrawingRenderer(ADrawer));
   FScrolling.Draw(TPLDrawingRenderer(ADrawer));
@@ -210,9 +211,7 @@ end;
 
 procedure TPLHTMLBasicObject.Render(ARenderer: TPLDrawingRenderer);
 begin
-  // only for view object bounds (must be overriden)
-  //ARenderer.DrawBox(FSize, TPLCSSDeclarations.Create(''), nil, false, true);
-  //ARenderer.Drawer.;
+  ARenderer.DrawHTMLObject(self);
 end;
 
 procedure TPLHTMLBasicObject.InitEventTarget;
