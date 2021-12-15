@@ -8,21 +8,7 @@ unit pospolite_view;
 interface
 
 uses
-  Pospolite.View.Basics, Pospolite.View.JS.Basics, Pospolite.View.DOM.Screen, 
-  Pospolite.View.DOM.Window, Pospolite.View.CSS.Basics, 
-  Pospolite.View.CSS.Declaration, Pospolite.View.CSS.Selector, 
-  Pospolite.View.Drawing.Basics, Pospolite.View.Drawing.Drawer, 
-  Pospolite.View.Drawing.DrawerD2D1, 
-  Pospolite.View.Drawing.DrawerD2D1.Definitions, 
-  Pospolite.View.Drawing.ImageCodecs, Pospolite.View.Drawing.Renderer, 
-  Pospolite.View.HTML.Basics, Pospolite.View.HTML.Parser, 
-  Pospolite.View.HTML.Document, Pospolite.View.DOM.Document, 
-  Pospolite.View.Internet, Pospolite.View.Version, Pospolite.View.Threads, 
-  Pospolite.View.CSS.Binder, Pospolite.View.CSS.MediaQuery, 
-  Pospolite.View.CSS.Animation, Pospolite.View.HTML.Scrolling, 
-  Pospolite.View.HTML.Layout, Pospolite.View.HTML.Events, 
-  Pospolite.View.Frame, Pospolite.View.RegisterAll, 
-  Pospolite.View.CSS.StyleSheet, LazarusPackageIntf;
+  Pospolite.View.RegisterAll, LazarusPackageIntf;
 
 implementation
 

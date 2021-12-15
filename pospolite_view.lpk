@@ -4,10 +4,13 @@
     <PathDelim Value="\"/>
     <Name Value="pospolite_view"/>
     <Type Value="RunAndDesignTime"/>
+    <AddToProjectUsesSection Value="True"/>
     <CompilerOptions>
       <Version Value="11"/>
       <PathDelim Value="\"/>
       <SearchPaths>
+        <IncludeFiles Value="core;frame;gfx;dom;css;js"/>
+        <OtherUnitFiles Value="core;frame;gfx;dom;css;js"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <CodeGeneration>
@@ -17,133 +20,162 @@
     <Version Major="1"/>
     <Files Count="32">
       <Item1>
-        <Filename Value="pospolite.view.basics.pas"/>
-        <UnitName Value="Pospolite.View.Basics"/>
+        <Filename Value="gfx\pospolite.view.drawing.basics.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.Drawing.Basics"/>
       </Item1>
       <Item2>
-        <Filename Value="pospolite.view.basics.generics.inc"/>
-        <Type Value="Include"/>
+        <Filename Value="gfx\pospolite.view.drawing.renderer.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.Drawing.Renderer"/>
       </Item2>
       <Item3>
-        <Filename Value="pospolite.view.basics.helpers.inc"/>
-        <Type Value="Include"/>
+        <Filename Value="gfx\pospolite.view.drawing.drawer.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.Drawing.Drawer"/>
       </Item3>
       <Item4>
-        <Filename Value="pospolite.view.basics.funcs.inc"/>
-        <Type Value="Include"/>
+        <Filename Value="gfx\pospolite.view.drawing.drawerd2d1.definitions.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.Drawing.DrawerD2D1.Definitions"/>
       </Item4>
       <Item5>
-        <Filename Value="pospolite.view.js.basics.pas"/>
-        <UnitName Value="Pospolite.View.JS.Basics"/>
+        <Filename Value="gfx\pospolite.view.drawing.drawerd2d1.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.Drawing.DrawerD2D1"/>
       </Item5>
       <Item6>
-        <Filename Value="pospolite.view.dom.screen.pas"/>
-        <UnitName Value="Pospolite.View.DOM.Screen"/>
+        <Filename Value="gfx\pospolite.view.drawing.imagecodecs.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.Drawing.ImageCodecs"/>
       </Item6>
       <Item7>
-        <Filename Value="pospolite.view.dom.window.pas"/>
-        <UnitName Value="Pospolite.View.DOM.Window"/>
+        <Filename Value="js\pospolite.view.js.basics.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.JS.Basics"/>
       </Item7>
       <Item8>
-        <Filename Value="pospolite.view.css.basics.pas"/>
-        <UnitName Value="Pospolite.View.CSS.Basics"/>
+        <Filename Value="core\pospolite.view.version.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.Version"/>
       </Item8>
       <Item9>
-        <Filename Value="pospolite.view.css.declaration.pas"/>
-        <UnitName Value="Pospolite.View.CSS.Declaration"/>
+        <Filename Value="core\pospolite.view.threads.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.Threads"/>
       </Item9>
       <Item10>
-        <Filename Value="pospolite.view.css.selector.pas"/>
-        <UnitName Value="Pospolite.View.CSS.Selector"/>
+        <Filename Value="core\pospolite.view.internet.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.Internet"/>
       </Item10>
       <Item11>
-        <Filename Value="pospolite.view.drawing.basics.pas"/>
-        <UnitName Value="Pospolite.View.Drawing.Basics"/>
+        <Filename Value="core\pospolite.view.basics.helpers.inc"/>
+        <Type Value="Include"/>
       </Item11>
       <Item12>
-        <Filename Value="pospolite.view.drawing.drawer.pas"/>
-        <UnitName Value="Pospolite.View.Drawing.Drawer"/>
+        <Filename Value="core\pospolite.view.basics.generics.inc"/>
+        <Type Value="Include"/>
       </Item12>
       <Item13>
-        <Filename Value="pospolite.view.drawing.drawerd2d1.pas"/>
-        <UnitName Value="Pospolite.View.Drawing.DrawerD2D1"/>
+        <Filename Value="core\pospolite.view.basics.funcs.inc"/>
+        <Type Value="Include"/>
       </Item13>
       <Item14>
-        <Filename Value="pospolite.view.drawing.drawerd2d1.definitions.pas"/>
-        <UnitName Value="Pospolite.View.Drawing.DrawerD2D1.Definitions"/>
+        <Filename Value="core\pospolite.view.basics.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.Basics"/>
       </Item14>
       <Item15>
-        <Filename Value="pospolite.view.drawing.imagecodecs.pas"/>
-        <UnitName Value="Pospolite.View.Drawing.ImageCodecs"/>
+        <Filename Value="css\pospolite.view.css.stylesheet.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.CSS.StyleSheet"/>
       </Item15>
       <Item16>
-        <Filename Value="pospolite.view.drawing.renderer.pas"/>
-        <UnitName Value="Pospolite.View.Drawing.Renderer"/>
+        <Filename Value="css\pospolite.view.css.animation.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.CSS.Animation"/>
       </Item16>
       <Item17>
-        <Filename Value="pospolite.view.html.basics.pas"/>
-        <UnitName Value="Pospolite.View.HTML.Basics"/>
+        <Filename Value="css\pospolite.view.css.basics.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.CSS.Basics"/>
       </Item17>
       <Item18>
-        <Filename Value="pospolite.view.html.parser.pas"/>
-        <UnitName Value="Pospolite.View.HTML.Parser"/>
+        <Filename Value="css\pospolite.view.css.binder.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.CSS.Binder"/>
       </Item18>
       <Item19>
-        <Filename Value="pospolite.view.html.document.pas"/>
-        <UnitName Value="Pospolite.View.HTML.Document"/>
+        <Filename Value="css\pospolite.view.css.declaration.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.CSS.Declaration"/>
       </Item19>
       <Item20>
-        <Filename Value="pospolite.view.dom.document.pas"/>
-        <UnitName Value="Pospolite.View.DOM.Document"/>
+        <Filename Value="css\pospolite.view.css.mediaquery.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.CSS.MediaQuery"/>
       </Item20>
       <Item21>
-        <Filename Value="pospolite.view.internet.pas"/>
-        <UnitName Value="Pospolite.View.Internet"/>
+        <Filename Value="css\pospolite.view.css.selector.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.CSS.Selector"/>
       </Item21>
       <Item22>
-        <Filename Value="pospolite.view.version.pas"/>
-        <UnitName Value="Pospolite.View.Version"/>
+        <Filename Value="dom\pospolite.view.dom.window.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.DOM.Window"/>
       </Item22>
       <Item23>
-        <Filename Value="pospolite.view.threads.pas"/>
-        <UnitName Value="Pospolite.View.Threads"/>
+        <Filename Value="dom\pospolite.view.dom.document.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.DOM.Document"/>
       </Item23>
       <Item24>
-        <Filename Value="pospolite.view.css.binder.pas"/>
-        <UnitName Value="Pospolite.View.CSS.Binder"/>
+        <Filename Value="dom\pospolite.view.dom.screen.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.DOM.Screen"/>
       </Item24>
       <Item25>
-        <Filename Value="pospolite.view.css.mediaquery.pas"/>
-        <UnitName Value="Pospolite.View.CSS.MediaQuery"/>
+        <Filename Value="dom\pospolite.view.html.basics.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.HTML.Basics"/>
       </Item25>
       <Item26>
-        <Filename Value="pospolite.view.css.animation.pas"/>
-        <UnitName Value="Pospolite.View.CSS.Animation"/>
+        <Filename Value="dom\pospolite.view.html.document.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.HTML.Document"/>
       </Item26>
       <Item27>
-        <Filename Value="pospolite.view.html.scrolling.pas"/>
-        <UnitName Value="Pospolite.View.HTML.Scrolling"/>
+        <Filename Value="dom\pospolite.view.html.events.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.HTML.Events"/>
       </Item27>
       <Item28>
-        <Filename Value="pospolite.view.html.layout.pas"/>
+        <Filename Value="dom\pospolite.view.html.layout.pas"/>
+        <AddToUsesPkgSection Value="False"/>
         <UnitName Value="Pospolite.View.HTML.Layout"/>
       </Item28>
       <Item29>
-        <Filename Value="pospolite.view.html.events.pas"/>
-        <UnitName Value="Pospolite.View.HTML.Events"/>
+        <Filename Value="dom\pospolite.view.html.parser.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.HTML.Parser"/>
       </Item29>
       <Item30>
-        <Filename Value="pospolite.view.frame.pas"/>
-        <UnitName Value="Pospolite.View.Frame"/>
+        <Filename Value="dom\pospolite.view.html.scrolling.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.HTML.Scrolling"/>
       </Item30>
       <Item31>
         <Filename Value="pospolite.view.registerall.pas"/>
         <HasRegisterProc Value="True"/>
+        <AddToUsesPkgSection Value="False"/>
         <UnitName Value="Pospolite.View.RegisterAll"/>
       </Item31>
       <Item32>
-        <Filename Value="pospolite.view.css.stylesheet.pas"/>
-        <UnitName Value="Pospolite.View.CSS.StyleSheet"/>
+        <Filename Value="frame\pospolite.view.frame.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.Frame"/>
       </Item32>
     </Files>
     <RequiredPkgs Count="3">
