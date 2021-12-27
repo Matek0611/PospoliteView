@@ -313,7 +313,7 @@ procedure TPLCSSStylingThread.UpdateStyles;
 
 begin
   // aktualizacja styli - nie może kłócić się to z przejściami
-  //EnumStyleUpdates(FManager.FDocument.Body);
+  EnumStyleUpdates(FManager.FDocument.Body);
 end;
 
 procedure TPLCSSStylingThread.LoadAllStyles;

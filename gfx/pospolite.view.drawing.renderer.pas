@@ -184,14 +184,16 @@ var
 begin
   delay := round(1000 / FManager.FMaxFPS);
 
-  while FEnabled and not Terminated do begin
+  while FEnabled and not Suspended and not Terminated do begin
     if not FManager.Control.IsResizing then begin
 
       FManager.RenderingFlag := not FManager.RenderingFlag;
 
-      if not FManager.RenderingFlag then UpdateRendering
+      if FManager.RenderingFlag then UpdateRendering
       else FManager.FControl.Redraw;
     end;
+
+    if not FEnabled or Suspended or Terminated then break;
 
     Sleep(delay);
   end;

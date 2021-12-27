@@ -82,7 +82,7 @@ constructor TPLHTMLObjectLayouter.Create;
 begin
   inherited Create;
 
-  //
+
 end;
 
 destructor TPLHTMLObjectLayouter.Destroy;
