@@ -2074,30 +2074,283 @@ begin
   FillOrStroke(ABrush, nil, APreserve);
 end;
 
+const
+  MaxTextSize = High(integer);
+
 function TPLDrawingSurfaceD2D.TextSize(AFont: IPLDrawingFont;
   const AText: string): TPLPointF;
+var
+  Layout: IDWriteTextLayout;
+  M: TDWriteTextMetrics;
 begin
+  if AText = '' then exit(TPLPointF.Empty);
 
+  Layout := CreateTextLayout((AFont as TPLDrawingFontD2D).Format, AText, MaxTextSize, MaxTextSize);
+
+  if (Layout = nil) or (Layout.GetMetrics(M) <> S_OK) then exit(TPLPointF.Empty);
+
+  Result.X := M.widthIncludingTrailingWhitespace;
+  Result.Y := M.height;
 end;
 
 function TPLDrawingSurfaceD2D.TextHeight(AFont: IPLDrawingFont;
   const AText: string; const AWidth: TPLFloat): TPLFloat;
+var
+  Layout: IDWriteTextLayout;
+  M: TDWriteTextMetrics;
 begin
+  if AWidth < 1 then exit(0);
 
+  Layout := CreateTextLayout((AFont as TPLDrawingFontD2D).Format, AText, AWidth, MaxTextSize);
+
+  if (Layout = nil) or (Layout.GetMetrics(M) <> S_OK) then exit(0);
+
+  Result := M.height;
 end;
+
+type
+
+  { TPLCustomTextRenderer }
+
+  TPLCustomTextRenderer = class(TInterfacedObject, IDWritePixelSnapping, IDWriteTextRenderer)
+  private
+    FSurface: TPLDrawingSurfaceD2D;
+    FMatrix: TDWriteMatrix;
+    function TranslatedMatrix(X, Y: Float): TD2D1Matrix3x2F;
+  public
+    constructor Create(Surface: TPLDrawingSurfaceD2D);
+    { IDWritePixelSnapping }
+    function IsPixelSnappingDisabled(clientDrawingContext: Pointer;
+      var isDisabled: BOOL): HResult; stdcall;
+    function GetCurrentTransform(clientDrawingContext: Pointer;
+      var transform: TDWriteMatrix): HResult; stdcall;
+    function GetPixelsPerDip(clientDrawingContext: Pointer;
+      var pixelsPerDip: Single): HResult; stdcall;
+    { IDWriteTextRenderer }
+    function DrawGlyphRun(clientDrawingContext: Pointer; baselineOriginX: Single;
+      baselineOriginY: Single; measuringMode: TDWriteMeasuringMode;
+      var glyphRun: TDwriteGlyphRun;
+      var glyphRunDescription: TDwriteGlyphRunDescription;
+      clientDrawingEffect: IUnknown): HResult; stdcall;
+    function DrawUnderline(clientDrawingContext: Pointer; baselineOriginX: Single;
+      baselineOriginY: Single; var underline: TDwriteUnderline;
+      clientDrawingEffect: IUnknown): HResult; stdcall;
+    function DrawStrikethrough(clientDrawingContext: Pointer;
+      baselineOriginX: Single; baselineOriginY: Single;
+      var strikethrough: TDwriteStrikethrough;
+      clientDrawingEffect: IUnknown): HResult; stdcall;
+    function DrawInlineObject(clientDrawingContext: Pointer; originX: Single;
+      originY: Single; inlineObject: IDWriteInlineObject; isSideways: BOOL;
+      isRightToLeft: BOOL; clientDrawingEffect: IUnknown): HResult; stdcall;
+  end;
+
+  { TPLCustomTextRenderer }
+
+  function TPLCustomTextRenderer.TranslatedMatrix(X, Y: Float): TD2D1Matrix3x2F;
+  var
+    M: TD2D1Matrix3x2F;
+  begin
+    M := MatrixIdentity;
+    MatrixTranslate(M, X, Y);
+    Result := MatrixMultiply(M, TD2D1Matrix3x2F(FMatrix));
+  end;
+
+  constructor TPLCustomTextRenderer.Create(Surface: TPLDrawingSurfaceD2D);
+  begin
+    inherited Create;
+
+    FSurface := Surface;
+    FMatrix := TDWriteMatrix(FSurface.Matrix.FMatrix);
+  end;
+
+  function TPLCustomTextRenderer.IsPixelSnappingDisabled(
+    clientDrawingContext: Pointer; var isDisabled: BOOL): HResult; stdcall;
+  begin
+    isDisabled := false;
+    Result := S_OK;
+  end;
+
+  function TPLCustomTextRenderer.GetCurrentTransform(
+    clientDrawingContext: Pointer; var transform: TDWriteMatrix): HResult;
+    stdcall;
+  begin
+    transform := FMatrix;
+    Result := S_OK;
+  end;
+
+  function TPLCustomTextRenderer.GetPixelsPerDip(clientDrawingContext: Pointer;
+    var pixelsPerDip: Single): HResult; stdcall;
+  begin
+    pixelsPerDip := 1;
+    Result := S_OK;
+  end;
+
+  function TPLCustomTextRenderer.DrawGlyphRun(clientDrawingContext: Pointer;
+    baselineOriginX: Single; baselineOriginY: Single;
+    measuringMode: TDWriteMeasuringMode; var glyphRun: TDwriteGlyphRun;
+    var glyphRunDescription: TDwriteGlyphRunDescription;
+    clientDrawingEffect: IUnknown): HResult; stdcall;
+  var
+    F: ID2D1PathGeometry;
+    S: ID2D1GeometrySink;
+    M: TD2D1Matrix3x2F;
+    T: ID2D1TransformedGeometry;
+  begin
+    F := CreateFigure;
+    F.Open(S);
+
+    glyphRun.fontFace.GetGlyphRunOutline(
+      glyphRun.fontEmSize,
+      glyphRun.glyphIndices,
+      glyphRun.glyphAdvances,
+      glyphRun.glyphOffsets,
+      glyphRun.glyphCount,
+      glyphRun.isSideways,
+      glyphRun.bidiLevel <> 0,
+      S);
+
+    S.Close;
+    M := TranslatedMatrix(baselineOriginX, baselineOriginY);
+    RenderFactory.CreateTransformedGeometry(F, M, T);
+    FSurface.Path.FData.Add(T);
+
+    Result := S_OK;
+  end;
+
+  function TPLCustomTextRenderer.DrawUnderline(clientDrawingContext: Pointer;
+    baselineOriginX: Single; baselineOriginY: Single;
+    var underline: TDwriteUnderline; clientDrawingEffect: IUnknown): HResult;
+    stdcall;
+  var
+    R: TPLRectF;
+    G: ID2D1RectangleGeometry;
+    M: TD2D1Matrix3x2F;
+    T: ID2D1TransformedGeometry;
+  begin
+    R := TPLRectF.Create(0, 0, underline.width, underline.thickness);
+    R.Inflate(0, underline.offset);
+    G := CreateRectangle(R);
+    M := TranslatedMatrix(baselineOriginX, baselineOriginY);
+
+    RenderFactory.CreateTransformedGeometry(G, M, T);
+    FSurface.Path.FData.Add(T);
+
+    Result := S_OK;
+  end;
+
+  function TPLCustomTextRenderer.DrawStrikethrough(clientDrawingContext: Pointer;
+    baselineOriginX: Single; baselineOriginY: Single;
+    var strikethrough: TDwriteStrikethrough; clientDrawingEffect: IUnknown
+    ): HResult; stdcall;
+  var
+    R: TPLRectF;
+    G: ID2D1RectangleGeometry;
+    M: TD2D1Matrix3x2F;
+    T: ID2D1TransformedGeometry;
+  begin
+    R := TPLRectF.Create(0, 0, strikethrough.width, strikethrough.thickness);
+    R.Inflate(0, strikethrough.offset);
+    G := CreateRectangle(R);
+    M := TranslatedMatrix(baselineOriginX, baselineOriginY);
+
+    RenderFactory.CreateTransformedGeometry(G, M, T);
+    FSurface.Path.FData.Add(T);
+
+    Result := S_OK;
+  end;
+
+  function TPLCustomTextRenderer.DrawInlineObject(clientDrawingContext: Pointer;
+    originX: Single; originY: Single; inlineObject: IDWriteInlineObject;
+    isSideways: BOOL; isRightToLeft: BOOL; clientDrawingEffect: IUnknown
+    ): HResult; stdcall;
+  var
+    R: IDWriteTextRenderer;
+  begin
+    R := self;
+
+    inlineObject.Draw(clientDrawingContext, R, originX, originY, isSideways,
+      isRightToLeft, clientDrawingEffect);
+
+    Result := S_OK;
+  end;
 
 procedure TPLDrawingSurfaceD2D.TextOut(AFont: IPLDrawingFont;
   const AText: string; const ARect: TPLRectF;
   const ADirection: TPLTextDirections; const AImmediate: TPLBool);
+const
+  TrimChar: TDWriteTrimming = (granularity: DWRITE_TRIMMING_GRANULARITY_CHARACTER);
+  RenderingModes: array[TFontQuality] of DWORD = (DWRITE_RENDERING_MODE_DEFAULT,
+    DWRITE_RENDERING_MODE_ALIASED, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC, DWRITE_RENDERING_MODE_ALIASED,
+    DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
+    DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL);
+  AntialiasModes: array[TFontQuality] of DWORD = (D2D1_TEXT_ANTIALIAS_MODE_DEFAULT,
+    D2D1_TEXT_ANTIALIAS_MODE_ALIASED, D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE,
+    D2D1_TEXT_ANTIALIAS_MODE_ALIASED, D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE,
+    D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE, D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
+  FontWeight: array[TPLDrawingFontWeight] of DWRITE_FONT_WEIGHT =
+    (DWRITE_FONT_WEIGHT_THIN, DWRITE_FONT_WEIGHT_EXTRA_LIGHT, DWRITE_FONT_WEIGHT_LIGHT,
+    DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_WEIGHT_MEDIUM, DWRITE_FONT_WEIGHT_SEMI_BOLD,
+    DWRITE_FONT_WEIGHT_BOLD, DWRITE_FONT_WEIGHT_EXTRA_BOLD, DWRITE_FONT_WEIGHT_BLACK
+    );
+  FontStyle: array[TPLDrawingFontStyle] of DWRITE_FONT_STYLE =
+    (DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STYLE_ITALIC, DWRITE_FONT_STYLE_OBLIQUE);
+  FontStretch: array[TPLDrawingFontStretch] of DWRITE_FONT_STRETCH =
+    (DWRITE_FONT_STRETCH_ULTRA_CONDENSED, DWRITE_FONT_STRETCH_EXTRA_CONDENSED,
+    DWRITE_FONT_STRETCH_CONDENSED, DWRITE_FONT_STRETCH_SEMI_CONDENSED,
+    DWRITE_FONT_STRETCH_NORMAL, DWRITE_FONT_STRETCH_SEMI_EXPANDED,
+    DWRITE_FONT_STRETCH_EXPANDED, DWRITE_FONT_STRETCH_EXTRA_EXPANDED,
+    DWRITE_FONT_STRETCH_ULTRA_EXPANDED
+    );
+var
+  FontObj: TPLDrawingFontD2D;
+  Layout: IDWriteTextLayout;
+  Range: TDWriteTextRange;
+  AEllipse: IDWriteInlineObject;
+  Params1: IDWriteRenderingParams;
+  Params2: IDWriteRenderingParams;
+  Brush: ID2D1Brush;
+  Renderer: IDWriteTextRenderer;
+  M: TD2D1Matrix3x2F;
+  txta, prga: DWORD;
 begin
+  ShareRelease;
 
+  if not HandleAvailable then exit;
+  if AImmediate then Path.Remove;
+  if ARect.IsEmpty or (AText = '') then exit;
+
+  Draw;
+  Path.Add;
+  FontObj := AFont as TPLDrawingFontD2D;
+
+  Layout := CreateGdiTextLayout(FontObj.Format, AText, ARect.Width, ARect.Height);
+
+  case ADirection.TextPosition of
+    tdLeft, tdWrap, tdFlow: txta := DWRITE_TEXT_ALIGNMENT_LEADING;
+    tdRight: txta := DWRITE_TEXT_ALIGNMENT_TRAILING;
+    else txta := DWRITE_TEXT_ALIGNMENT_CENTER;
+  end;
+  case ADirection.ParagraphPosition of
+    tdCenter, tdFill: prga := DWRITE_PARAGRAPH_ALIGNMENT_CENTER;
+    tdDown: prga := DWRITE_PARAGRAPH_ALIGNMENT_FAR;
+    else prga := DWRITE_PARAGRAPH_ALIGNMENT_NEAR;
+  end;
+  Layout.SetTextAlignment(txta);
+  Layout.SetParagraphAlignment(prga);
+
+  Range.StartPosition := 0;
+  Range.Length := Length(AText);
+  Layout.SetFontWeight(FontWeight[FontObj.Weight], Range);
+  Layout.SetFontStretch(FontStretch[FontObj.Stretch], Range);
+  Layout.SetFontStyle(FontStyle[FontObj.Style], Range);
+  Layout.SetLocaleName(PWCHAR(PLD2D1Locale), Range);
 end;
 
 { TBitmapSurfaceD2D }
 
 function TBitmapSurfaceD2D.HandleAvailable: TPLBool;
 begin
-  Result:=inherited HandleAvailable;
+  Result := inherited HandleAvailable;
 end;
 
 procedure TBitmapSurfaceD2D.HandleRelease;
@@ -2159,6 +2412,61 @@ end;
 destructor TPLD2D1Drawer.Destroy;
 begin
   inherited Destroy;
+end;
+
+procedure TPLD2D1Drawer.DrawObjectBackground(const AObject: TPLHTMLObject);
+begin
+  inherited DrawObjectBackground(AObject);
+end;
+
+procedure TPLD2D1Drawer.DrawObjectBorder(const AObject: TPLHTMLObject);
+begin
+  inherited DrawObjectBorder(AObject);
+end;
+
+procedure TPLD2D1Drawer.DrawObjectOutline(const AObject: TPLHTMLObject);
+begin
+  inherited DrawObjectOutline(AObject);
+end;
+
+procedure TPLD2D1Drawer.DrawObjectOutlineText(const AObject: TPLHTMLObject);
+begin
+  inherited DrawObjectOutlineText(AObject);
+end;
+
+procedure TPLD2D1Drawer.DrawObjectText(const AObject: TPLHTMLObject);
+begin
+  inherited DrawObjectText(AObject);
+end;
+
+procedure TPLD2D1Drawer.DrawObjectDebug(const AObject: TPLHTMLObject);
+begin
+  inherited DrawObjectDebug(AObject);
+end;
+
+procedure TPLD2D1Drawer.DrawObjectShadow(const AObject: TPLHTMLObject);
+begin
+  inherited DrawObjectShadow(AObject);
+end;
+
+procedure TPLD2D1Drawer.DrawObjectTextShadow(const AObject: TPLHTMLObject);
+begin
+  inherited DrawObjectTextShadow(AObject);
+end;
+
+procedure TPLD2D1Drawer.DrawObjectPseudoBefore(const AObject: TPLHTMLObject);
+begin
+  inherited DrawObjectPseudoBefore(AObject);
+end;
+
+procedure TPLD2D1Drawer.DrawObjectPseudoAfter(const AObject: TPLHTMLObject);
+begin
+  inherited DrawObjectPseudoAfter(AObject);
+end;
+
+procedure TPLD2D1Drawer.DrawFrame(const ABorders: TPLDrawingBorders);
+begin
+  inherited DrawFrame(ABorders);
 end;
 
 // public functions

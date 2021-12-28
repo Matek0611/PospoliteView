@@ -226,7 +226,15 @@ type
   IPLDrawingBitmap = interface;
 
   TPLTextDirection = (tdLeft, tdUp, tdRight, tdDown, tdCenter, tdFill, tdWrap, tdFlow);
-  TPLTextDirections = set of TPLTextDirection;
+
+  { TPLTextDirections }
+
+  TPLTextDirections = record
+  public
+    TextPosition, ParagraphPosition: TPLTextDirection;
+  public
+    constructor Create(const ATextPosition, AParagraphPosition: TPLTextDirection);
+  end;
 
   { IPLDrawingSurface }
 
@@ -442,6 +450,15 @@ operator * (a, b: IPLDrawingMatrix) r: IPLDrawingMatrix;
 begin
   r := a;
   r.Multiply(b);
+end;
+
+{ TPLTextDirections }
+
+constructor TPLTextDirections.Create(const ATextPosition,
+  AParagraphPosition: TPLTextDirection);
+begin
+  TextPosition := ATextPosition;
+  ParagraphPosition := AParagraphPosition;
 end;
 
 operator := (a: TPLString) r: TPLDrawingBorderStyle;

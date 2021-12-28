@@ -631,8 +631,6 @@ end;
 
 procedure TPLHTMLNormalObject.UpdateOwnLayout;
 begin
-  if not IsVisible or (Display = 'none') then exit;
-
 
 end;
 

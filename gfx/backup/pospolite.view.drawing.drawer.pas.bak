@@ -226,7 +226,12 @@ type
   IPLDrawingBitmap = interface;
 
   TPLTextDirection = (tdLeft, tdUp, tdRight, tdDown, tdCenter, tdFill, tdWrap, tdFlow);
-  TPLTextDirections = set of TPLTextDirection;
+  TPLTextDirections = record
+  public
+    TextPosition, ParagraphPosition: TPLTextDirection;
+  public
+    constructor Create(const ATextPosition, AParagraphPosition: TPLTextDirection);
+  end;
 
   { IPLDrawingSurface }
 
@@ -252,7 +257,7 @@ type
     function TextSize(AFont: IPLDrawingFont; const AText: string): TPLPointF;
     function TextHeight(AFont: IPLDrawingFont; const AText: string; const AWidth: TPLFloat): TPLFloat;
     procedure TextOut(AFont: IPLDrawingFont; const AText: string; const ARect: TPLRectF;
-      const ADirection: TPLTextDirection; const AImmediate: TPLBool = true);
+      const ADirection: TPLTextDirections; const AImmediate: TPLBool = true);
 
     property Handle: Pointer read GetHandle;
     property Matrix: IPLDrawingMatrix read GetMatrix write SetMatrix;

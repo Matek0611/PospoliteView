@@ -496,8 +496,8 @@ begin
       dr.Drawer.Surface.Clear(TPLColor.White); // NA RAZIE NAPRAWIONY BUG #D1 DZIĘKI TEJ LINII (#D1: Krytyczny - użycie CPU wzrasta co chwilę o kilka setnych MB mimo, że nie ma wycieków pamięci)
       //dr.Drawer.Surface.Clear(clRed);
 
-      //if Assigned(FDocument) and Assigned(FDocument.Root) then
-      //  FDocument.Root.Draw(dr);
+      if Assigned(FDocument) and Assigned(FDocument.Root) then
+        FDocument.Root.Draw(dr);
     finally
       dr.Free;
     end;

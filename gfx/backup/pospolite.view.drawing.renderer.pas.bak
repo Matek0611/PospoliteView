@@ -193,6 +193,8 @@ begin
       else FManager.FControl.Redraw;
     end;
 
+    if not FEnabled or Suspended or Terminated then break;
+
     Sleep(delay);
   end;
 end;
