@@ -150,6 +150,17 @@ type
     dfstUltraExpanded);
   TPLDrawingFontDecoration = (dfdUnderline, dfdLineThrough, dfdOverline);
   TPLDrawingFontDecorations = set of TPLDrawingFontDecoration;
+  TPLDrawingFontVariantTag = (dfvtCapsSmall, dfvtCapsAllSmall, dfvtCapsPetite,
+    dfvtCapsAllPetite, dfvtCapsTitling, dfvtUnicase, dfvtKerningNone, dfvtEastAsianRuby,
+    dfvtEastAsianJIS78, dfvtEastAsianJIS83, dfvtEastAsianJIS90, dfvtEastAsianJIS04,
+    dfvtEastAsianSimplified, dfvtEastAsianTraditional, dfvtEastAsianFullWidth,
+    dfvtEastAsianProportionalWidth, dfvtLigaturesNone, dfvtLigaturesCommon,
+    dfvtLigaturesNoCommon, dfvtLigaturesDiscretionary, dfvtLigaturesNoDiscretionary,
+    dfvtLigaturesHistorical, dfvtLigaturesNoHistorical, dfvtLigaturesContextual,
+    dfvtLigaturesNoContextual, dfvtNumericOrdinal, dfvtNumericSlashedZero,
+    dfvtNumericLiningNums, dfvtNumericOldstyleNums, dfvtNumericProportionalNums,
+    dfvtNumericTabularNums, dfvtNumericDiagonalFractions, dfvtNumericStackedFractions);
+  TPLDrawingFontVariantTags = set of TPLDrawingFontVariantTag;
 
   { IPLDrawingFont }
 
@@ -163,6 +174,7 @@ type
     function GetSize: TPLFloat;
     function GetStretch: TPLDrawingFontStretch;
     function GetStyle: TPLDrawingFontStyle;
+    function GetVariantTags: TPLDrawingFontVariantTags;
     function GetWeight: TPLDrawingFontWeight;
     procedure SetColor(AValue: TPLColor);
     procedure SetDecoration(AValue: TPLDrawingFontDecorations);
@@ -171,6 +183,7 @@ type
     procedure SetSize(AValue: TPLFloat);
     procedure SetStretch(AValue: TPLDrawingFontStretch);
     procedure SetStyle(AValue: TPLDrawingFontStyle);
+    procedure SetVariantTags(AValue: TPLDrawingFontVariantTags);
     procedure SetWeight(AValue: TPLDrawingFontWeight);
 
     property Name: TPLString read GetName write SetName;
@@ -181,6 +194,7 @@ type
     property Style: TPLDrawingFontStyle read GetStyle write SetStyle;
     property Stretch: TPLDrawingFontStretch read GetStretch write SetStretch;
     property Decoration: TPLDrawingFontDecorations read GetDecoration write SetDecoration;
+    property VariantTags: TPLDrawingFontVariantTags read GetVariantTags write SetVariantTags;
   end;
 
   { TPLDrawingFontData }
@@ -195,13 +209,14 @@ type
     Style: TPLDrawingFontStyle;
     Stretch: TPLDrawingFontStretch;
     Decoration: TPLDrawingFontDecorations;
+    VariantTags: TPLDrawingFontVariantTags;
   end;
 
 const
    PLDrawingFontDataDef: TPLDrawingFontData = (Name: 'Segoe UI';
      Color: (FR: 0; FG: 0; FB: 0; FA: 255); Quality: fqCleartypeNatural;
      Size: 12; Weight: dfwNormal; Style: dfsNormal; Stretch: dfstNormal;
-     Decoration: []);
+     Decoration: []; VariantTags: []);
 
 type
 
@@ -236,6 +251,9 @@ type
     constructor Create(const ATextPosition, AParagraphPosition: TPLTextDirection);
   end;
 
+  TPLWritingMode = (wmHorizontalTB = 0, wmVerticalLR = 2, wmVerticalRL = 3);
+  TPLReadingDirection = (rdLTR = 0, rdRTL, rdTTB, rdBTT);
+
   { IPLDrawingSurface }
 
   IPLDrawingSurface = interface
@@ -257,10 +275,18 @@ type
     procedure Ellipse(const ARect: TPLRectF);
     procedure Stroke(APen: IPLDrawingPen; const APreserve: TPLBool = false);
     procedure Fill(ABrush: IPLDrawingBrush; const APreserve: TPLBool = false);
-    function TextSize(AFont: IPLDrawingFont; const AText: string): TPLPointF;
-    function TextHeight(AFont: IPLDrawingFont; const AText: string; const AWidth: TPLFloat): TPLFloat;
+    function TextSize(AFont: IPLDrawingFont; const AText: string;
+      const ALineSpacing: single = NaN; const AWordWrap: boolean = true;
+      const AWritingMode: TPLWritingMode = wmHorizontalTB;
+      const AReading: TPLReadingDirection = rdLTR): TPLPointF;
+    function TextHeight(AFont: IPLDrawingFont; const AText: string; const AWidth: TPLFloat;
+      const ALineSpacing: single = NaN; const AWordWrap: boolean = true;
+      const AWritingMode: TPLWritingMode = wmHorizontalTB;
+      const AReading: TPLReadingDirection = rdLTR): TPLFloat;
     procedure TextOut(AFont: IPLDrawingFont; const AText: string; const ARect: TPLRectF;
-      const ADirection: TPLTextDirections; const AImmediate: TPLBool = true);
+      const ADirection: TPLTextDirections; const ALineSpacing: single = NaN;
+      const AWordWrap: boolean = true; const AWritingMode: TPLWritingMode = wmHorizontalTB;
+      const AReading: TPLReadingDirection = rdLTR; const AImmediate: TPLBool = true);
 
     property Handle: Pointer read GetHandle;
     property Matrix: IPLDrawingMatrix read GetMatrix write SetMatrix;

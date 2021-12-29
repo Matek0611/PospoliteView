@@ -156,7 +156,7 @@ type
       Reset: Variant;
     end;
     Cursor: TCursor;
-    Direction: TPLString;
+    Direction: TPLReadingDirection;
     EmptyCells: TPLBool;
     Flex: record
       Basis: TPLCSSSimpleUnit;
@@ -172,7 +172,7 @@ type
       Adjust: TPLCSSSimpleUnit; // Firefox supports it only, so no need for supporting it here
       Stretch: TPLDrawingFontStretch;
       Style: TPLDrawingFontStyle;
-      SmallCaps: TPLBool; // = font-variant
+      VariantTags: TPLDrawingFontVariantTags; // = font-variant
       Weight: TPLDrawingFontWeight;
     end;
     Height: TPLCSSSimpleUnit;
@@ -246,6 +246,7 @@ type
       Spacing: TPLCSSSimpleUnit; // auto = normal
       Wrap: TPLBool;
     end;
+    WritingMode: TPLWritingMode;
   public
     class function GetDefault: TPLCSSBindingProperties; static;
   end;
@@ -429,7 +430,7 @@ begin
       Reset := 'none';
     end;
     Cursor := crDefault;
-    Direction := 'ltr';
+    Direction := rdLTR;
     EmptyCells := true;
     with Flex do begin
       Basis := TPLCSSSimpleUnit.Auto;
@@ -446,7 +447,7 @@ begin
       Adjust := TPLCSSSimpleUnit.Auto;
       Stretch := dfstNormal;
       Style := dfsNormal;
-      SmallCaps := false;
+      VariantTags := [];
       Weight := dfwNormal;
     end;
     Height := TPLCSSSimpleUnit.Auto;

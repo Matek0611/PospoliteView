@@ -304,6 +304,7 @@ type
     function GetSize: TPLFloat;
     function GetStretch: TPLDrawingFontStretch;
     function GetStyle: TPLDrawingFontStyle;
+    function GetVariantTags: TPLDrawingFontVariantTags;
     function GetWeight: TPLDrawingFontWeight;
     procedure SetColor(AValue: TPLColor);
     procedure SetDecoration(AValue: TPLDrawingFontDecorations);
@@ -312,6 +313,7 @@ type
     procedure SetSize(AValue: TPLFloat);
     procedure SetStretch(AValue: TPLDrawingFontStretch);
     procedure SetStyle(AValue: TPLDrawingFontStyle);
+    procedure SetVariantTags(AValue: TPLDrawingFontVariantTags);
     procedure SetWeight(AValue: TPLDrawingFontWeight);
     function Format: IDWriteTextFormat;
   public
@@ -325,6 +327,7 @@ type
     property Style: TPLDrawingFontStyle read GetStyle write SetStyle;
     property Stretch: TPLDrawingFontStretch read GetStretch write SetStretch;
     property Decoration: TPLDrawingFontDecorations read GetDecoration write SetDecoration;
+    property VariantTags: TPLDrawingFontVariantTags read GetVariantTags write SetVariantTags;
   end;
 
   { TPLDrawingPathDataD2D }
@@ -430,10 +433,18 @@ type
     procedure FillOrStroke(ABrush: IPLDrawingBrush; APen: IPLDrawingPen; APreserve: TPLBool);
     procedure Stroke(APen: IPLDrawingPen; const APreserve: TPLBool = false);
     procedure Fill(ABrush: IPLDrawingBrush; const APreserve: TPLBool = false);
-    function TextSize(AFont: IPLDrawingFont; const AText: string): TPLPointF;
-    function TextHeight(AFont: IPLDrawingFont; const AText: string; const AWidth: TPLFloat): TPLFloat;
+    function TextSize(AFont: IPLDrawingFont; const AText: string;
+      const ALineSpacing: single = NaN; const AWordWrap: boolean = true;
+      const AWritingMode: TPLWritingMode = wmHorizontalTB;
+      const AReading: TPLReadingDirection = rdLTR): TPLPointF;
+    function TextHeight(AFont: IPLDrawingFont; const AText: string; const AWidth: TPLFloat;
+      const ALineSpacing: single = NaN; const AWordWrap: boolean = true;
+      const AWritingMode: TPLWritingMode = wmHorizontalTB;
+      const AReading: TPLReadingDirection = rdLTR): TPLFloat;
     procedure TextOut(AFont: IPLDrawingFont; const AText: string; const ARect: TPLRectF;
-      const ADirection: TPLTextDirections; const AImmediate: TPLBool = true);
+      const ADirection: TPLTextDirections; const ALineSpacing: single = NaN;
+      const AWordWrap: boolean = true; const AWritingMode: TPLWritingMode = wmHorizontalTB;
+      const AReading: TPLReadingDirection = rdLTR; const AImmediate: TPLBool = true);
 
     property Handle: Pointer read GetHandle;
     //property Matrix: IPLDrawingMatrix read GetMatrix write SetMatrix;
@@ -451,9 +462,9 @@ type
 
   TPLDrawingBitmapD2D = class;
 
-  { TBitmapSurfaceD2D }
+  { TPLDrawingBitmapSurfaceD2D }
 
-  TBitmapSurfaceD2D = class(TPLDrawingSurfaceD2D, IPLSharedBitmapTargetD2D)
+  TPLDrawingBitmapSurfaceD2D = class(TPLDrawingSurfaceD2D, IPLSharedBitmapTargetD2D)
   private
     FBitmap: TPLDrawingBitmapD2D;
     FSurfaceBitmap: ID2D1Bitmap;
@@ -598,8 +609,8 @@ var
 begin
   Rect := TRect.Empty;
   Result := nil;
-  if not IsWindow(Wnd) then
-    Exit;
+  if not IsWindow(Wnd) then exit;
+
   GetClientRect(Wnd, Rect);
   Rect.Right := Rect.Right;
   Rect.Bottom := Rect.Bottom;
@@ -618,8 +629,7 @@ var
   Prop: TD2D1BitmapProperties;
 begin
   Result := nil;
-  if (Width < 1) or (Height < 1) then
-    exit;
+  if (Width < 1) or (Height < 1) then exit;
 
   Size.Width := Width;
   Size.Height := Height;
@@ -903,6 +913,68 @@ begin
     Result := nil;
 end;
 
+function CreateFontTypography(const AFont: IPLDrawingFont): IDWriteTypography;
+var
+  typg: IDWriteTypography absolute Result;
+
+  function ApplyTag(const ATag: TPLDrawingFontVariantTag; const ACode: DWORD;
+    const AParameter: Cardinal = 1): TPLBool;
+  var
+    f: TDWriteFontFeature;
+  begin
+    Result := ATag in AFont.VariantTags;
+    if Result then begin
+      f.parameter := AParameter;
+      f.nameTag := ACode;
+      Result := typg.AddFontFeature(f) = S_OK;
+    end;
+  end;
+
+begin
+  Result := nil;
+  if AFont.VariantTags = [] then exit;
+  if WriteFactory.CreateTypography(Result) <> S_OK then Result := nil;
+
+  if not Assigned(Result) then exit;
+
+  if not ApplyTag(dfvtCapsSmall, DWRITE_FONT_FEATURE_TAG_SMALL_CAPITALS) then
+  if not ApplyTag(dfvtCapsAllSmall, DWRITE_FONT_FEATURE_TAG_SMALL_CAPITALS_FROM_CAPITALS) then
+  if not ApplyTag(dfvtCapsPetite, DWRITE_FONT_FEATURE_TAG_PETITE_CAPITALS) then
+  if not ApplyTag(dfvtCapsAllPetite, DWRITE_FONT_FEATURE_TAG_PETITE_CAPITALS_FROM_CAPITALS) then
+  if not ApplyTag(dfvtUnicase, DWRITE_FONT_FEATURE_TAG_UNICASE) then
+    ApplyTag(dfvtCapsTitling, DWRITE_FONT_FEATURE_TAG_TITLING);
+
+  ApplyTag(dfvtKerningNone, DWRITE_FONT_FEATURE_TAG_KERNING, 0);
+
+  ApplyTag(dfvtEastAsianRuby, DWRITE_FONT_FEATURE_TAG_RUBY_NOTATION_FORMS);
+  if not ApplyTag(dfvtEastAsianFullWidth, DWRITE_FONT_FEATURE_TAG_FULL_WIDTH) then
+    ApplyTag(dfvtEastAsianProportionalWidth, DWRITE_FONT_FEATURE_TAG_PROPORTIONAL_WIDTHS);
+  if not ApplyTag(dfvtEastAsianJIS78, DWRITE_FONT_FEATURE_TAG_JIS78_FORMS) then
+  if not ApplyTag(dfvtEastAsianJIS83, DWRITE_FONT_FEATURE_TAG_JIS83_FORMS) then
+  if not ApplyTag(dfvtEastAsianJIS90, DWRITE_FONT_FEATURE_TAG_JIS90_FORMS) then
+  if not ApplyTag(dfvtEastAsianJIS04, DWRITE_FONT_FEATURE_TAG_JIS04_FORMS) then
+  if not ApplyTag(dfvtEastAsianSimplified, DWRITE_FONT_FEATURE_TAG_SIMPLIFIED_FORMS) then
+    ApplyTag(dfvtEastAsianTraditional, DWRITE_FONT_FEATURE_TAG_TRADITIONAL_FORMS);
+
+  if not ApplyTag(dfvtLigaturesCommon, DWRITE_FONT_FEATURE_TAG_STANDARD_LIGATURES) then
+    ApplyTag(dfvtLigaturesNoCommon, DWRITE_FONT_FEATURE_TAG_STANDARD_LIGATURES, 0);
+  if not ApplyTag(dfvtLigaturesDiscretionary, DWRITE_FONT_FEATURE_TAG_DISCRETIONARY_LIGATURES) then
+    ApplyTag(dfvtLigaturesNoDiscretionary, DWRITE_FONT_FEATURE_TAG_DISCRETIONARY_LIGATURES, 0);
+  if not ApplyTag(dfvtLigaturesHistorical, DWRITE_FONT_FEATURE_TAG_HISTORICAL_LIGATURES) then
+    ApplyTag(dfvtLigaturesNoHistorical, DWRITE_FONT_FEATURE_TAG_HISTORICAL_LIGATURES, 0);
+  if not ApplyTag(dfvtLigaturesContextual, DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES) then
+    ApplyTag(dfvtLigaturesNoContextual, DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES, 0);
+
+  if not ApplyTag(dfvtNumericLiningNums, DWRITE_FONT_FEATURE_TAG_LINING_FIGURES) then
+    ApplyTag(dfvtNumericOldstyleNums, DWRITE_FONT_FEATURE_TAG_OLD_STYLE_FIGURES);
+  if not ApplyTag(dfvtNumericProportionalNums, DWRITE_FONT_FEATURE_TAG_PROPORTIONAL_FIGURES) then
+    ApplyTag(dfvtNumericTabularNums, DWRITE_FONT_FEATURE_TAG_TABULAR_FIGURES);
+  if not ApplyTag(dfvtNumericDiagonalFractions, DWRITE_FONT_FEATURE_TAG_FRACTIONS) then
+    ApplyTag(dfvtNumericStackedFractions, DWRITE_FONT_FEATURE_TAG_ALTERNATIVE_FRACTIONS);
+
+  ApplyTag(dfvtNumericOrdinal, DWRITE_FONT_FEATURE_TAG_ORDINALS);
+  ApplyTag(dfvtNumericSlashedZero, DWRITE_FONT_FEATURE_TAG_SLASHED_ZERO);
+end;
 
 { TPLDrawingMatrixD2D }
 
@@ -1411,6 +1483,11 @@ begin
   Result := FData.Style;
 end;
 
+function TPLDrawingFontD2D.GetVariantTags: TPLDrawingFontVariantTags;
+begin
+  Result := FData.VariantTags;
+end;
+
 function TPLDrawingFontD2D.GetWeight: TPLDrawingFontWeight;
 begin
   Result := FData.Weight;
@@ -1452,6 +1529,11 @@ end;
 procedure TPLDrawingFontD2D.SetStyle(AValue: TPLDrawingFontStyle);
 begin
   FData.Style := AValue;
+end;
+
+procedure TPLDrawingFontD2D.SetVariantTags(AValue: TPLDrawingFontVariantTags);
+begin
+  FData.VariantTags := AValue;
 end;
 
 procedure TPLDrawingFontD2D.SetWeight(AValue: TPLDrawingFontWeight);
@@ -2078,14 +2160,27 @@ const
   MaxTextSize = High(integer);
 
 function TPLDrawingSurfaceD2D.TextSize(AFont: IPLDrawingFont;
-  const AText: string): TPLPointF;
+  const AText: string; const ALineSpacing: single; const AWordWrap: boolean;
+  const AWritingMode: TPLWritingMode; const AReading: TPLReadingDirection
+  ): TPLPointF;
 var
   Layout: IDWriteTextLayout;
   M: TDWriteTextMetrics;
+  plinesp, pbasel: single;
+  lsmethod: DWRITE_LINE_SPACING_METHOD;
 begin
   if AText = '' then exit(TPLPointF.Empty);
 
   Layout := CreateTextLayout((AFont as TPLDrawingFontD2D).Format, AText, MaxTextSize, MaxTextSize);
+
+  Layout.SetWordWrapping(ifthen(AWordWrap, 0, 1));
+  Layout.SetFlowDirection(Ord(AWritingMode));
+  Layout.SetReadingDirection(Ord(AReading));
+
+  if not IsNan(ALineSpacing) then begin
+    Layout.GetLineSpacing(lsmethod, plinesp, pbasel);
+    Layout.SetLineSpacing(lsmethod, ALineSpacing, pbasel);
+  end;
 
   if (Layout = nil) or (Layout.GetMetrics(M) <> S_OK) then exit(TPLPointF.Empty);
 
@@ -2094,14 +2189,27 @@ begin
 end;
 
 function TPLDrawingSurfaceD2D.TextHeight(AFont: IPLDrawingFont;
-  const AText: string; const AWidth: TPLFloat): TPLFloat;
+  const AText: string; const AWidth: TPLFloat; const ALineSpacing: single;
+  const AWordWrap: boolean; const AWritingMode: TPLWritingMode;
+  const AReading: TPLReadingDirection): TPLFloat;
 var
   Layout: IDWriteTextLayout;
   M: TDWriteTextMetrics;
+  plinesp, pbasel: single;
+  lsmethod: DWRITE_LINE_SPACING_METHOD;
 begin
   if AWidth < 1 then exit(0);
 
   Layout := CreateTextLayout((AFont as TPLDrawingFontD2D).Format, AText, AWidth, MaxTextSize);
+
+  Layout.SetWordWrapping(ifthen(AWordWrap, 0, 1));
+  Layout.SetFlowDirection(Ord(AWritingMode));
+  Layout.SetReadingDirection(Ord(AReading));
+
+  if not IsNan(ALineSpacing) then begin
+    Layout.GetLineSpacing(lsmethod, plinesp, pbasel);
+    Layout.SetLineSpacing(lsmethod, ALineSpacing, pbasel);
+  end;
 
   if (Layout = nil) or (Layout.GetMetrics(M) <> S_OK) then exit(0);
 
@@ -2276,7 +2384,9 @@ type
 
 procedure TPLDrawingSurfaceD2D.TextOut(AFont: IPLDrawingFont;
   const AText: string; const ARect: TPLRectF;
-  const ADirection: TPLTextDirections; const AImmediate: TPLBool);
+  const ADirection: TPLTextDirections; const ALineSpacing: single;
+  const AWordWrap: boolean; const AWritingMode: TPLWritingMode;
+  const AReading: TPLReadingDirection; const AImmediate: TPLBool);
 const
   TrimChar: TDWriteTrimming = (granularity: DWRITE_TRIMMING_GRANULARITY_CHARACTER);
   RenderingModes: array[TFontQuality] of DWORD = (DWRITE_RENDERING_MODE_DEFAULT,
@@ -2312,6 +2422,9 @@ var
   Renderer: IDWriteTextRenderer;
   M: TD2D1Matrix3x2F;
   txta, prga: DWORD;
+  typg: IDWriteTypography;
+  plinesp, pbasel: single;
+  lsmethod: DWRITE_LINE_SPACING_METHOD;
 begin
   ShareRelease;
 
@@ -2328,6 +2441,7 @@ begin
   case ADirection.TextPosition of
     tdLeft, tdWrap, tdFlow: txta := DWRITE_TEXT_ALIGNMENT_LEADING;
     tdRight: txta := DWRITE_TEXT_ALIGNMENT_TRAILING;
+    tdFill: txta := DWRITE_TEXT_ALIGNMENT_JUSTIFIED;
     else txta := DWRITE_TEXT_ALIGNMENT_CENTER;
   end;
   case ADirection.ParagraphPosition of
@@ -2340,36 +2454,75 @@ begin
 
   Range.StartPosition := 0;
   Range.Length := Length(AText);
+
   Layout.SetFontWeight(FontWeight[FontObj.Weight], Range);
   Layout.SetFontStretch(FontStretch[FontObj.Stretch], Range);
   Layout.SetFontStyle(FontStyle[FontObj.Style], Range);
-  //Layout.SetLocaleName(PWCHAR(PLD2D1Locale), Range);
-  //...
+
+  if dfdUnderline in FontObj.Decoration then
+    Layout.SetUnderline(true, Range);
+  if dfdLineThrough in FontObj.Decoration then
+    Layout.SetStrikethrough(true, Range);
+  if dfdOverline in FontObj.Decoration then { TODO : add overline text effect }
+    ;//Layout.Set;
+
+  Layout.SetWordWrapping(ifthen(AWordWrap, 0, 1));
+  Layout.SetFlowDirection(Ord(AWritingMode));
+  Layout.SetReadingDirection(Ord(AReading));
+
+  if not IsNan(ALineSpacing) then begin
+    Layout.GetLineSpacing(lsmethod, plinesp, pbasel);
+    Layout.SetLineSpacing(lsmethod, ALineSpacing, pbasel);
+  end;
+
+  typg := CreateFontTypography(FontObj);
+  if Assigned(typg) then Layout.SetTypography(typg, Range);
+
+  WriteFactory.CreateEllipsisTrimmingSign(Layout, AEllipse);
+  Layout.SetTrimming(TrimChar, AEllipse);
+  WriteFactory.CreateRenderingParams(Params1);
+  WriteFactory.CreateCustomRenderingParams(Params1.GetGamma, Params1.GetEnhancedContrast,
+    1, Params1.GetPixelGeometry, RenderingModes[AFont.Quality], Params2);
+
+  FTarget.SetTextRenderingParams(Params2);
+  FTarget.SetTextAntialiasMode(AntialiasModes[AFont.Quality]);
+
+  if AImmediate then begin
+    Brush := CreateSolidBrush(FTarget, AFont.Color, 255);
+
+    FTarget.GetTransform(M);
+    FTarget.SetTransform(Matrix.FMatrix);
+    FTarget.DrawTextLayout(ARect.TopLeft, Layout, Brush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT or D2D1_DRAW_TEXT_OPTIONS_CLIP);
+    FTarget.SetTransform(M);
+  end else begin
+    Renderer := TPLCustomTextRenderer.Create(self);
+    Layout.Draw(nil, Renderer, ARect.Left, ARect.Top);
+  end;
 end;
 
-{ TBitmapSurfaceD2D }
+{ TPLDrawingBitmapSurfaceD2D }
 
-function TBitmapSurfaceD2D.HandleAvailable: TPLBool;
+function TPLDrawingBitmapSurfaceD2D.HandleAvailable: TPLBool;
 begin
   Result := inherited HandleAvailable;
 end;
 
-procedure TBitmapSurfaceD2D.HandleRelease;
+procedure TPLDrawingBitmapSurfaceD2D.HandleRelease;
 begin
   inherited HandleRelease;
 end;
 
-constructor TBitmapSurfaceD2D.Create(B: TPLDrawingBitmapD2D);
+constructor TPLDrawingBitmapSurfaceD2D.Create(B: TPLDrawingBitmapD2D);
 begin
 
 end;
 
-function TBitmapSurfaceD2D.ShareCreate(Target: ID2D1RenderTarget): ID2D1Bitmap;
+function TPLDrawingBitmapSurfaceD2D.ShareCreate(Target: ID2D1RenderTarget): ID2D1Bitmap;
 begin
 
 end;
 
-procedure TBitmapSurfaceD2D.ShareRelease;
+procedure TPLDrawingBitmapSurfaceD2D.ShareRelease;
 begin
   inherited ShareRelease;
 end;
