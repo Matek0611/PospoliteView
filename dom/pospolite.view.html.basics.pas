@@ -128,7 +128,7 @@ type
 
     function ToHTML: TPLString; override;
 
-    function GetDefaultBindings: TPLCSSStyleBind;
+    function GetDefaultBindings: TPLCSSStyleBind; virtual;
     procedure RefreshStyles(const AParentStyles); override;
     procedure UpdateOwnLayout; override;
 
@@ -604,6 +604,7 @@ var
 
 begin
   FCustomProps.Clear;
+  FBindings := GetDefaultBindings;
 
   for st in TPLCSSElementState do begin
     dcl := TPLCSSDeclarations(FStates[st]);
@@ -621,6 +622,8 @@ begin
         // ... dodać resztę
         'background': ;
         // ...
+        'position': ;
+        '': ;
       end;
     end;
   end;

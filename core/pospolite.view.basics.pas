@@ -82,23 +82,29 @@ type
     function Clone: T;
   end;
 
-  { IPLListBase }
+  generic IPLSimpleList<T> = interface(specialize IEnumerable<T>)
+    ['{85CB3AC4-43DA-4F67-814F-EC954688A12A}']
 
-  generic IPLListBase<T> = interface(specialize IEnumerable<T>)
-    ['{8523A611-1885-49FC-9DD3-6B104AC4ED59}']
     function GetItem(AIndex: SizeInt): T;
     procedure SetItem(AIndex: SizeInt; AValue: T);
 
+    function Count: SizeInt;
+
+    property Item[AIndex: SizeInt]: T read GetItem write SetItem; default;
+  end;
+
+  { IPLListBase }
+
+  generic IPLListBase<T> = interface(specialize IPLSimpleList<T>)
+    ['{8523A611-1885-49FC-9DD3-6B104AC4ED59}']
     procedure Add(AItem: T);
     procedure Remove(AItem: T);
-    function Count: SizeInt;
     function Empty: TPLBool;
     procedure Clear;
     function Last: T;
     function First: T;
     function Poll: T;
-
-    property Item[AIndex: SizeInt]: T read GetItem write SetItem; default;
+    function Pop: T;
   end;
 
   { TPLListEnumerator }
@@ -170,6 +176,7 @@ type
     function Last: T;
     function First: T;
     function Poll: T;
+    function Pop: T;
     function Duplicate: specialize IPLObjectList<T>;
     procedure SetObjectsFreeing(const AValue: TPLBool);
 
@@ -218,6 +225,7 @@ type
     function Last: T;
     function First: T;
     function Poll: T;
+    function Pop: T;
     function Duplicate: specialize IPLList<T>; virtual;
 
     property Item[AIndex: SizeInt]: T read GetItem write SetItem; default;
@@ -263,6 +271,8 @@ type
   generic TPLFuncsOfClassComparator<T: class> = function(const AObject: T;
     const ACriteria: Variant): TPLSign of object;
 
+  { TPLFuncsOfClass }
+
   generic TPLFuncsOfClass<T: class> = packed class sealed
   private type
     ListHelper = specialize TPLObjectList<T>;
@@ -276,6 +286,7 @@ type
   public
     class procedure Swap(var A, B: T);
     class function NewList(ATab: array of T; const AFreeObjects: TPLBool = true): specialize TPLObjectList<T>;
+    class function NewArray(ATab: array of T): specialize TArray<T>;
     // Fast (exponential) search works if only list is sorted!
     class function FastSearch(AList: specialize TPLObjectList<T>; const ACriteria: Variant;
       ACustomComparator: specialize TPLFuncsOfClassComparator<T> = nil): SizeInt;
@@ -531,6 +542,7 @@ type
     function GetRealTop: TPLFloat; virtual;
     function GetRealLeft: TPLFloat; virtual;
     function GetElementTarget: Pointer; virtual;
+    function GetIDFromParent: SizeInt;
 
     function IsVisible: TPLBool; virtual;
     function Display: TPLString; virtual;

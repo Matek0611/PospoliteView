@@ -13,8 +13,8 @@ If you have any ideas or questions feel free to join the [discussions](https://g
 
  Code Name | Current/Planned Version | FPC Version | Start Date | Release Date | New Features
 :--------- | -----------------------:|:-----------:|:----------:|:------------:|:------------
-Iks | 0.5b / 1.0 | >= 3.0.4 | 09.2020 | 09.2022p | First release
-Iks | X / 1.1 | >= 3.0.4 | 09.2022p | 12.2022p | (new features etc.)
+Iks | 0.6a / 1.0 | >= 3.0.4 | 09.2020 | 01.2023p | First release
+Iks | X / 1.1 | >= 3.0.4 | 01.2023p | 05.2023p | (new features etc.)
 
 \* **p** - planned, **a** - alpha, **b** - beta, **o** - omega
 
@@ -41,9 +41,12 @@ States: ***🟩** - almost done, **🟨** - in progress, **🟧** - beginning*
 - [ ] 🟨 CSS Transitions
 - [ ] 🟨 CSS Media Queries Applying
 - [ ] 🟨 Properties Applying
-- [ ] 🟨 Rendering 
+- [ ] 🟨 Rendering
+- [ ] 🟨 Layouter 
+- [ ] 🟨 JavaScript AST
+- [ ] 🟧 JavaScript Parser
+- [ ] 🟧 JavaScript Interpreter
 - [ ] 🟧 Objects Scrolling
-- [ ] 🟧 Layouter
 - [ ] 🟧 D2D1 Text
 - [ ] 🟧 Style Sheets Parsing and Management
 - [ ] 🟧 Connections between HTML, CSS and JS Objects
@@ -53,7 +56,6 @@ States: ***🟩** - almost done, **🟨** - in progress, **🟧** - beginning*
 - [ ] Demo
 - [ ] CSS Animations
 - [ ] D2D1 Image 
-- [ ] JavaScript Interpreter
 - [ ] Audio Support
 - [ ] Video Support
 - [ ] DevTools

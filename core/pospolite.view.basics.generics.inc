@@ -274,6 +274,13 @@ begin
   if not Empty then Remove(First);
 end;
 
+function TPLObjectList.Pop: T;
+begin
+  Result := Last;
+
+  if not Empty then Remove(Last);
+end;
+
 function TPLObjectList.Duplicate: specialize IPLObjectList<T>;
 var
   x: T;
@@ -394,6 +401,13 @@ begin
   Result := First;
 
   if not Empty then Remove(First);
+end;
+
+function TPLList.Pop: T;
+begin
+  Result := Last;
+
+  if not Empty then Remove(Last);
 end;
 
 function TPLList.Duplicate: specialize IPLList<T>;
@@ -557,6 +571,16 @@ begin
 
   for i := Low(ATab) to High(ATab) do
     Result.Add(ATab[i]);
+end;
+
+class function TPLFuncsOfClass.NewArray(ATab: array of T): specialize TArray<T>;
+var
+  i: SizeInt;
+begin
+  SetLength(Result, Length(ATab));
+
+  for i := Low(ATab) to High(ATab) do
+    Result[i] := ATab[i];
 end;
 
 class function TPLFuncsOfClass.FastSearch(AList: specialize TPLObjectList<T>;
@@ -1001,6 +1025,14 @@ end;
 function TPLHTMLObject.GetElementTarget: Pointer;
 begin
   Result := nil;
+end;
+
+function TPLHTMLObject.GetIDFromParent: SizeInt;
+begin
+  if not Assigned(FParent) then
+    Result := -1
+  else
+    Result := FParent.FChildren.Find(self);
 end;
 
 function TPLHTMLObject.IsVisible: TPLBool;

@@ -9,7 +9,7 @@ unit Pospolite.View.JS.Basics;
   +-------------------------+
 
   Comments:
-  ...
+  Goal: ES2019 Parser & Interpreter
 }
 
 {$mode objfpc}{$H+}
@@ -21,185 +21,110 @@ uses
   Classes, SysUtils, strutils, math, Pospolite.View.Basics;
 
 type
-  TPLJSAtom = TPLUInt;
 
-  TPLJSMode = (jsmStrict, jsmStrip, jsmMath);
-
-  TPLJSObject = class;
-
-  TPLJSObjectValueKind = (ovtrObject, ovtrBigDecimal, ovtrBigInt, ovtrBigFloat,
-    ovtrString, ovtrFunction, ovtrModule, ovtrSymbol, ovtNull, ovtUndefined,
-    ovtUninitialized, ovtException, ovtCatch, ovtInteger, ovtFloat, ovtBoolean);
-
-  { TPLJSObjectValue }
-
-  TPLJSObjectValue = packed record
-  private
-    FKind: TPLJSObjectValueKind;
-    FVPtr: Pointer;
-  public
-    constructor Create(AValue: Pointer; AKind: TPLJSObjectValueKind);
-
-    class function NewString(AValue: TPLString): TPLJSObjectValue; static; inline;
-    class function NewInteger(AValue: TPLInt): TPLJSObjectValue; static; inline;
-    class function NewFloat(AValue: TPLFloat): TPLJSObjectValue; static; inline;
-    class function NewBoolean(AValue: TPLBool): TPLJSObjectValue; static; inline;
-    class function NewObject(AValue: TPLJSObject): TPLJSObjectValue; static; inline;
-    class function NewNull: TPLJSObjectValue; static; inline;
-    class function NewUndefined: TPLJSObjectValue; static; inline;
-    class function NewUninitialized: TPLJSObjectValue; static; inline;
-    class function NewException: TPLJSObjectValue; static; inline;
-
-    function AsString: TPLString;
-    function AsNumber: TPLFloat;
-
-    property Kind: TPLJSObjectValueKind read FKind;
-  end;
-
-  PPLJSObjectValue = ^TPLJSObjectValue;
-
-  TPLJSPropertyFlag = (pfNormal, pfGetSet, pfVarRef, pfAutoInit, pfConfigurable,
-    pfWriteable, pfEnumerable, pfLength, pfHasGet, pfHasSet, pfHasValue, pfThrow,
-    pfThrowStrict, pfNoAdd, pfExotic);
-  TPLJSPropertyFlags = set of TPLJSPropertyFlag;
-
-const
-  CPLJSPropertyFlagFullAccess = [pfConfigurable, pfWriteable, pfEnumerable];
+  TPLJSInt = integer;
+  TPLJSLong = Int64;
 
 type
 
-  TPLSJSEvalFlag = (efGlobal, efModule, efDirect, efIndirect, efStrict, efStrip,
-    efCompileOnly);
+  { TPLJSCodePosition }
 
-  TPLJSClassId = (ciObject, ciNumber, ciString, ciBoolean, ciBigInt, ciBigFloat,
-    ciFloatEnv, ciBigDecimal, ciOpertorSet, ciSet, ciWeakSet, ciMap, ciWeakMap,
-    ciDataView, ciSetIterator, ciMapIterator, ciArrayIterator, ciStringIterator,
-    ciRegularExpressionIterator, ciProxy, ciGenerator, ciPromise, ciPromiseResolveFunction,
-    ciPromiseRejectFunction, ciAsyncFunction, ciAsyncFunctionResolve, ciAsyncFunctionReject,
-    ciAsyncGeneratorFunction, ciAsyncGenerator, ciAsyncIterator, ciError, ciSymbol,
-    ciArguments, ciMappedArguments, ciDate, ciModule, ciFreePascalFunction,
-    ciFreePascalFunctionData, ciBytecodeFunction, ciBoundFunction, ciGeneratorFunction,
-    ciForInIterator, ciRegularExpression, ciArray, ciArrayBuffer, ciSharedArrayBuffer,
-    ciUnsignedIntegerArray, ciSignedIntegerArray, ciBigIntArray, ciBigFloatArray);
-
-  TPLJSErrorKind = (ekInternal, ekAggregate, ekType, ekSyntax, ekURI, ekReference,
-    ekRange, ekEval);
-
-  { TPLJSClass }
-
-  TPLJSClass = packed class
+  TPLJSCodePosition = packed record
   private
-    FAtom: TPLJSAtom;
-    FId: TPLJSClassId;
+    FColumn: SizeInt;
+    FLine: SizeInt;
   public
-    property Id: TPLJSClassId read FId write FId;
-    property Atom: TPLJSAtom read FAtom write FAtom;
+    constructor Create(const ALine, AColumn: SizeInt);
 
+    class operator =(const a, b: TPLJSCodePosition) r: TPLBool; inline;
+    class operator :=(const a: TPLJSCodePosition) r: TPLString; inline;
+
+    function ToString: TPLString; inline;
+
+    property Line: SizeInt read FLine;
+    property Column: SizeInt read FColumn;
   end;
 
-  { TPLJSRuntime }
+  { TPLJSCodeLocation }
 
-  TPLJSRuntime = packed class
+  TPLJSCodeLocation = packed record
   private
-    FInfo: TPLString;
+    FFinish: TPLJSCodePosition;
+    FSource: TPLString;
+    FStart: TPLJSCodePosition;
   public
-    property Info: TPLString read FInfo write FInfo;
+    constructor Create(const AStart, AFinish: TPLJSCodePosition;
+      const ASource: TPLString = '');
 
-  end;
+    class operator =(const a, b: TPLJSCodeLocation) r: TPLBool; inline;
+    class operator :=(const a: TPLJSCodeLocation) r: TPLString; inline;
 
-  TPLJSGarbageCollectorStage = (gcsNone, gcDecreaseReference, gcsDeleteCycles);
-  TPLJSGarbageCollectorObjectType = (gcotObject, gcotFunctionBytecode,
-    gcotFunctionAsync, gcotVariableReference, gcotShape, gcotContext);
+    function ToString: TPLString; inline;
+    function Extract(out AStart, AFinish: TPLJSCodePosition; out ASource: TPLString): TPLJSCodeLocation;
 
-  TPLJSGarbageCollectorObjectHeader = packed record
-    ObjectType: TPLJSGarbageCollectorObjectType;
-  end;
-
-  TPLJSGarbageCollectorMarker = procedure (var ARuntime: TPLJSRuntime; AValue: TPLJSObjectValue);
-  TPLJSGarbageCollectorFinalizer = procedure (var ARuntime: TPLJSRuntime; const AFunction,
-    AThis: TPLJSObjectValue; const AArguments: array of TPLJSObjectValue);
-
-  TPLJSObject = class
-
+    property Start: TPLJSCodePosition read FStart write FStart;
+    property Finish: TPLJSCodePosition read FFinish write FFinish;
+    property Source: TPLString read FSource write FSource;
   end;
 
 implementation
 
-{ TPLJSObjectValue }
+{ TPLJSCodePosition }
 
-constructor TPLJSObjectValue.Create(AValue: Pointer; AKind: TPLJSObjectValueKind
-  );
+constructor TPLJSCodePosition.Create(const ALine, AColumn: SizeInt);
 begin
-  FVPtr := AValue;
-  FKind := AKind;
+  FLine := ALine;
+  FColumn := AColumn;
 end;
 
-class function TPLJSObjectValue.NewString(AValue: TPLString): TPLJSObjectValue;
+class operator TPLJSCodePosition.=(const a, b: TPLJSCodePosition) r: TPLBool;
 begin
-  Result := TPLJSObjectValue.Create(@AValue, ovtrString);
+  r := (a.FLine = b.FLine) and (a.FColumn = b.FColumn);
 end;
 
-class function TPLJSObjectValue.NewInteger(AValue: TPLInt): TPLJSObjectValue;
+class operator TPLJSCodePosition.:=(const a: TPLJSCodePosition) r: TPLString;
 begin
-  Result := TPLJSObjectValue.Create(@AValue, ovtInteger);
+  r := a.ToString;
 end;
 
-class function TPLJSObjectValue.NewFloat(AValue: TPLFloat): TPLJSObjectValue;
+function TPLJSCodePosition.ToString: TPLString;
 begin
-  Result := TPLJSObjectValue.Create(@AValue, ovtFloat);
+  Result := '(%d, %d)'.Format([FLine, FColumn]);
 end;
 
-class function TPLJSObjectValue.NewBoolean(AValue: TPLBool): TPLJSObjectValue;
+{ TPLJSCodeLocation }
+
+constructor TPLJSCodeLocation.Create(const AStart, AFinish: TPLJSCodePosition;
+  const ASource: TPLString);
 begin
-  Result := TPLJSObjectValue.Create(@AValue, ovtBoolean);
+  FStart := AStart;
+  FFinish := AFinish;
+  FSource := ASource;
 end;
 
-class function TPLJSObjectValue.NewObject(AValue: TPLJSObject
-  ): TPLJSObjectValue;
+class operator TPLJSCodeLocation.=(const a, b: TPLJSCodeLocation) r: TPLBool;
 begin
-  Result := TPLJSObjectValue.Create(AValue, ovtrObject);
+  r := (a.FStart = b.FStart) and (a.FFinish = b.FFinish) and (a.FSource = b.FSource);
 end;
 
-class function TPLJSObjectValue.NewNull: TPLJSObjectValue;
+class operator TPLJSCodeLocation.:=(const a: TPLJSCodeLocation) r: TPLString;
 begin
-  Result := TPLJSObjectValue.Create(nil, ovtNull);
+  r := a.ToString;
 end;
 
-class function TPLJSObjectValue.NewUndefined: TPLJSObjectValue;
+function TPLJSCodeLocation.ToString: TPLString;
 begin
-  Result := TPLJSObjectValue.Create(nil, ovtUndefined);
+  Result := '[%s .. %s]: %s'.Format([FStart.ToString, FFinish.ToString, FSource]);
 end;
 
-class function TPLJSObjectValue.NewUninitialized: TPLJSObjectValue;
+function TPLJSCodeLocation.Extract(out AStart, AFinish: TPLJSCodePosition; out
+  ASource: TPLString): TPLJSCodeLocation;
 begin
-  Result := TPLJSObjectValue.Create(nil, ovtUninitialized);
-end;
+  AStart := FStart;
+  AFinish := FFinish;
+  ASource := FSource;
 
-class function TPLJSObjectValue.NewException: TPLJSObjectValue;
-begin
-  Result := TPLJSObjectValue.Create(nil, ovtException);
-end;
-
-function TPLJSObjectValue.AsString: TPLString;
-begin
-  case FKind of
-    ovtNull: Result := 'null';
-    ovtUndefined: Result := 'undefined';
-    ovtUninitialized: Result := 'uninitialized';
-    ovtBoolean: Result := BoolToStr(TPLBool(FVPtr^), 'true', 'false');
-    ovtInteger: Result := TPLInt(FVPtr^);
-    ovtFloat: Result := TPLFloat(FVPtr^);
-    ovtrString: Result := TPLString(FVPtr^);
-    //ovtrObject: Result := TPLJSObject(FVPtr).AsString;
-    ovtException: Result := 'exception'
-    else Result := '';
-  end;
-end;
-
-function TPLJSObjectValue.AsNumber: TPLFloat;
-begin
-  Result := 0;
-  TryStrToFloat(AsString, Result, PLFormatSettingsDef);
+  Result := TPLJSCodeLocation.Create(AStart, AFinish, ASource);
 end;
 
 end.

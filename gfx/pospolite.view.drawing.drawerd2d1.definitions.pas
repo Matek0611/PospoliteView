@@ -9,7 +9,7 @@ unit Pospolite.View.Drawing.DrawerD2D1.Definitions;
   +-------------------------+
 
   Comments:
-    From Codebot Pascal Library by Anthony Walter
+    Module based on Codebot Pascal Library by Anthony Walter
     https://github.com/sysrpl/Cross.Codebot/tree/master/source
 }
 

@@ -8,7 +8,9 @@ unit pospolite_view;
 interface
 
 uses
-  Pospolite.View.RegisterAll, LazarusPackageIntf;
+  Pospolite.View.RegisterAll, Pospolite.View.JS.AST.Basics, 
+  Pospolite.View.JS.AST.Visitors, Pospolite.View.JS.AST.Interfaces, 
+  LazarusPackageIntf;
 
 implementation
 
