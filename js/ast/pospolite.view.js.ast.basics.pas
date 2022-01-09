@@ -30,7 +30,7 @@ type
   // Expressions
     nteAssignment, nteArray, nteAwait, nteBinary, nteCall, nteChain, nteClass,
     nteConditional, nteFunction, nteLogical, nteMember, nteNew, nteObject,
-    nteSequence, nteThis, nteUnary, nteUpdate, nteTagged, nteYield,
+    nteSequence, nteThis, nteUnary, nteUpdate, nteTagged, nteYield, nteArrowFunction,
   // Statements
     ntsBlock, ntsBreak, ntsContinue, ntsDoWhile, ntsDebug, ntsEmpty,
     ntsExpression, ntsFor, ntsForIn, ntsForOf, ntsIf, ntsLabel, ntsReturn,
@@ -71,7 +71,7 @@ type
 
   { TPLJSASTNode }
 
-  TPLJSASTNode = class abstract
+  TPLJSASTNode = class abstract(TInterfacedObject)
   private
     FLocation: TPLJSCodeLocation;
     FNodeType: TPLJSASTNodeType;
@@ -90,6 +90,8 @@ type
     property Children: TPLJSASTNodeList read FChildren;
   end;
 
+  TPLJSASTNodeClass = class of TPLJSASTNode;
+  TPLJSASTNodeArray = class(specialize TPLObjectList<TPLJSASTNode>);
   TPLJSASTFuncsOfNode = specialize TPLFuncsOfClass<TPLJSASTNode>;
 
   { TPLJSASTNodeList }
@@ -124,17 +126,62 @@ type
     constructor Create(const A1: TPLJSASTNode; const A2: array of TPLJSASTNode;
       const A3: TPLJSASTNode);
 
+    class function Collect(const AFirst: TPLJSASTNodeArray): TPLJSASTNodeList; overload; inline;
+    class function Collect(const AFirst, ASecond: TPLJSASTNodeArray): TPLJSASTNodeList; overload; inline;
+    class function Collect(const AFirst: TPLJSASTNodeArray;
+      const ASecond: TPLJSASTNode): TPLJSASTNodeList; overload; inline;
+    class function Collect(const AFirst: TPLJSASTNode;
+      const ASecond: TPLJSASTNodeArray): TPLJSASTNodeList; overload; inline;
+    class function Collect(const AFirst: TPLJSASTNode;
+      const ASecond: TPLJSASTNodeArray;
+      const AThird: TPLJSASTNode): TPLJSASTNodeList; overload; inline;
+
     function Count: SizeInt; inline;
 
     property Item[AIndex: SizeInt]: TPLJSASTNode read GetItem; default;
     class property Empty: TPLJSASTNodeList read FEmpty;
   end;
 
+  TPLJSASTClassBody = class;
+  TPLJSASTIdentifier = class;
+
   { TPLJSASTBaseVisitor }
 
   TPLJSASTBaseVisitor = class
   public
     procedure Visit(const ANode: TPLJSASTNode); virtual;
+    procedure VisitTyped(const ANode: TPLJSASTNode; const {%H-}AType: TPLJSASTNodeClass); virtual;
+  end;
+
+  { TPLJSASTClassBody }
+
+  TPLJSASTClassBody = class sealed(TPLJSASTNode)
+  private
+    FBody: TPLJSASTNodeArray;
+  public
+    constructor Create(const ABody: TPLJSASTNodeArray);
+    destructor Destroy; override;
+
+    property Body: TPLJSASTNodeArray read FBody;
+  end;
+
+  { TPLJSASTStatementListItem }
+
+  TPLJSASTStatementListItem = class abstract(TPLJSASTNode);
+
+  { TPLJSASTExpression }
+
+  TPLJSASTExpression = class abstract(TPLJSASTNode);
+
+  { TPLJSASTIdentifier }
+
+  TPLJSASTIdentifier = class sealed(TPLJSASTNode)
+  private
+    FName: TPLString;
+  protected
+    procedure Accept(AVisitor: TPLJSASTBaseVisitor); override;
+  public
+    constructor Create(const AName: TPLString);
   end;
 
 implementation
@@ -307,6 +354,38 @@ begin
   FCount := Length(FNodeList1) + 2;
 end;
 
+class function TPLJSASTNodeList.Collect(const AFirst: TPLJSASTNodeArray
+  ): TPLJSASTNodeList;
+begin
+  Result := TPLJSASTNodeList.Create(TPLJSASTFuncsOfNode.Extract(AFirst));
+end;
+
+class function TPLJSASTNodeList.Collect(const AFirst, ASecond: TPLJSASTNodeArray
+  ): TPLJSASTNodeList;
+begin
+  Result := TPLJSASTNodeList.Create(TPLJSASTFuncsOfNode.Extract(AFirst),
+    TPLJSASTFuncsOfNode.Extract(ASecond));
+end;
+
+class function TPLJSASTNodeList.Collect(const AFirst: TPLJSASTNodeArray;
+  const ASecond: TPLJSASTNode): TPLJSASTNodeList;
+begin
+  Result := TPLJSASTNodeList.Create(TPLJSASTFuncsOfNode.Extract(AFirst), ASecond);
+end;
+
+class function TPLJSASTNodeList.Collect(const AFirst: TPLJSASTNode;
+  const ASecond: TPLJSASTNodeArray): TPLJSASTNodeList;
+begin
+  Result := TPLJSASTNodeList.Create(AFirst, TPLJSASTFuncsOfNode.Extract(ASecond));
+end;
+
+class function TPLJSASTNodeList.Collect(const AFirst: TPLJSASTNode;
+  const ASecond: TPLJSASTNodeArray; const AThird: TPLJSASTNode
+  ): TPLJSASTNodeList;
+begin
+  Result := TPLJSASTNodeList.Create(AFirst, TPLJSASTFuncsOfNode.Extract(ASecond), AThird);
+end;
+
 function TPLJSASTNodeList.Count: SizeInt;
 begin
   Result := FCount;
@@ -317,6 +396,42 @@ end;
 procedure TPLJSASTBaseVisitor.Visit(const ANode: TPLJSASTNode);
 begin
   ANode.Accept(Self);
+end;
+
+procedure TPLJSASTBaseVisitor.VisitTyped(const ANode: TPLJSASTNode;
+  const AType: TPLJSASTNodeClass);
+begin
+  Visit(ANode);
+end;
+
+{ TPLJSASTClassBody }
+
+constructor TPLJSASTClassBody.Create(const ABody: TPLJSASTNodeArray);
+begin
+  inherited Create(ntcBody);
+
+  if Assigned(ABody) then FBody := ABody else FBody := TPLJSASTNodeArray.Create(true);
+end;
+
+destructor TPLJSASTClassBody.Destroy;
+begin
+  FBody.Free;
+
+  inherited Destroy;
+end;
+
+{ TPLJSASTIdentifier }
+
+procedure TPLJSASTIdentifier.Accept(AVisitor: TPLJSASTBaseVisitor);
+begin
+  AVisitor.VisitTyped(Self, TPLJSASTIdentifier);
+end;
+
+constructor TPLJSASTIdentifier.Create(const AName: TPLString);
+begin
+  inherited Create(ntIdentifier);
+
+  FName := AName;
 end;
 
 initialization

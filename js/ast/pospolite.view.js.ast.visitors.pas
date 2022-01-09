@@ -20,7 +20,25 @@ uses
   Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.JS.Basics,
   Pospolite.View.JS.AST.Basics;
 
+type
+
+  { TPLJSASTNormalVisitor }
+
+  TPLJSASTNormalVisitor = class(TPLJSASTBaseVisitor)
+  public
+    procedure VisitTyped(const ANode: TPLJSASTNode;
+      const AType: TPLJSASTNodeClass); override;
+  end;
+
 implementation
+
+{ TPLJSASTNormalVisitor }
+
+procedure TPLJSASTNormalVisitor.VisitTyped(const ANode: TPLJSASTNode;
+  const AType: TPLJSASTNodeClass);
+begin
+  inherited VisitTyped(ANode, AType);
+end;
 
 end.
 

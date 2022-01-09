@@ -511,6 +511,11 @@ begin
     ATab[i] := AValue;
 end;
 
+class function TPLFuncs.Extract(const AList: specialize TPLList<T>): specialize TArray<T>;
+begin
+  Result := TPLFuncs.NewArray(AList.FArray);
+end;
+
 { TPLFuncsOfClass }
 
 class function TPLFuncsOfClass.DefaultComparator(const AObject: T;
@@ -581,6 +586,11 @@ begin
 
   for i := Low(ATab) to High(ATab) do
     Result[i] := ATab[i];
+end;
+
+class function TPLFuncsOfClass.Extract(const AList: specialize TPLObjectList<T>): specialize TArray<T>;
+begin
+  Result := TPLFuncsOfClass.NewArray(AList.FArray);
 end;
 
 class function TPLFuncsOfClass.FastSearch(AList: specialize TPLObjectList<T>;

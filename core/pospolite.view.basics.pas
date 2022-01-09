@@ -260,6 +260,7 @@ type
     class function NewList(ATab: array of T): specialize TPLList<T>;
     class function ToString(ATab: specialize TArray<T>): TPLString; reintroduce;
     class procedure FillArray(var ATab: array of T; const AValue: T);
+    class function Extract(const AList: specialize TPLList<T>): specialize TArray<T>; inline;
   end;
 
   TPLStringFuncs = specialize TPLFuncs<TPLString>;
@@ -287,6 +288,7 @@ type
     class procedure Swap(var A, B: T);
     class function NewList(ATab: array of T; const AFreeObjects: TPLBool = true): specialize TPLObjectList<T>;
     class function NewArray(ATab: array of T): specialize TArray<T>;
+    class function Extract(const AList: specialize TPLObjectList<T>): specialize TArray<T>; inline;
     // Fast (exponential) search works if only list is sorted!
     class function FastSearch(AList: specialize TPLObjectList<T>; const ACriteria: Variant;
       ACustomComparator: specialize TPLFuncsOfClassComparator<T> = nil): SizeInt;
