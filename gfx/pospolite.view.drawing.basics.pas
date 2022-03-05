@@ -77,7 +77,7 @@ type
     FX, FY: T;
   public
     constructor Create(AX, AY: T);
-    function Empty: TPLPoint; inline;
+    class function Empty: TPLPoint; inline; static;
     function IsEmpty: TPLBool; inline;
     function Rotate(APivot: TPLPoint; AAngleDeg: TPLFloat): TPLPoint;
     function RotateClockwise(APivot: TPLPoint; AAngleDeg: TPLFloat): TPLPoint;
@@ -565,7 +565,7 @@ begin
   FY := AY;
 end;
 
-function TPLPoint.Empty: TPLPoint;
+class function TPLPoint.Empty: TPLPoint;
 begin
   Result := Create(0, 0);
 end;

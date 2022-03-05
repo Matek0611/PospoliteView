@@ -173,26 +173,7 @@ begin
   FBody := nil;
   FHead := nil;
 
-  case TPLString(ExtractFileExt(AFileName)).ToLower.Replace('.', '') of
-    'html', 'htm': FMimeType := 'text/html';
-    'xml': FMimeType := 'text/xml';
-    'txt': FMimeType := 'text/plain';
-    'css': FMimeType := 'text/css';
-    'csv': FMimeType := 'text/csv';
-    'php': FMimeType := 'text/php';
-    'png': FMimeType := 'image/png';
-    'webp': FMimeType := 'image/webp';
-    'jpg', 'jpeg', 'jfif', 'pjpeg', 'pjp': FMimeType := 'image/jpeg';
-    'tif', 'tiff': FMimeType := 'image/tiff';
-    'ico': FMimeType := 'image/vnd.microsoft.icon';
-    'mp3', 'mpeg': FMimeType := 'audio/mpeg';
-    'pdf': FMimeType := 'application/pdf';
-    'sql': FMimeType := 'application/sql';
-    'json': FMimeType := 'application/json';
-    'js': FMimeType := 'application/javascript';
-    'gif': FMimeType := 'image/gif';
-    else exit; // download
-  end;
+  FMimeType := LocalMimeType(AFileName);
 
   try
     sl := TStringList.Create;
@@ -204,7 +185,7 @@ begin
     end;
   except
     t := '';
-    FMimeType := '';  //application/octet-stream
+    FMimeType := '';
     exit;
   end;
 
@@ -228,13 +209,10 @@ begin
 
   try
     oc := OnlineClient;
-    t := oc.Download(AFileName);
+    t := oc.FileGetContents(AFileName);
     FMimeType := oc.MimeType.ToLower;
 
-    if (oc.ResponseStatusCode >= 300) or not FMimeType.Exists(['html',
-      'htm', 'xml', 'plain', 'css', 'csv', 'php', 'sql', 'json', 'sql', 'pdf',
-      'png', 'tiff', 'javascript', 'icon', 'mpeg', 'gif'])
-      then raise Exception.Create('');
+    if oc.ResponseStatusCode >= 300 then raise Exception.Create('');
   except
     t := '';
     FMimeType := '';

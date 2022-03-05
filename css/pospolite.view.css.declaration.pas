@@ -33,11 +33,14 @@ type
   TPLCSSPropertyValuePart = packed class
   private
     FKind: TPLCSSPropertyValuePartKind;
+  protected
+    constructor CreateForClone;
   public
     constructor Create(const AValue: TPLString); virtual;
 
     function SetValue(const AValue: TPLString): TPLBool; virtual;
     function AsString: TPLString; virtual;
+    function Clone: TPLCSSPropertyValuePart; virtual;
 
     property Kind: TPLCSSPropertyValuePartKind read FKind;
   end;
@@ -59,6 +62,7 @@ type
   public
     function SetValue(const AValue: TPLString): TPLBool; override;
     function AsString: TPLString; override;
+    function Clone: TPLCSSPropertyValuePart; override;
 
     property Value: TPLFloat read FValue;
   end;
@@ -72,6 +76,7 @@ type
   public
     function SetValue(const AValue: TPLString): TPLBool; override;
     function AsString: TPLString; override;
+    function Clone: TPLCSSPropertyValuePart; override;
 
     class function IsDimensionValue(const AValue: TPLString): TPLBool;
 
@@ -91,6 +96,7 @@ type
 
     function SetValue(const AValue: TPLString): TPLBool; override;
     function AsString: TPLString; override;
+    function Clone: TPLCSSPropertyValuePart; override;
 
     property Name: TPLString read FName;
     property Arguments: TPLCSSPropertyValueParts read FArguments;
@@ -105,6 +111,7 @@ type
   public
     function SetValue(const AValue: TPLString): TPLBool; override;
     function AsString: TPLString; override;
+    function Clone: TPLCSSPropertyValuePart; override;
 
     property Value: TPLString read FValue;
     property Quoted: TPLBool read FQuoted;
@@ -132,6 +139,7 @@ type
 
     function AsString: TPLString;
     function Clone: TPLCSSProperty;
+    procedure Assign(const AProperty: TPLCSSProperty);
 
     property Name: TPLString read FName write SetName;
     property Value: TPLCSSPropertyValue read FValue write FValue;
@@ -156,8 +164,8 @@ type
   TPLCSSDeclarations = class(specialize TPLObjectList<TPLCSSProperty>, IPLCSSDeclarations)
   private
     FSelector: TPLString;
-    function Compare(a, b: T): TPLBool; inline;
-    function CompareSort(a, b: T): TPLSign;
+    function Compare(a, b: TPLCSSProperty): TPLBool; inline;
+    function CompareSort(a, b: TPLCSSProperty): TPLSign;
     function GetProperties(AName: TPLString): TPLCSSProperty;
     function BinarySearch(AName: TPLString; ALeft, ARight: SizeInt): SizeInt;
     function Search(AName: TPLString): SizeInt;
@@ -167,12 +175,13 @@ type
     procedure SetDeclarations(AValue: TPLString);
     function AsString: TPLString;
 
-    procedure Add(AItem: T); override;
-    function Find(AItem: T; AComparator: specialize TPLObjectListFindCompare<T>
+    procedure Add(AItem: TPLCSSProperty); override;
+    function Find(AItem: TPLCSSProperty; AComparator: specialize TPLObjectListFindCompare<TPLCSSProperty>
       = nil): SizeInt; override;
     function Exists(AName: TPLString; out AProperty: TPLCSSProperty): TPLBool;
     procedure Delete(AName: TPLString);
     function IsFor(const AObject: TPLHTMLObject): TPLBool;
+    procedure Merge(const ADeclarations: TPLCSSDeclarations);
 
     property Properties[AName: TPLString]: TPLCSSProperty read GetProperties;
     property Selector: TPLString read FSelector write FSelector;
@@ -194,6 +203,11 @@ uses Pospolite.View.CSS.Basics, Pospolite.View.DOM.Document;
 
 { TPLCSSPropertyValuePart }
 
+constructor TPLCSSPropertyValuePart.CreateForClone;
+begin
+  inherited Create;
+end;
+
 constructor TPLCSSPropertyValuePart.Create(const AValue: TPLString);
 begin
   inherited Create;
@@ -209,6 +223,12 @@ end;
 function TPLCSSPropertyValuePart.AsString: TPLString;
 begin
   Result := '';
+end;
+
+function TPLCSSPropertyValuePart.Clone: TPLCSSPropertyValuePart;
+begin
+  Result := TPLCSSPropertyValuePart.CreateForClone;
+  Result.FKind := FKind;
 end;
 
 { TPLCSSPropertyValueParts }
@@ -251,6 +271,13 @@ begin
   Result := FValue;
 end;
 
+function TPLCSSPropertyValuePartNumber.Clone: TPLCSSPropertyValuePart;
+begin
+  Result := TPLCSSPropertyValuePartNumber.CreateForClone;
+  Result.FKind := FKind;
+  TPLCSSPropertyValuePartNumber(Result).FValue := FValue;
+end;
+
 { TPLCSSPropertyValuePartDimension }
 
 function TPLCSSPropertyValuePartDimension.SetValue(const AValue: TPLString
@@ -288,6 +315,14 @@ function TPLCSSPropertyValuePartDimension.AsString: TPLString;
 begin
   Result := FValue;
   Result += FUnit;
+end;
+
+function TPLCSSPropertyValuePartDimension.Clone: TPLCSSPropertyValuePart;
+begin
+  Result := TPLCSSPropertyValuePartDimension.CreateForClone;
+  Result.FKind := FKind;
+  TPLCSSPropertyValuePartDimension(Result).FValue := FValue;
+  TPLCSSPropertyValuePartDimension(Result).FUnit := FUnit;
 end;
 
 class function TPLCSSPropertyValuePartDimension.IsDimensionValue(
@@ -357,6 +392,16 @@ begin
   Result += ')';
 end;
 
+function TPLCSSPropertyValuePartFunction.Clone: TPLCSSPropertyValuePart;
+var
+  v: TPLCSSPropertyValuePart;
+begin
+  Result := TPLCSSPropertyValuePartFunction.CreateForClone;
+  Result.FKind := FKind;
+  TPLCSSPropertyValuePartFunction(Result).FName := FName;
+  for v in FArguments do TPLCSSPropertyValuePartFunction(Result).FArguments.Add(v.Clone);
+end;
+
 { TPLCSSPropertyValuePartStringOrIdentifier }
 
 function TPLCSSPropertyValuePartStringOrIdentifier.SetValue(const AValue: TPLString
@@ -371,6 +416,14 @@ function TPLCSSPropertyValuePartStringOrIdentifier.AsString: TPLString;
 begin
   if FQuoted then Result := '''' + FValue + ''''
   else Result := FValue;
+end;
+
+function TPLCSSPropertyValuePartStringOrIdentifier.Clone: TPLCSSPropertyValuePart;
+begin
+  Result := TPLCSSPropertyValuePartStringOrIdentifier.CreateForClone;
+  Result.FKind := FKind;
+  TPLCSSPropertyValuePartStringOrIdentifier(Result).FValue := FValue;
+  TPLCSSPropertyValuePartStringOrIdentifier(Result).FQuoted := FQuoted;
 end;
 
 { TPLCSSProperty }
@@ -440,14 +493,27 @@ begin
   Result := TPLCSSProperty.Create(FName, FRaw);
 end;
 
+procedure TPLCSSProperty.Assign(const AProperty: TPLCSSProperty);
+var
+  v: TPLCSSPropertyValuePart;
+begin
+  if not Assigned(AProperty) then exit;
+
+  FName := AProperty.FName;
+  FImportant := AProperty.FImportant;
+  FRaw := AProperty.FRaw;
+  FValue.Clear;
+  for v in AProperty.FValue do FValue.Add(v.Clone);
+end;
+
 { TPLCSSDeclarations }
 
-function TPLCSSDeclarations.Compare(a, b: T): TPLBool;
+function TPLCSSDeclarations.Compare(a, b: TPLCSSProperty): TPLBool;
 begin
   Result := a.FName = b.FName;
 end;
 
-function TPLCSSDeclarations.CompareSort(a, b: T): TPLSign;
+function TPLCSSDeclarations.CompareSort(a, b: TPLCSSProperty): TPLSign;
 begin
   if a.FName = b.FName then Result := 0
   else if a.FName > b.FName then Result := 1
@@ -567,15 +633,15 @@ begin
   end;
 end;
 
-procedure TPLCSSDeclarations.Add(AItem: T);
+procedure TPLCSSDeclarations.Add(AItem: TPLCSSProperty);
 begin
   inherited Add(AItem);
 
   Sort(@CompareSort);
 end;
 
-function TPLCSSDeclarations.Find(AItem: T; AComparator: specialize
-  TPLObjectListFindCompare<T> = nil): SizeInt;
+function TPLCSSDeclarations.Find(AItem: TPLCSSProperty; AComparator: specialize
+  TPLObjectListFindCompare<TPLCSSProperty> = nil): SizeInt;
 begin
   Result := Search(AItem.Name);
 end;
@@ -602,6 +668,16 @@ function TPLCSSDeclarations.IsFor(const AObject: TPLHTMLObject): TPLBool;
 begin
   if TPLString.IsNullOrEmpty(FSelector) then exit(true);
   Result := TPLHTMLDocumentQueries.isQuerySelectorFor(AObject, FSelector);
+end;
+
+procedure TPLCSSDeclarations.Merge(const ADeclarations: TPLCSSDeclarations);
+var
+  p, d: TPLCSSProperty;
+begin
+  for p in ADeclarations do begin
+    if Exists(p.Name, d) then d.Assign(p)
+    else Add(p.Clone);
+  end;
 end;
 
 { TPLCSSPropertyParser }

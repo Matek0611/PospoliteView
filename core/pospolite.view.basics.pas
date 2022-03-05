@@ -236,17 +236,17 @@ type
 
   generic IPLInterfaceList<I> = interface(specialize IPLList<I>)
     ['{34A068B1-7410-420A-9B7E-90968F924C0D}']
-    function {%H-}Duplicate: specialize IPLInterfaceList<T>;
+    function {%H-}Duplicate: specialize IPLInterfaceList<I>;
   end;
 
   { TPLInterfaceList }
 
   generic TPLInterfaceList<I> = class(specialize TPLList<I>, specialize IPLInterfaceList<I>)
   public
-    procedure Add(AItem: T); override;
-    procedure Remove(AItem: T); override;
+    procedure Add(AItem: I); override;
+    procedure Remove(AItem: I); override;
     procedure Clear; override;
-    function Duplicate: specialize IPLInterfaceList<T>; reintroduce;
+    function Duplicate: specialize IPLInterfaceList<I>; overload; reintroduce;
   end;
 
   { TPLFuncs }
@@ -374,8 +374,8 @@ type
 
     procedure UpdateConsts;
   public
-    procedure Add(AItem: T); override;
-    procedure Remove(AItem: T); override;
+    procedure Add(AItem: TPLHTMLObjectAttribute); override;
+    procedure Remove(AItem: TPLHTMLObjectAttribute); override;
     procedure Clear; override;
 
     function Get(AName: TPLString): TPLHTMLObjectAttribute;
@@ -450,6 +450,7 @@ type
     procedure RefreshStyles(const AParentStyles);
     procedure UpdateLayoutForAll;
     procedure UpdateOwnLayout;
+    procedure ApplyInlineStyles;
 
     property Zoom: TPLFloat read GetZoom write SetZoom;
 
@@ -536,6 +537,7 @@ type
     procedure RefreshStyles(const AParentStyles); virtual;
     procedure UpdateLayoutForAll;
     procedure UpdateOwnLayout; virtual;
+    procedure ApplyInlineStyles; virtual;
 
     function GetWidth: TPLFloat; virtual;
     function GetHeight: TPLFloat; virtual;

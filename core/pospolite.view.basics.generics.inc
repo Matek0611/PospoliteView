@@ -421,13 +421,13 @@ end;
 
 { TPLInterfaceList }
 
-procedure TPLInterfaceList.Add(AItem: T);
+procedure TPLInterfaceList.Add(AItem: I);
 begin
   AItem._AddRef;
   inherited Add(AItem);
 end;
 
-procedure TPLInterfaceList.Remove(AItem: T);
+procedure TPLInterfaceList.Remove(AItem: I);
 begin
   AItem._Release;
   inherited Remove(AItem);
@@ -443,7 +443,7 @@ begin
   inherited Clear;
 end;
 
-function TPLInterfaceList.Duplicate: specialize IPLInterfaceList<T>;
+function TPLInterfaceList.Duplicate: specialize IPLInterfaceList<I>;
 var
   x: I;
 begin
@@ -674,13 +674,13 @@ begin
   FPtrs[8] := Get('rel');
 end;
 
-procedure TPLHTMLObjectAttributes.Add(AItem: T);
+procedure TPLHTMLObjectAttributes.Add(AItem: TPLHTMLObjectAttribute);
 begin
   inherited Add(AItem);
   UpdateConsts;
 end;
 
-procedure TPLHTMLObjectAttributes.Remove(AItem: T);
+procedure TPLHTMLObjectAttributes.Remove(AItem: TPLHTMLObjectAttribute);
 begin
   inherited Remove(AItem);
   UpdateConsts;
@@ -1000,6 +1000,11 @@ end;
 procedure TPLHTMLObject.UpdateOwnLayout;
 begin
   // ...
+end;
+
+procedure TPLHTMLObject.ApplyInlineStyles;
+begin
+  //
 end;
 
 function TPLHTMLObject.GetWidth: TPLFloat;

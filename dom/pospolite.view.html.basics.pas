@@ -43,6 +43,7 @@ type
     procedure DoneStates; override;
     procedure DoDraw(ADrawer: Pointer); override;
     procedure Render(ARenderer: TPLDrawingRenderer); virtual;
+    procedure ApplyInlineStyles; override;
   protected
     // https://developer.mozilla.org/en-US/docs/Web/Events
     procedure InitEventTarget; virtual;
@@ -213,6 +214,18 @@ end;
 procedure TPLHTMLBasicObject.Render(ARenderer: TPLDrawingRenderer);
 begin
   ARenderer.DrawHTMLObject(self);
+end;
+
+procedure TPLHTMLBasicObject.ApplyInlineStyles;
+var
+  d: TPLCSSDeclarations;
+begin
+  d := TPLCSSDeclarations.Create(Attributes.Style.Value);
+  try
+    TPLCSSDeclarations(FStates[esNormal]).Merge(d);
+  finally
+    d.Free;
+  end;
 end;
 
 procedure TPLHTMLBasicObject.InitEventTarget;
@@ -605,6 +618,8 @@ var
 begin
   FCustomProps.Clear;
   FBindings := GetDefaultBindings;
+
+  ApplyInlineStyles;
 
   for st in TPLCSSElementState do begin
     dcl := TPLCSSDeclarations(FStates[st]);

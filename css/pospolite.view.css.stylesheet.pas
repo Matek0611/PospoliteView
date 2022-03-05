@@ -339,11 +339,10 @@ procedure TPLCSSStylingThread.LoadAllStyles;
       if (m <> Default(TPLHTMLObjectAttribute)) and (not TPLString.IsNullOrEmpty(m.Value))
         and (m.Value.ToLower <> 'all') then s.MediaQuery := m.Value;
 
-      //s.Load(OnlineClient.Download(s.FileName)); // może załadować przy wczytywaniu dokumentu?
-    end else if obj.Attributes.Style <> Default(TPLHTMLObjectAttribute) then begin
+      s.Load(OnlineClient.FileGetContents(s.FileName)); // może załadować przy wczytywaniu dokumentu?
+    end else if obj.Attributes.Style <> Default(TPLHTMLObjectAttribute) then
       // inline
-
-    end;
+      obj.ApplyInlineStyles;
 
     for e in obj.Children do
       EnumStyles(e);

@@ -60,9 +60,11 @@ var
   BindCtx: IBindCtx;
   Moniker: IMoniker;
 begin
+  New(chEaten);
   OleCheck(CreateBindCtx(0, bindCtx));
   OleCheck(MkParseDisplayName(BindCtx, StringToOleStr(objectName), chEaten, Moniker));
   OleCheck(Moniker.BindToObject(BindCtx, nil, IDispatch, Result));
+  Dispose(chEaten);
 end;
 
 procedure GetWin32_OperatingSystem;
@@ -74,7 +76,7 @@ var
   iValue        : LongWord;
 
 begin
-  objWMIService := GetWMIObject('winmgmts:\\localhost\root\cimv2');
+  objWMIService := GetWMIObject('winmgmts:\\.\root\CIMV2');
   colItems      := objWMIService.ExecQuery('SELECT * FROM Win32_OperatingSystem', 'WQL', 0);
   oEnum         := IUnknown(colItems._NewEnum) as IEnumVariant;
   if oEnum.Next(1, colItem, iValue) = 0 then
