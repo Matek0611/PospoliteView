@@ -80,7 +80,7 @@ begin
   case AUnit.ToLower of
     'px', 'cm', 'mm', 'q', 'in', 'pc', 'pt': Result := AbsoluteLengthToPx(AValue, AUnit, AHTMLObject);
     '%', 'ch', 'em', 'ex', 'rem', 'vh', 'vw', 'vmin', 'vmax': Result := RelativeLengthToPx(AValue, AUnit, AHTMLObject);
-    else Result := 0;
+    else Result := AValue;
   end;
 end;
 
@@ -155,7 +155,7 @@ begin
   end;
 end;
 
-operator mod (a, b: TPLFloat)r: TPLFloat;
+operator mod (a, b: TPLFloat) r: TPLFloat;
 begin
   r := fmod(a, b);
 end;

@@ -543,8 +543,6 @@ type
     function GetHeight: TPLFloat; virtual;
     function GetTop: TPLFloat; virtual;
     function GetLeft: TPLFloat; virtual;
-    function GetRealTop: TPLFloat; virtual;
-    function GetRealLeft: TPLFloat; virtual;
     function GetElementTarget: Pointer; virtual;
     function GetIDFromParent: SizeInt;
 

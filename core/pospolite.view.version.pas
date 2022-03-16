@@ -60,11 +60,11 @@ var
   BindCtx: IBindCtx;
   Moniker: IMoniker;
 begin
-  New(chEaten);
+  {$if (FPC_VERSION = 3) and (FPC_RELEASE >= 2)}New(chEaten);{$endif}
   OleCheck(CreateBindCtx(0, bindCtx));
   OleCheck(MkParseDisplayName(BindCtx, StringToOleStr(objectName), chEaten, Moniker));
   OleCheck(Moniker.BindToObject(BindCtx, nil, IDispatch, Result));
-  Dispose(chEaten);
+  {$if (FPC_VERSION = 3) and (FPC_RELEASE >= 2)}Dispose(chEaten);{$endif}
 end;
 
 procedure GetWin32_OperatingSystem;

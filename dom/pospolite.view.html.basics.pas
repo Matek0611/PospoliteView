@@ -21,7 +21,7 @@ uses
   Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.Drawing.Renderer,
   Pospolite.View.Drawing.Basics, Pospolite.View.CSS.Declaration,
   Pospolite.View.HTML.Scrolling, Pospolite.View.HTML.Events,
-  Pospolite.View.CSS.Binder;
+  Pospolite.View.CSS.Binder, math;
 
 type
 
@@ -31,19 +31,19 @@ type
   private
     FEventTarget: TPLHTMLEventTarget;
     FFocused: TPLBool;
-    FRealPos: TPLPointF;
     FScrolling: TPLHTMLScrolling;
     FSize: TPLRectF;
 
     procedure SetFocused(AValue: TPLBool);
   protected
     FCustomProps: TPLCSSDeclarations;
+    FSizeTransitionData: TPLVector4F;
 
     procedure InitStates; override;
     procedure DoneStates; override;
     procedure DoDraw(ADrawer: Pointer); override;
     procedure Render(ARenderer: TPLDrawingRenderer); virtual;
-    procedure ApplyInlineStyles; override;
+    procedure {%H-}ApplyInlineStyles; override;
   protected
     // https://developer.mozilla.org/en-US/docs/Web/Events
     procedure InitEventTarget; virtual;
@@ -81,8 +81,6 @@ type
     function GetWidth: TPLFloat; override;
     function GetTop: TPLFloat; override;
     function GetLeft: TPLFloat; override;
-    function GetRealTop: TPLFloat; override;
-    function GetRealLeft: TPLFloat; override;
     function GetElementTarget: Pointer; override;
 
     function IsVisible: TPLBool; override;
@@ -91,7 +89,6 @@ type
 
     property Scrolling: TPLHTMLScrolling read FScrolling;
     property Size: TPLRectF read FSize write FSize;
-    property RealPos: TPLPointF read FRealPos write FRealPos;
     property EventTarget: TPLHTMLEventTarget read FEventTarget;
     property Focused: TPLBool read FFocused write SetFocused;
     property CustomProperties: TPLCSSDeclarations read FCustomProps;
@@ -172,9 +169,22 @@ type
     class function GetTextNodesCount(AObject: TPLHTMLObject): SizeInt;
   end;
 
+  operator :=(p: TPLCSSPropertyValuePart) r: TPLCSSSimpleUnit;
+
 implementation
 
 uses Controls, Variants, Pospolite.View.Threads, Pospolite.View.CSS.Basics;
+
+operator :=(p: TPLCSSPropertyValuePart) r: TPLCSSSimpleUnit;
+begin
+  if p is TPLCSSPropertyValuePartNumber then
+    r := TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(TPLCSSPropertyValuePartNumber(p).Value, ''))
+  else if p is TPLCSSPropertyValuePartDimension then
+    r := TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(TPLCSSPropertyValuePartDimension(p).Value, TPLCSSPropertyValuePartDimension(p).&Unit))
+  else if p.AsString.Trim.ToLower = 'auto' then
+    r := TPLCSSSimpleUnit.Auto
+  else r := TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(0, p.AsString.Trim.ToLower));
+end;
 
 { TPLHTMLBasicObject }
 
@@ -205,7 +215,7 @@ end;
 procedure TPLHTMLBasicObject.DoDraw(ADrawer: Pointer);
 begin
   inherited DoDraw(ADrawer);
-  if (GetRealLeft + GetWidth < 0) or (GetRealTop + GetHeight < 0) or not IsVisible then exit;
+  if (GetLeft + GetWidth < 0) or (GetTop + GetHeight < 0) or not IsVisible then exit;
 
   Render(TPLDrawingRenderer(ADrawer));
   FScrolling.Draw(TPLDrawingRenderer(ADrawer));
@@ -360,6 +370,8 @@ begin
   InitEventTarget;
 
   FCustomProps := TPLCSSDeclarations.Create();
+
+  FSizeTransitionData.Reset;
 end;
 
 destructor TPLHTMLBasicObject.Destroy;
@@ -451,16 +463,6 @@ end;
 function TPLHTMLBasicObject.GetLeft: TPLFloat;
 begin
   Result := FSize.Left;
-end;
-
-function TPLHTMLBasicObject.GetRealTop: TPLFloat;
-begin
-  Result := FRealPos.Y;
-end;
-
-function TPLHTMLBasicObject.GetRealLeft: TPLFloat;
-begin
-  Result := FRealPos.X;
 end;
 
 function TPLHTMLBasicObject.GetElementTarget: Pointer;
@@ -638,6 +640,48 @@ begin
         'background': ;
         // ...
         'position': ;
+        'width': if p.Value.Count = 1 then begin
+          case p.Value[0].AsString.ToLower of
+            'initial', 'revert': FBindings.Properties[st].Width := GetDefaultBindings.Properties[st].Width;
+            'inherit', 'unset': FBindings.Properties[st].Width := ParentCurrentBinding.Width;
+            else FBindings.Properties[st].Width := p.Value[0];
+          end;
+        end;
+        'height': if p.Value.Count = 1 then begin
+          case p.Value[0].AsString.ToLower of
+            'initial', 'revert': FBindings.Properties[st].Height := GetDefaultBindings.Properties[st].Height;
+            'inherit', 'unset': FBindings.Properties[st].Height := ParentCurrentBinding.Height;
+            else FBindings.Properties[st].Height := p.Value[0];
+          end;
+        end;
+        'max-width': if p.Value.Count = 1 then begin
+          case p.Value[0].AsString.ToLower of
+            'initial', 'revert': FBindings.Properties[st].Max.Width := GetDefaultBindings.Properties[st].Max.Width;
+            'inherit', 'unset': FBindings.Properties[st].Max.Width := ParentCurrentBinding.Max.Width;
+            else FBindings.Properties[st].Max.Width := p.Value[0];
+          end;
+        end;
+        'max-height': if p.Value.Count = 1 then begin
+          case p.Value[0].AsString.ToLower of
+            'initial', 'revert': FBindings.Properties[st].Max.Height := GetDefaultBindings.Properties[st].Max.Height;
+            'inherit', 'unset': FBindings.Properties[st].Max.Height := ParentCurrentBinding.Max.Height;
+            else FBindings.Properties[st].Max.Height := p.Value[0];
+          end;
+        end;
+        'min-width': if p.Value.Count = 1 then begin
+          case p.Value[0].AsString.ToLower of
+            'initial', 'revert': FBindings.Properties[st].Min.Width := GetDefaultBindings.Properties[st].Min.Width;
+            'inherit', 'unset': FBindings.Properties[st].Min.Width := ParentCurrentBinding.Min.Width;
+            else FBindings.Properties[st].Min.Width := p.Value[0];
+          end;
+        end;
+        'min-height': if p.Value.Count = 1 then begin
+          case p.Value[0].AsString.ToLower of
+            'initial', 'revert': FBindings.Properties[st].Min.Height := GetDefaultBindings.Properties[st].Min.Height;
+            'inherit', 'unset': FBindings.Properties[st].Min.Height := ParentCurrentBinding.Min.Height;
+            else FBindings.Properties[st].Min.Height := p.Value[0];
+          end;
+        end;
         '': ;
       end;
     end;
@@ -651,7 +695,9 @@ procedure TPLHTMLNormalObject.UpdateOwnLayout;
 begin
   if not IsVisible or (Display = 'none') then exit;
 
+  FSize := TPLRectF.Create(0, 0, 0, 0);
 
+  //
 end;
 
 { TPLHTMLObjectDIV }
@@ -678,7 +724,7 @@ begin
     'div': Result := TPLHTMLObjectDIV.Create(AParent);
     else begin
       Result := TPLHTMLNormalObject.Create(AParent);
-      Result.Name := ATagName;
+      Result.Name := ATagName.ToLower;
     end;
   end;
 end;

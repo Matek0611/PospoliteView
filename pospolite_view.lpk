@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <PathDelim Value="\"/>
     <Name Value="pospolite_view"/>
     <Type Value="RunAndDesignTime"/>
@@ -18,7 +18,7 @@
       </CodeGeneration>
     </CompilerOptions>
     <Version Major="1"/>
-    <Files Count="36">
+    <Files Count="37">
       <Item1>
         <Filename Value="gfx\pospolite.view.drawing.basics.pas"/>
         <AddToUsesPkgSection Value="False"/>
@@ -191,9 +191,14 @@
       </Item35>
       <Item36>
         <Filename Value="js\ast\pospolite.view.js.ast.expressions.pas"/>
-        <UnitName Value="pospolite.view.js.ast.expressions"/>
+        <UnitName Value="Pospolite.View.JS.AST.Expressions"/>
       </Item36>
+      <Item37>
+        <Filename Value="gfx\pospolite.view.drawing.nativedrawer.pas"/>
+        <UnitName Value="pospolite.view.drawing.nativedrawer"/>
+      </Item37>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">
       <Item1>
         <PackageName Value="Printer4Lazarus"/>

@@ -17,8 +17,9 @@ unit Pospolite.View.Internet;
 interface
 
 uses
-  Classes, SysUtils, fphttpclient, Forms, opensslsockets, openssl, sslsockets,
-  fpopenssl, Pospolite.View.Basics, Pospolite.View.Version, URIParser, StrUtils;
+  Classes, SysUtils, fphttpclient, Forms, openssl, sslsockets, fpopenssl,
+  Pospolite.View.Basics, Pospolite.View.Version, URIParser, StrUtils
+  {$if (FPC_VERSION = 3) and (FPC_RELEASE >= 2)}, opensslsockets{$endif};
 
 type
 
@@ -321,10 +322,15 @@ begin
 
   try
     ms := TMemoryStream.Create;
-    ss := TStringStream.Create;
+    ss := TStringStream.Create('');
     try
       if FileGetContents(AURL, ms) then begin
-        ss.LoadFromStream(ms);
+        {$if (FPC_VERSION = 3) and (FPC_RELEASE >= 2)}
+          ss.LoadFromStream(ms);
+        {$else}
+          ss.CopyFrom(ms, ms.Size);
+        {$endif}
+
         ss.Position := 0;
         Result := ss.DataString;
       end;

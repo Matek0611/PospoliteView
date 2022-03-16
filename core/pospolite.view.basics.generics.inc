@@ -1027,16 +1027,6 @@ begin
   Result := 0;
 end;
 
-function TPLHTMLObject.GetRealTop: TPLFloat;
-begin
-  Result := 0;
-end;
-
-function TPLHTMLObject.GetRealLeft: TPLFloat;
-begin
-  Result := 0;
-end;
-
 function TPLHTMLObject.GetElementTarget: Pointer;
 begin
   Result := nil;

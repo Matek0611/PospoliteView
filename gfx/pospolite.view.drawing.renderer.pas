@@ -18,12 +18,27 @@ interface
 
 uses
   Classes, SysUtils, Graphics, Pospolite.View.Basics, Pospolite.View.CSS.Declaration,
-  Pospolite.View.CSS.Basics, Pospolite.View.Drawing.Basics, Pospolite.View.Drawing.Drawer
+  Pospolite.View.CSS.Basics, Pospolite.View.Drawing.Basics, Pospolite.View.Drawing.Drawer,
+  Pospolite.View.Drawing.NativeDrawer
   {$ifdef windows}, Pospolite.View.Drawing.DrawerD2D1{$endif};
 
 type
 
   TPLDrawingDrawerClass = class of TPLAbstractDrawer;
+  TPLDrawingDrawerKind = (
+      dkAbstract, dkNative,
+      {$ifdef windows}dkDirect2D, {$endif}
+      dkCustom
+    );
+
+const
+  dkDefault = {$ifdef windows}dkDirect2D{$else}dkNative{$endif};
+
+var
+  PLDrawerKind: TPLDrawingDrawerKind = dkDefault;
+  PLDrawerCustomClass: TPLDrawingDrawerClass = TPLAbstractDrawer;
+
+type
 
   { IPLDrawingRenderer }
 
@@ -137,12 +152,15 @@ constructor TPLDrawingRenderer.Create(ACanvas: TCanvas);
 begin
   inherited Create;
 
-  FDrawer :=
+  case PLDrawerKind of
+    dkAbstract: FDrawer := TPLAbstractDrawer.Create(ACanvas);
+    dkNative: FDrawer := TPLNativeDrawer.Create(ACanvas);
     {$ifdef windows}
-      TPLD2D1Drawer
-    {$else}
-      TPLAbstractDrawer // to do TPLNativeDrawer
-    {$endif}.Create(ACanvas);
+    dkDirect2D: FDrawer := TPLD2D1Drawer.Create(ACanvas);
+    {$endif}
+    dkCustom: FDrawer := PLDrawerCustomClass.Create(ACanvas);
+  end;
+
   FDebugMode := false;
 end;
 

@@ -98,6 +98,11 @@ type
   TPLPointF = specialize TPLPoint<TPLFloat>;
   TPLPointS = specialize TPLPoint<TPLShortInt>;
 
+  generic TPLPointArray<T> = array of specialize TPLPoint<T>;
+  TPLPointIArray = specialize TPLPointArray<TPLInt>;
+  TPLPointFArray = specialize TPLPointArray<TPLFloat>;
+  TPLPointSArray = specialize TPLPointArray<TPLShortInt>;
+
   operator := (p: TPLPointF) r: TPLPointI; inline;
   operator := (p: TPLPointI) r: TPLPointF; inline;
   operator := (p: TPLPointS) r: TPLPointI; inline;
@@ -154,6 +159,50 @@ type
 
   operator := (p: TPLRectF) r: TPLRectI; inline;
   operator := (p: TPLRectI) r: TPLRectF; inline;
+
+type
+
+  { TPLVector }
+
+  generic TPLVector<T, A> = packed record
+  public type
+    ElementType = T;
+  public
+    Elements: A;
+  private
+    function GetElement(const AIndex: TPLInt): T;
+    procedure SetElement(const AIndex: TPLInt; AValue: T);
+  public
+    constructor Create(const AData: array of T);
+
+    class function Empty: TPLVector; static;
+    procedure Reset;
+
+    property Element[const AIndex: TPLInt]: T read GetElement write SetElement;
+  end;
+
+  generic TPLVector1Array<T> = array[0..0] of T;
+  generic TPLVector2Array<T> = array[0..1] of T;
+  generic TPLVector3Array<T> = array[0..2] of T;
+  generic TPLVector4Array<T> = array[0..3] of T;
+
+  TPLVector1ArrayI = specialize TPLVector1Array<TPLInt>;
+  TPLVector2ArrayI = specialize TPLVector2Array<TPLInt>;
+  TPLVector3ArrayI = specialize TPLVector3Array<TPLInt>;
+  TPLVector4ArrayI = specialize TPLVector4Array<TPLInt>;
+  TPLVector1ArrayF = specialize TPLVector1Array<TPLFloat>;
+  TPLVector2ArrayF = specialize TPLVector2Array<TPLFloat>;
+  TPLVector3ArrayF = specialize TPLVector3Array<TPLFloat>;
+  TPLVector4ArrayF = specialize TPLVector4Array<TPLFloat>;
+
+  TPLVector1I = specialize TPLVector<TPLInt, TPLVector1ArrayI>;
+  TPLVector2I = specialize TPLVector<TPLInt, TPLVector2ArrayI>;
+  TPLVector3I = specialize TPLVector<TPLInt, TPLVector3ArrayI>;
+  TPLVector4I = specialize TPLVector<TPLInt, TPLVector4ArrayI>;
+  TPLVector1F = specialize TPLVector<TPLFloat, TPLVector1ArrayF>;
+  TPLVector2F = specialize TPLVector<TPLFloat, TPLVector2ArrayF>;
+  TPLVector3F = specialize TPLVector<TPLFloat, TPLVector3ArrayF>;
+  TPLVector4F = specialize TPLVector<TPLFloat, TPLVector4ArrayF>;
 
 implementation
 
@@ -778,6 +827,40 @@ end;
 operator :=(p: TPLRectI) r: TPLRectF;
 begin
   r := TPLRectF.Create(p.Left, p.Top, p.Width, p.Height);
+end;
+
+{ TPLVector }
+
+function TPLVector.GetElement(const AIndex: TPLInt): T;
+begin
+  Result := Elements[AIndex];
+end;
+
+procedure TPLVector.SetElement(const AIndex: TPLInt; AValue: T);
+begin
+  Elements[AIndex] := AValue;
+end;
+
+constructor TPLVector.Create(const AData: array of T);
+var
+  i: TPLInt;
+begin
+  if Length(AData) <> Length(Elements) then exit;
+
+  for i := 0 to Length(Elements)-1 do Elements[i] := AData[i];
+end;
+
+class function TPLVector.Empty: TPLVector;
+var
+  i: TPLInt;
+begin
+  for i := 0 to Length(Result.Elements)-1 do
+    Result.Elements[i] := Default(T);
+end;
+
+procedure TPLVector.Reset;
+begin
+  Self := Empty;
 end;
 
 end.
