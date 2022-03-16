@@ -133,6 +133,8 @@ type
     function IsEmpty: TPLBool; inline;
     function Inflate(AX, AY: T): TPLRect; overload;
     function Inflate(ALeft, ATop, AWidth, AHeight: T): TPLRect; overload;
+    procedure SetSize(const AWidth, AHeight: T);
+    procedure SetPosition(const ALeft, ATop: T);
 
     class operator =(a, b: TPLRect) r: TPLBool; inline;
     class operator in(a, b: TPLRect) r: TPLBool; inline;
@@ -753,6 +755,18 @@ end;
 function TPLRect.Inflate(ALeft, ATop, AWidth, AHeight: T): TPLRect;
 begin
   Result := TPLRect.Create(FLeft + ALeft, FTop + ATop, FWidth - AWidth, FHeight - AHeight);
+end;
+
+procedure TPLRect.SetSize(const AWidth, AHeight: T);
+begin
+  FWidth := AWidth;
+  FHeight := AHeight;
+end;
+
+procedure TPLRect.SetPosition(const ALeft, ATop: T);
+begin
+  FLeft := ALeft;
+  FTop := ATop;
 end;
 
 class operator TPLRect.**(a: TPLRect; b: TPLPointT) r: TPLRect;

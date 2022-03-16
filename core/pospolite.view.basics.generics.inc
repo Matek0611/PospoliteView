@@ -882,45 +882,6 @@ begin
   Result := TPLHTMLObject.Create(FParent as TPLHTMLObject);
 end;
 
-function TPLHTMLObject.CSS_InheritValueOf(APropName: TPLString; AId: TPLInt
-  ): TPLString;
-begin
-  Result := '';
-  // ...
-end;
-
-function TPLHTMLObject.CSS_InitialValueOf(APropName: TPLString; AId: TPLInt
-  ): TPLString;
-begin
-  Result := '';
-  // ...
-end;
-
-function TPLHTMLObject.CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt
-  ): TPLString;
-begin
-  Result := '';
-  // ...
-end;
-
-function TPLHTMLObject.CSS_RevertValueOf(APropName: TPLString; AId: TPLInt
-  ): TPLString;
-begin
-  Result := '';
-  // ...
-end;
-
-function TPLHTMLObject.CSS_Get(APropName: TPLString): Pointer;
-begin
-  Result := nil;
-  // ...
-end;
-
-procedure TPLHTMLObject.CSS_Set(APropName: TPLString; const APropValue);
-begin
-  // ...
-end;
-
 function TPLHTMLObject.GetCSSProperty(const AName: TPLString;
   AState: TPLCSSElementState; AUseCommonPrefixes: TPLBool): Pointer;
 begin
@@ -987,24 +948,41 @@ begin
   // ...
 end;
 
-procedure TPLHTMLObject.UpdateLayoutForAll;
+procedure TPLHTMLObject.UpdateLayout;
 var
   obj: TPLHTMLObject;
 begin
-  UpdateOwnLayout;
+  if not IsVisible or (Display = 'none') then exit;
 
   for obj in Children do
-    obj.UpdateLayoutForAll;
+    obj.UpdateLayout;
+
+  // position
+  UpdatePositionLayout;
+
+  for obj in Children do
+    obj.UpdatePositionLayout;
+
+  // size
+  for obj in Children do
+    obj.UpdateSizeLayout;
+
+  UpdateSizeLayout;
 end;
 
-procedure TPLHTMLObject.UpdateOwnLayout;
+procedure TPLHTMLObject.UpdatePositionLayout;
+begin
+  // ...
+end;
+
+procedure TPLHTMLObject.UpdateSizeLayout;
 begin
   // ...
 end;
 
 procedure TPLHTMLObject.ApplyInlineStyles;
 begin
-  //
+  // ...
 end;
 
 function TPLHTMLObject.GetWidth: TPLFloat;
@@ -1062,10 +1040,24 @@ begin
   Result := 'static';
 end;
 
-function TPLHTMLObject.CoordsInObject(const AX, AY: TPLFloat): TPLBool;
+function TPLHTMLObject.RealCoords: TPLFloatArray;
 begin
-  Result := IsVisible and (Display <> 'none') and (AX >= GetLeft) and
-    (AX <= GetLeft + GetWidth) and (AY >= GetTop) and (AY <= GetTop + GetWidth);
+  SetLength(Result, 4);
+
+  Result[0] := GetLeft;
+  Result[1] := GetTop;
+  Result[2] := GetWidth;
+  Result[3] := GetHeight;
+end;
+
+function TPLHTMLObject.CoordsInObject(const AX, AY: TPLFloat): TPLBool;
+var
+  c: TPLFloatArray;
+begin
+  c := RealCoords;
+
+  Result := IsVisible and (Display <> 'none') and (AX >= c[0]) and
+    (AX <= c[0] + c[2]) and (AY >= c[1]) and (AY <= c[1] + c[3]);
 end;
 
 function TPLHTMLObject.CoordsInObjectOnly(const AX, AY: TPLFloat): TPLBool;

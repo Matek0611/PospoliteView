@@ -428,13 +428,6 @@ type
     procedure SetText(AValue: TPLString);
     procedure SetZoom(AValue: TPLFloat);
 
-    function CSS_InheritValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; deprecated;
-    function CSS_InitialValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; deprecated;
-    function CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; deprecated;
-    function CSS_RevertValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; deprecated;
-    function CSS_Get(APropName: TPLString): Pointer; deprecated; // get as pointer to css property value part class
-    procedure CSS_Set(APropName: TPLString; const APropValue); deprecated; // set value to css property
-
     function GetCSSProperty(const AName: TPLString; AState: TPLCSSElementState;
       AUseCommonPrefixes: TPLBool = true): Pointer;
     function GetCSSPropertyValue(const AName: TPLString; AState: TPLCSSElementState;
@@ -448,8 +441,9 @@ type
     function ToObject: TPLHTMLObject;
     function PositionInParent: SizeInt;
     procedure RefreshStyles(const AParentStyles);
-    procedure UpdateLayoutForAll;
-    procedure UpdateOwnLayout;
+    procedure UpdateLayout;
+    procedure UpdatePositionLayout;
+    procedure UpdateSizeLayout;
     procedure ApplyInlineStyles;
 
     property Zoom: TPLFloat read GetZoom write SetZoom;
@@ -515,13 +509,6 @@ type
 
     function Clone: IPLHTMLObject; virtual;
 
-    function CSS_InheritValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual; deprecated;
-    function CSS_InitialValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual; deprecated;
-    function CSS_UnsetValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual; deprecated;
-    function CSS_RevertValueOf(APropName: TPLString; AId: TPLInt = 0): TPLString; virtual; deprecated;
-    function CSS_Get(APropName: TPLString): Pointer; virtual; deprecated;
-    procedure CSS_Set(APropName: TPLString; const APropValue); virtual; deprecated;
-
     function GetCSSProperty(const AName: TPLString; AState: TPLCSSElementState;
       AUseCommonPrefixes: TPLBool = true): Pointer; virtual;
     function GetCSSPropertyValue(const AName: TPLString; AState: TPLCSSElementState;
@@ -535,8 +522,9 @@ type
     function ToObject: TPLHTMLObject;
     function PositionInParent: SizeInt;
     procedure RefreshStyles(const AParentStyles); virtual;
-    procedure UpdateLayoutForAll;
-    procedure UpdateOwnLayout; virtual;
+    procedure UpdateLayout;
+    procedure UpdatePositionLayout; virtual;
+    procedure UpdateSizeLayout; virtual;
     procedure ApplyInlineStyles; virtual;
 
     function GetWidth: TPLFloat; virtual;
@@ -550,6 +538,7 @@ type
     function Display: TPLString; virtual;
     function IsLink: TPLBool; virtual;
     function PositionType: TPLString; virtual;
+    function RealCoords: TPLFloatArray; virtual; // Array[0..3]: Left, Top, Width, Height
     function CoordsInObject(const AX, AY: TPLFloat): TPLBool; virtual;
     function CoordsInObjectOnly(const AX, AY: TPLFloat): TPLBool;
 

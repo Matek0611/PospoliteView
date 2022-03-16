@@ -195,8 +195,8 @@ begin
 end;
 
 procedure TPLHTMLParser.Consume(AChar: TPLChar; AMoveNext: TPLBool);
-var
-  p: SizeInt;
+//var
+//  p: SizeInt;
 begin
   if IsEOF then begin
     FErrors.Add(TPLHTMLParserError.Create(FPos, 'CRITICAL: Unexpected end of file.'));
@@ -284,7 +284,6 @@ var
   eof: TPLBool;
   n, x: TPLString;
   s: ^TPLChar;
-  p: SizeInt;
   arrc: specialize TArray<TPLString>;
   txt: TPLHTMLTextObject;
 begin
@@ -379,11 +378,9 @@ begin
 end;
 
 function TPLHTMLParser.ReadText(AChars: array of TPLString): TPLString;
-var
-  s: SizeInt;
 begin
   Result := '';
-  s := Position;
+
   while not IsEOF and not (FCurrent^ in TPLStringFuncs.NewArray(AChars)) do begin
     Result += FCurrent^;
     MovePosForward;

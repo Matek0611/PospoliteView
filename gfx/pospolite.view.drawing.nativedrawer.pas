@@ -28,7 +28,7 @@ type
     procedure DrawObjectPseudoBefore(const AObject: TPLHTMLObject); override;
     procedure DrawObjectPseudoAfter(const AObject: TPLHTMLObject); override;
 
-    procedure DrawFrame(const ABorders: TPLDrawingBorders); override;
+    procedure DrawFrame(const ABorders: TPLDrawingBorders; const ARect: TPLRectF); override;
   end;
 
 implementation
@@ -95,9 +95,10 @@ begin
   inherited DrawObjectPseudoAfter(AObject);
 end;
 
-procedure TPLNativeDrawer.DrawFrame(const ABorders: TPLDrawingBorders);
+procedure TPLNativeDrawer.DrawFrame(const ABorders: TPLDrawingBorders;
+  const ARect: TPLRectF);
 begin
-  inherited DrawFrame(ABorders);
+  //inherited DrawFrame(ABorders);
 end;
 
 end.

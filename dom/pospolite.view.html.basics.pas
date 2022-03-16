@@ -128,7 +128,8 @@ type
 
     function GetDefaultBindings: TPLCSSStyleBind; virtual;
     procedure RefreshStyles(const AParentStyles); override;
-    procedure UpdateOwnLayout; override;
+    procedure UpdatePositionLayout; override;
+    procedure UpdateSizeLayout; override;
 
     property Bounds: TPLRectF read FBounds write FBounds;
     property Bindings: TPLCSSStyleBind read FBindings;
@@ -611,6 +612,7 @@ var
   st: TPLCSSElementState;
   dcl: TPLCSSDeclarations;
   p: TPLCSSProperty;
+  su: TPLCSSSimpleUnit;
 
   function ParentCurrentBinding: TPLCSSBindingProperties; inline;
   begin
@@ -640,6 +642,10 @@ begin
         'background': ;
         // ...
         'position': ;
+        'margin': ;
+        // ...
+        'padding': ;
+        // ...
         'width': if p.Value.Count = 1 then begin
           case p.Value[0].AsString.ToLower of
             'initial', 'revert': FBindings.Properties[st].Width := GetDefaultBindings.Properties[st].Width;
@@ -682,7 +688,19 @@ begin
             else FBindings.Properties[st].Min.Height := p.Value[0];
           end;
         end;
-        '': ;
+        'z-index': if (p.Value.Count = 1) and (FState = st) then begin
+          case p.Value[0].AsString.ToLower of
+            'initial', 'revert': ZIndex := 0;
+            'inherit', 'unset':
+              if Assigned(Parent) then ZIndex := Parent.ZIndex
+              else ZIndex := 0;
+            else begin
+              su := p.Value[0];
+              if su.IsAuto or (su.Value.Value <> '') then
+                ZIndex := 0 else ZIndex := trunc(su.Value.Key);
+            end;
+          end;
+        end;
       end;
     end;
   end;
@@ -691,13 +709,18 @@ begin
     obj.RefreshStyles(FBindings);
 end;
 
-procedure TPLHTMLNormalObject.UpdateOwnLayout;
+procedure TPLHTMLNormalObject.UpdatePositionLayout;
 begin
-  if not IsVisible or (Display = 'none') then exit;
+  FSize.SetPosition(0, 0);
 
-  FSize := TPLRectF.Create(0, 0, 0, 0);
 
-  //
+end;
+
+procedure TPLHTMLNormalObject.UpdateSizeLayout;
+begin
+  FSize.SetSize(0, 0);
+
+
 end;
 
 { TPLHTMLObjectDIV }

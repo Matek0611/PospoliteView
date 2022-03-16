@@ -75,7 +75,7 @@ implementation
 
 procedure TPLHTMLObjectLayouter.UpdateLayout;
 begin
-  if Assigned(FBody) then FBody.UpdateLayoutForAll;
+  if Assigned(FBody) then FBody.UpdateLayout;
 end;
 
 constructor TPLHTMLObjectLayouter.Create;
@@ -87,6 +87,8 @@ end;
 
 destructor TPLHTMLObjectLayouter.Destroy;
 begin
+  //
+
   inherited Destroy;
 end;
 

@@ -434,7 +434,7 @@ type
     procedure DrawObjectPseudoBefore(const AObject: TPLHTMLObject);
     procedure DrawObjectPseudoAfter(const AObject: TPLHTMLObject);
 
-    procedure DrawFrame(const ABorders: TPLDrawingBorders);
+    procedure DrawFrame(const ABorders: TPLDrawingBorders; const ARect: TPLRectF);
 
     property Canvas: TCanvas read GetCanvas;
     property Surface: IPLDrawingSurface read GetSurface;
@@ -464,7 +464,7 @@ type
     procedure DrawObjectText(const AObject: TPLHTMLObject); virtual;
     procedure DrawObjectTextShadow(const AObject: TPLHTMLObject); virtual;
 
-    procedure DrawFrame(const ABorders: TPLDrawingBorders); virtual;
+    procedure DrawFrame(const ABorders: TPLDrawingBorders; const ARect: TPLRectF); virtual;
 
     property Canvas: TCanvas read GetCanvas;
     property Surface: IPLDrawingSurface read GetSurface;
@@ -749,7 +749,8 @@ begin
   if not Assigned(AObject) then exit;
 end;
 
-procedure TPLAbstractDrawer.DrawFrame(const ABorders: TPLDrawingBorders);
+procedure TPLAbstractDrawer.DrawFrame(const ABorders: TPLDrawingBorders;
+  const ARect: TPLRectF);
 begin
   //
 end;
