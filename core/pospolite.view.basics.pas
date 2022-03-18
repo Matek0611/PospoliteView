@@ -46,6 +46,17 @@ type
   // Bool
   TPLBool = Boolean;
 
+  // Pointers
+  TPLPChar = ^TPLChar;
+  TPLPCharSet = ^TPLCharSet;
+  TPLPString = ^TPLString;
+  TPLPFloat = ^TPLFloat;
+  TPLPInt = ^TPLInt;
+  TPLPUInt = ^TPLUInt;
+  TPLPShortInt = ^TPLShortInt;
+  TPLPSign = ^TPLSign;
+  TPLPBool = ^TPLBool;
+
   // - Generics and normal types - //
 
   TPLNestedProc = procedure is nested;

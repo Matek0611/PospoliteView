@@ -11,7 +11,7 @@ uses
   Pospolite.View.RegisterAll, Pospolite.View.JS.AST.Basics, 
   Pospolite.View.JS.AST.Visitors, Pospolite.View.JS.AST.Interfaces, 
   Pospolite.View.JS.AST.Expressions, Pospolite.View.Drawing.NativeDrawer, 
-  LazarusPackageIntf;
+  Pospolite.View.Controls, Pospolite.View.Popups, LazarusPackageIntf;
 
 implementation
 
