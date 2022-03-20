@@ -47,7 +47,7 @@ type
   end;
 
 var
-  PLD2D1Locale: TPLString = 'en-us';
+  PLD2D1Locale: WideString = 'en-us';
 
 function NewDrawingMatrixD2D: IPLDrawingMatrix;
 function NewDrawingPenD2D(ABrush: IPLDrawingBrush; AWidth: TPLFloat = 1): IPLDrawingPen;
@@ -430,6 +430,8 @@ type
     procedure ArcTo(const ARect: TPLRectF; const ABeginAngle, AEndAngle: TPLFloat);
     procedure CurveTo(const AX, AY: TPLFloat; const AC1, AC2: TPLPointF);
     procedure Ellipse(const ARect: TPLRectF);
+    procedure Rectangle(const ARect: TPLRectF);
+    procedure RoundRectangle(const ARect: TPLRectF; const ARadius: TPLFloat);
     procedure FillOrStroke(ABrush: IPLDrawingBrush; APen: IPLDrawingPen; APreserve: TPLBool);
     procedure Stroke(APen: IPLDrawingPen; const APreserve: TPLBool = false);
     procedure Fill(ABrush: IPLDrawingBrush; const APreserve: TPLBool = false);
@@ -860,7 +862,7 @@ end;
 
 function CreateTextFormat(Font: IPLDrawingFont): IDWriteTextFormat;
 const
-  Factor = 72 / 96;
+  Factor = 96 / 72;//72 / 96;
   Weight: array[TPLDrawingFontWeight] of DWRITE_FONT_WEIGHT =
     (DWRITE_FONT_WEIGHT_THIN, DWRITE_FONT_WEIGHT_EXTRA_LIGHT, DWRITE_FONT_WEIGHT_LIGHT,
     DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_WEIGHT_MEDIUM, DWRITE_FONT_WEIGHT_SEMI_BOLD,
@@ -1515,7 +1517,8 @@ end;
 
 procedure TPLDrawingFontD2D.SetSize(AValue: TPLFloat);
 begin
-  if (AValue < 1) or (AValue = FData.Size) then exit;
+  if AValue < 1 then AValue := 1;
+  if AValue = FData.Size then exit;
 
   FData.Size := AValue;
   FFormat := nil;
@@ -2065,6 +2068,23 @@ begin
   if not HandleAvailable then exit;
 
   Path.Add(CreateEllispe(ARect));
+end;
+
+procedure TPLDrawingSurfaceD2D.Rectangle(const ARect: TPLRectF);
+begin
+  ShareRelease;
+  if not HandleAvailable then exit;
+
+  Path.Add(CreateRectangle(ARect));
+end;
+
+procedure TPLDrawingSurfaceD2D.RoundRectangle(const ARect: TPLRectF;
+  const ARadius: TPLFloat);
+begin
+  ShareRelease;
+  if not HandleAvailable then exit;
+
+  Path.Add(CreateRoundRectangle(ARect, ARadius));
 end;
 
 procedure ApplyMatrix(ABrush: ID2D1Brush; AMatrix: IPLDrawingMatrix; out AState: TD2D1Matrix3x2F);

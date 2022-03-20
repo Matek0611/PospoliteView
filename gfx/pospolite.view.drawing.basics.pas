@@ -117,6 +117,9 @@ type
   generic TPLRect<T> = packed record
   private type
     TPLPointT = specialize TPLPoint<T>;
+    TPLTypePointer = ^T;
+    TPLTypePointerArray = array[0..3] of TPLTypePointer;
+    TPLTypeArray = array[0..3] of T;
   strict private
     FLeft, FTop, FWidth, FHeight: T;
     function GetBottom: T;
@@ -131,10 +134,13 @@ type
   public
     constructor Create(ALeft, ATop, AWidth, AHeight: T);
     function IsEmpty: TPLBool; inline;
+    class function Empty: TPLRect; static; inline;
     function Inflate(AX, AY: T): TPLRect; overload;
     function Inflate(ALeft, ATop, AWidth, AHeight: T): TPLRect; overload;
     procedure SetSize(const AWidth, AHeight: T);
     procedure SetPosition(const ALeft, ATop: T);
+    function PointsPointers: TPLTypePointerArray;
+    function Points: TPLTypeArray;
 
     class operator =(a, b: TPLRect) r: TPLBool; inline;
     class operator in(a, b: TPLRect) r: TPLBool; inline;
@@ -486,7 +492,7 @@ begin
   FA := AAlpha;
 end;
 
-class operator TPLColor.:=(AValue: TPLString)r: TPLColor;
+class operator TPLColor.:=(AValue: TPLString) r: TPLColor;
 begin
   r := TPLColor.Create(AValue);
 end;
@@ -744,7 +750,12 @@ end;
 
 function TPLRect.IsEmpty: TPLBool;
 begin
-  Result := (Width < 1) or (Height < 1);
+  Result := (Width <= 0) or (Height <= 0);
+end;
+
+class function TPLRect.Empty: TPLRect;
+begin
+  Result := TPLRect.Create(0, 0, 0, 0);
 end;
 
 function TPLRect.Inflate(AX, AY: T): TPLRect;
@@ -767,6 +778,22 @@ procedure TPLRect.SetPosition(const ALeft, ATop: T);
 begin
   FLeft := ALeft;
   FTop := ATop;
+end;
+
+function TPLRect.PointsPointers: TPLTypePointerArray;
+begin
+  Result[0] := @FLeft;
+  Result[1] := @FTop;
+  Result[2] := @FWidth;
+  Result[3] := @FHeight;
+end;
+
+function TPLRect.Points: TPLTypeArray;
+begin
+  Result[0] := FLeft;
+  Result[1] := FTop;
+  Result[2] := FWidth;
+  Result[3] := FHeight;
 end;
 
 class operator TPLRect.**(a: TPLRect; b: TPLPointT) r: TPLRect;

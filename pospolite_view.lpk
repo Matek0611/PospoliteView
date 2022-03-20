@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="5">
+  <Package Version="4">
     <PathDelim Value="\"/>
     <Name Value="pospolite_view"/>
     <Type Value="RunAndDesignTime"/>
@@ -18,7 +18,7 @@
       </CodeGeneration>
     </CompilerOptions>
     <Version Major="1"/>
-    <Files Count="37">
+    <Files Count="39">
       <Item1>
         <Filename Value="gfx\pospolite.view.drawing.basics.pas"/>
         <AddToUsesPkgSection Value="False"/>
@@ -197,8 +197,15 @@
         <Filename Value="gfx\pospolite.view.drawing.nativedrawer.pas"/>
         <UnitName Value="pospolite.view.drawing.nativedrawer"/>
       </Item37>
+      <Item38>
+        <Filename Value="frame\pospolite.view.controls.pas"/>
+        <UnitName Value="pospolite.view.controls"/>
+      </Item38>
+      <Item39>
+        <Filename Value="frame\pospolite.view.popups.pas"/>
+        <UnitName Value="pospolite.view.popups"/>
+      </Item39>
     </Files>
-    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">
       <Item1>
         <PackageName Value="Printer4Lazarus"/>

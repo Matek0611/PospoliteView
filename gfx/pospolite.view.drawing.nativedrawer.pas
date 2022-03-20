@@ -43,6 +43,21 @@ type
     procedure DrawFrame(const ABorders: TPLDrawingBorders; const ARect: TPLRectF); override;
   end;
 
+function NewDrawingMatrixNative: IPLDrawingMatrix;
+function NewDrawingPenNative(ABrush: IPLDrawingBrush; AWidth: TPLFloat = 1): IPLDrawingPen;
+  overload;
+function NewDrawingPenNative(AColor: TPLColor; AWidth: TPLFloat = 1): IPLDrawingPen;
+  overload;
+function NewDrawingSolidBrushNative(AColor: TPLColor): IPLDrawingBrushSolid;
+function NewDrawingBitmapBrushNative(ABitmap: IPLDrawingBitmap): IPLDrawingBrushBitmap;
+function NewDrawingLinearGradientBrushNative(
+  const A, B: TPLPointF): IPLDrawingBrushGradientLinear;
+function NewDrawingRadialGradientBrushNative(
+  const ARect: TPLRectF): IPLDrawingBrushGradientRadial;
+function NewDrawingFontNative(AFontData: TPLDrawingFontData): IPLDrawingFont;
+function NewDrawingSurfaceNative(ACanvas: TCanvas): IPLDrawingSurface;
+function NewDrawingBitmapNative(AWidth, AHeight: TPLInt): IPLDrawingBitmap;
+
 implementation
 
 { TPLNativeDrawer }
@@ -111,6 +126,61 @@ procedure TPLNativeDrawer.DrawFrame(const ABorders: TPLDrawingBorders;
   const ARect: TPLRectF);
 begin
   //inherited DrawFrame(ABorders);
+end;
+
+
+function NewDrawingMatrixNative: IPLDrawingMatrix;
+begin
+
+end;
+
+function NewDrawingPenNative(ABrush: IPLDrawingBrush; AWidth: TPLFloat
+  ): IPLDrawingPen;
+begin
+
+end;
+
+function NewDrawingPenNative(AColor: TPLColor; AWidth: TPLFloat): IPLDrawingPen;
+begin
+
+end;
+
+function NewDrawingSolidBrushNative(AColor: TPLColor): IPLDrawingBrushSolid;
+begin
+
+end;
+
+function NewDrawingBitmapBrushNative(ABitmap: IPLDrawingBitmap
+  ): IPLDrawingBrushBitmap;
+begin
+
+end;
+
+function NewDrawingLinearGradientBrushNative(const A, B: TPLPointF
+  ): IPLDrawingBrushGradientLinear;
+begin
+
+end;
+
+function NewDrawingRadialGradientBrushNative(const ARect: TPLRectF
+  ): IPLDrawingBrushGradientRadial;
+begin
+
+end;
+
+function NewDrawingFontNative(AFontData: TPLDrawingFontData): IPLDrawingFont;
+begin
+
+end;
+
+function NewDrawingSurfaceNative(ACanvas: TCanvas): IPLDrawingSurface;
+begin
+
+end;
+
+function NewDrawingBitmapNative(AWidth, AHeight: TPLInt): IPLDrawingBitmap;
+begin
+
 end;
 
 end.

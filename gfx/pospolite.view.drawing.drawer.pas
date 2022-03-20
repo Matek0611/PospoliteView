@@ -215,7 +215,7 @@ type
 const
    PLDrawingFontDataDef: TPLDrawingFontData = (Name: 'Segoe UI';
      Color: (FR: 0; FG: 0; FB: 0; FA: 255); Quality: fqCleartypeNatural;
-     Size: 12; Weight: dfwNormal; Style: dfsNormal; Stretch: dfstNormal;
+     Size: 9; Weight: dfwNormal; Style: dfsNormal; Stretch: dfstNormal;
      Decoration: []; VariantTags: []);
 
 type
@@ -273,6 +273,8 @@ type
     procedure ArcTo(const ARect: TPLRectF; const ABeginAngle, AEndAngle: TPLFloat);
     procedure CurveTo(const AX, AY: TPLFloat; const AC1, AC2: TPLPointF);
     procedure Ellipse(const ARect: TPLRectF);
+    procedure Rectangle(const ARect: TPLRectF);
+    procedure RoundRectangle(const ARect: TPLRectF; const ARadius: TPLFloat);
     procedure Stroke(APen: IPLDrawingPen; const APreserve: TPLBool = false);
     procedure Fill(ABrush: IPLDrawingBrush; const APreserve: TPLBool = false);
     function TextSize(AFont: IPLDrawingFont; const AText: string;
