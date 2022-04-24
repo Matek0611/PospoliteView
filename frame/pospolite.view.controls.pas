@@ -15,7 +15,7 @@ unit Pospolite.View.Controls;
 {$mode objfpc}{$H+}
 {$modeswitch advancedrecords}
 {$macro on}
-{.$define tabdebug}
+{$define tabdebug}
 
 interface
 
@@ -106,7 +106,7 @@ type
     procedure AsyncExecute(const AArguments: array of const);
   public const
     DefaultAnimationDuration = 100;
-    AnimationFrames = 1000 div 120;
+    AnimationFrames = 1000 div 60;
   public
     constructor Create(const AControl: TPLUIControl);
     destructor Destroy; override;
@@ -530,10 +530,21 @@ procedure TPLUIAnimationLoop.DisableByController(const AController: Pointer);
 var
   i: SizeInt;
 begin
+  if Assigned(FThread) then begin
+    FThread.Cancel;
+    FThread.Free;
+    FThread := nil;
+  end;
+
   for i := 0 to FQueue.Count-1 do begin
     if FQueue[i].Controller = AController then
       FQueue[i].Disable;
   end;
+
+  //if not FQueue.Empty then begin
+  //  FThread := TPLAsyncTask.Create(@AsyncExecute, false);
+  //  FThread.Async([]);
+  //end;
 end;
 
 procedure TPLUIAnimationLoop.Clear;
@@ -597,8 +608,8 @@ begin
       Text[tsDown] := '#484848';
 
       Background[tsNormal] := '#ffffff';
-      Background[tsHover] := '#e9e9e9';
-      Background[tsDown] := '#e0e0e0';
+      Background[tsHover] := '#fcfcfc';
+      Background[tsDown] := '#f8f8f8';
 
       with CloseButtons do begin
         Symbol[tsNormal] := '#333333';
@@ -799,46 +810,57 @@ end;
 procedure TPLUITab.Draw(const ARenderer: TPLDrawingRenderer);
 var
   r, rt: TPLRectF;
-  s: TPLFloat;
+  s, sx: TPLFloat;
   fd: TPLDrawingFontData;
 begin
   r := FRect.Inflate(FList.FTabs.TileMargin, FList.FTabs.TileMargin);
-  if FActive then r.Height := r.Height + FList.FTabs.TileMargin - 0.5;
+  if FActive then r.Height := r.Height + FList.FTabs.TileMargin - 1;
 
-  if FPinned then begin
+  if FActive then begin
+    sx := min(r.Height, r.Width);
+    s := sx / 2;
+    rt := TPLRectF.Create(r.Left - sx, r.Top, sx, r.Height);
+    ARenderer.Drawer.Surface.MoveTo(0, r.Bottom + 2);
+    ARenderer.Drawer.Surface.LineTo(0, r.Bottom);
+    ARenderer.Drawer.Surface.LineTo(r.Left - s, r.Bottom);
+    ARenderer.Drawer.Surface.ArcTo(rt, pi, pi/2);
+    rt.Left := r.Left;
+    ARenderer.Drawer.Surface.ArcTo(rt, 3/2*pi, 2*pi);
+    ARenderer.Drawer.Surface.LineTo(r.Right - s, r.Top);
+    rt.Left := r.Right - sx;
+    ARenderer.Drawer.Surface.ArcTo(rt, 0, pi/2);
+    rt.Left := r.Right;
+    ARenderer.Drawer.Surface.ArcTo(rt, 3/2*pi, pi);
+    ARenderer.Drawer.Surface.LineTo(FList.FTabs.FTabs.Width, r.Bottom);
+    ARenderer.Drawer.Surface.LineTo(FList.FTabs.FTabs.Width, r.Bottom + 2);
 
+    ARenderer.Drawer.Surface.Fill(ARenderer.NewBrushSolid(Theme.Navigation[true].Background[FState]), true);
+    ARenderer.Drawer.Surface.Stroke(ARenderer.NewPen(ifthen(FColor <> TPLColor.Transparent, FColor.ToString(), Theme.Separators.ToString()), 1));
   end else begin
-    if FActive then begin
-      s := r.Height / 2;
-      rt := TPLRectF.Create(r.Left - r.Height, r.Top, r.Height, r.Height);
-      ARenderer.Drawer.Surface.MoveTo(0, r.Bottom);
-      ARenderer.Drawer.Surface.LineTo(r.Left - s, r.Bottom);
-      ARenderer.Drawer.Surface.ArcTo(rt, pi, pi/2);
-      rt.Left := r.Left;
-      ARenderer.Drawer.Surface.ArcTo(rt, 3/2*pi, 2*pi);
-      ARenderer.Drawer.Surface.LineTo(r.Right - s, r.Top);
-      rt.Left := r.Right - r.Height;
-      ARenderer.Drawer.Surface.ArcTo(rt, 0, pi/2);
-      rt.Left := r.Right;
-      ARenderer.Drawer.Surface.ArcTo(rt, 3/2*pi, pi);
-      ARenderer.Drawer.Surface.LineTo(FList.FTabs.FTabs.Width, r.Bottom);
-
-      ARenderer.Drawer.Surface.Fill(ARenderer.NewBrushSolid(Theme.Navigation[true].Background[FState]), true);
-      ARenderer.Drawer.Surface.Stroke(ARenderer.NewPen(ifthen(FColor <> TPLColor.Transparent, FColor.ToString(), Theme.Separators.ToString()), 1.5));
-    end else begin
+    if FPinned then
+      ARenderer.Drawer.Surface.Ellipse(r)
+    else
       ARenderer.Drawer.Surface.RoundRectangle(r, r.Height / 2);
-      ARenderer.Drawer.Surface.Fill(ARenderer.NewBrushSolid(Theme.Navigation[false].Background[FState]));
-    end;
+    ARenderer.Drawer.Surface.Fill(ARenderer.NewBrushSolid(Theme.Navigation[false].Background[FState]));
   end;
 
-  fd := PLDrawingFontDataDef;
-  fd.Quality := fqAntialiased;
-  fd.Color := Theme.Navigation[FActive].Text[FState];
-  ARenderer.Drawer.Surface.TextOut(ARenderer.NewFont(fd), FCaption, FRect, TPLTextDirections.Create(tdLeft, tdCenter));
+  if not FPinned then begin
+    rt := r.Inflate(FList.FTabs.TileMargin * 2, FList.FTabs.TileMargin);
+
+    fd := PLDrawingFontDataDef;
+    fd.Quality := fqAntialiased;
+    fd.Color := Theme.Navigation[FActive].Text[FState];
+    ARenderer.Drawer.Surface.TextOut(ARenderer.NewFont(fd), FCaption, rt, TPLTextDirections.Create(tdLeft, tdCenter));
+
+
+  end;
 
   {$ifdef tabdebug}
-  ARenderer.Drawer.Surface.Rectangle(r);
-  ARenderer.Drawer.Surface.Stroke(ARenderer.NewPen(ifthen(FActive, '#ff000055', '#00ff0055')));
+    ARenderer.Drawer.Surface.Rectangle(r);
+    ARenderer.Drawer.Surface.Stroke(ARenderer.NewPen(ifthen(FActive, '#ff000055', '#00ff0055')));
+    if FPinned then exit;
+    ARenderer.Drawer.Surface.Rectangle(rt);
+    ARenderer.Drawer.Surface.Stroke(ARenderer.NewPen('#0000ff55'));
   {$endif}
 end;
 
@@ -884,13 +906,10 @@ procedure TPLUITabsManager.SetActiveTabIndex(AValue: SizeInt);
 var
   tab: TPLUITab;
 begin
-  tab := ActiveTab;
-  if Assigned(tab) then tab.FActive := true;
+  for tab in FPinnedTabs do tab.FActive := false;
+  for tab in FNormalTabs do tab.FActive := false;
 
-  if FActiveTabIndex = AValue then exit;
-
-  tab := ActiveTab;
-  if Assigned(tab) then tab.FActive := false;
+  //if FActiveTabIndex = AValue then exit;
 
   FActiveTabIndex := AValue;
 
@@ -945,7 +964,7 @@ begin
 
   FActiveTabIndex := 0;
 
-  FAnimate := false;
+  FAnimate := true;
 end;
 
 destructor TPLUITabsManager.Destroy;
@@ -980,26 +999,44 @@ begin
   if AIndex >= FPinnedTabs.Count then FNormalTabs.Remove(tab)
   else FPinnedTabs.Remove(tab);
 
-  ActiveTabIndex := ifthen(ActiveTabIndex-1 < 0, 0, ActiveTabIndex-1);
+  if ActiveTabIndex >= FPinnedTabs.Count + FNormalTabs.Count then
+    ActiveTabIndex := ifthen(ActiveTabIndex-1 < 0, 0, ActiveTabIndex-1)
+  else ActiveTabIndex := max(0, ActiveTabIndex); //!!!zle
 
   UpdateTabs;
 end;
 
 procedure TPLUITabsManager.ChangeTabPinning(const ATab: TPLUITab);
 begin
+  if not Assigned(ATab) then exit;
 
+  if ATab.FPinned then ATab.Exchange(FNormalTabs)
+  else ATab.Exchange(FPinnedTabs);
+
+  ATab.FPinned := not ATab.FPinned;
+
+  if ATab.FActive then begin
+    if ATab.FPinned then ActiveTabIndex := FPinnedTabs.Count-1
+    else ActiveTabIndex := FPinnedTabs.Count + FNormalTabs.Count-1;
+  end;
+
+  FTabs.FHoverID := -1;
+  FTabs.FMouseDown := false;
+  ATab.FState := tsNormal;
+
+  UpdateTabs;
 end;
 
 procedure TPLUITabsManager.UpdateTabs;
 var
   tw, xw: TPLFloat;
   i: SizeInt;
-  r: TPLRectF;
+  r, ntr: TPLRectF;
 begin
   FViewTabsRect := TPLRectF.Create(FTabs.Width - TileSize, 0, TileSize, TileSize);
-  FNewTabRect := TPLRectF.Create(FViewTabsRect.Left - TileSize, 0, TileSize, TileSize);
+  ntr := TPLRectF.Create(FViewTabsRect.Left - TileSize, 0, TileSize, TileSize);
   FScrollLeftRect := TPLRectF.Create(0, 0, TileSize, TileSize);
-  FScrollRightRect := TPLRectF.Create(FNewTabRect.Left - TileSize, 0, TileSize, TileSize);
+  FScrollRightRect := TPLRectF.Create(ntr.Left - TileSize, 0, TileSize, TileSize);
 
   FTabsRect := TPLRectF.Create(FScrollLeftRect.Right, 0, FScrollRightRect.Left - FScrollLeftRect.Right, TileSize);
   FScrolling := (TileSize * FPinnedTabs.Count + DefaultTabWidth * FNormalTabs.Count) * FTabs.Scale > FTabsRect.Width;
@@ -1019,17 +1056,22 @@ begin
   xw := FScrollLeftRect.Right;
   r := TPLRectF.Create(FTabsRect.Left - FScrollPos, FTabsRect.Top, 0, FTabsRect.Height);
   for i := 0 to FPinnedTabs.Count-1 do begin
+    if FPinnedTabs[i].FRect.Width <> TileSize * FTabs.Scale then
+      FPinnedTabs[i].FRect.Width := TileSize * FTabs.Scale / 2;
     r := TPLRectF.Create(r.Right, r.Top, TileSize * FTabs.Scale, r.Height);
     MoveTabRect(FPinnedTabs[i], r);
   end;
   if FNormalTabs.Empty then xw := r.Right+1;
   for i := 0 to FNormalTabs.Count-1 do begin
+    if FNormalTabs[i].FRect.Width <> tw then
+      FNormalTabs[i].FRect.Width := tw / 2;
     r := TPLRectF.Create(r.Right, r.Top, tw, r.Height);
     MoveTabRect(FNormalTabs[i], r);
     if i = FNormalTabs.Count-1 then xw := r.Right+1;
   end;
 
-  if not FScrolling then FNewTabRect.Left := xw;
+  if not FScrolling then ntr.Left := xw;
+  FNewTabRect := ntr;
 end;
 
 function TPLUITabsManager.GetTab(AIndex: SizeInt): TPLUITab;
@@ -1070,6 +1112,8 @@ begin
   with ARenderer.Drawer.Surface do begin
     Rectangle(Self.ClientRect);
     Fill(ARenderer.NewBrushSolid(FTheme.Background));
+    //Rectangle(TPLRectF.Create(0, Height-2, Width, 2));
+    //Fill(ARenderer.NewBrushSolid(Theme.Navigation[false].Background[tsNormal]));
   end;
 
   // karty
@@ -1122,9 +1166,10 @@ begin
   if FMousePos in FManager.FNewTabRect then FManager.AddTab else begin
     tab := FManager.GetTab(FHoverID);
     if Assigned(tab) then begin
-      FManager.ActiveTabIndex := FHoverID;
-      // on tab click
-
+      if (FManager.ActiveTabIndex <> FHoverID) then begin
+        FManager.ActiveTabIndex := FHoverID;
+        // on tab click
+      end else if ssCtrl in FShiftState then FManager.ChangeTabPinning(tab);
     end;
   end;
 

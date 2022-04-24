@@ -957,17 +957,17 @@ begin
   for obj in Children do
     obj.UpdateLayout;
 
-  // position
-  UpdatePositionLayout;
-
-  for obj in Children do
-    obj.UpdatePositionLayout;
-
   // size
   for obj in Children do
     obj.UpdateSizeLayout;
 
   UpdateSizeLayout;
+
+  // position
+  UpdatePositionLayout;
+
+  for obj in Children do
+    obj.UpdatePositionLayout;
 end;
 
 procedure TPLHTMLObject.UpdatePositionLayout;
@@ -1026,7 +1026,7 @@ end;
 
 function TPLHTMLObject.Display: TPLString;
 begin
-  Result := '';
+  Result := 'block';
   // ...
 end;
 
@@ -1070,5 +1070,16 @@ begin
     for obj in Children do
       if (obj.ZIndex >= FZIndex) and obj.CoordsInObjectOnly(AX, AY) then exit(false);
   end;
+end;
+
+function TPLHTMLObject.CalculateRelativeLength(AValue: TPLFloat; const AUnit: TPLString;
+  APropName: TPLString = ''): TPLFloat;
+begin
+  Result := 0;
+end;
+
+procedure TPLHTMLObject.SetEnvironment(AEnvironment: Pointer);
+begin
+  //
 end;
 

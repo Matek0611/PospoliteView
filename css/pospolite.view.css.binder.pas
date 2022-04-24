@@ -46,6 +46,8 @@ type
     class function Auto: TPLCSSSimpleUnit; static;
   end;
 
+  TPLCSSSimpleUnitPoint = array[0..1] of TPLCSSSimpleUnit;
+
   TPLCSSSimpleUnitFuncs = specialize TPLFuncs<TPLCSSSimpleUnit>;
 
   { TPLCSSSimpleUnitRect }
@@ -116,6 +118,7 @@ type
       PlayState: TAnimationPlayStateType;
       TimingFunction: TTimingFunctionType;
     end;
+    AspectRatio: TPLFloat;
     BackfaceVisibility: TPLBool;
     Background: record
       Attachment: TBackgroundAttachmentType;
@@ -123,9 +126,9 @@ type
       Color: TPLColor;
       Image: IPLDrawingBitmap;
       Origin: TBoxModelType;
-      Position: array[0..1] of Variant;
+      Position: TPLCSSSimpleUnitPoint;
       &Repeat: TBackgroundRepeatType;
-      Size: array[0..1] of Variant;
+      Size: TPLCSSSimpleUnitPoint;
     end;
     Border: record
       Calculated: TPLDrawingBorders;
@@ -249,7 +252,12 @@ type
     WritingMode: TPLWritingMode;
   public
     class function GetDefault: TPLCSSBindingProperties; static;
+
+    function GetProperty(const AName: TPLString): Pointer;
+    procedure SetProperty(const AName: TPLString; const AValue: Pointer);
   end;
+
+  //generic TPLCSSBindingPropertiesManager
 
   { TPLCSSStyleBind }
 
@@ -389,6 +397,7 @@ begin
       TimingFunction.Name := 'ease';
       TPLFloatFuncs.FillArray(TimingFunction.Args, 0);
     end;
+    AspectRatio := 1;
     BackfaceVisibility := true;
     with Background do begin
       Attachment := batScroll;
@@ -396,9 +405,9 @@ begin
       Color := TPLColor.Transparent;
       Image := nil;
       Origin := bmtPaddingBox;
-      TPLVariantFuncs.FillArray(Position, '0%');
+      TPLCSSSimpleUnitFuncs.FillArray(Position, TPLCSSSimpleUnit.Create(TPLCSSSimpleUnitValue.Create(0, '%')));
       &Repeat := brtRepeat;
-      TPLVariantFuncs.FillArray(Size, 'auto');
+      TPLCSSSimpleUnitFuncs.FillArray(Size, TPLCSSSimpleUnit.Auto);
     end;
     with Border do begin
       Calculated := PLDrawingBordersDef;
@@ -529,6 +538,61 @@ begin
       Spacing := TPLCSSSimpleUnit.Auto;
       Wrap := true;
     end;
+  end;
+end;
+
+function TPLCSSBindingProperties.GetProperty(const AName: TPLString): Pointer;
+begin
+  case AName.ToLower of
+    'align-content': Result := @Align.Content;
+    'align-items': Result := @Align.Items;
+    'align-self': Result := @Align.Self;
+
+    'margin': Result := @Margin;
+    'margin-left': Result := @Margin.Left;
+    'margin-right': Result := @Margin.Right;
+    'margin-top': Result := @Margin.Top;
+    'margin-bottom': Result := @Margin.Bottom;
+
+    'padding': Result := @Padding;
+    'padding-left': Result := @Padding.Left;
+    'padding-right': Result := @Padding.Right;
+    'padding-top': Result := @Padding.Top;
+    'padding-bottom': Result := @Padding.Bottom;
+
+    else Result := nil;
+  end;
+end;
+
+procedure TPLCSSBindingProperties.SetProperty(const AName: TPLString;
+  const AValue: Pointer);
+begin
+  case AName.ToLower of
+    'align-content': Align.Content := TAlignContentType(AValue^);
+    'align-items': Align.Items := TAlignItemsType(AValue^);
+    'align-self': Align.Self := TAlignSelfType(AValue^);
+    'animation-delay': Animation.Delay := TPLInt(AValue^);
+    'animation-direction': Animation.Direction := TAnimationDirectionType(AValue^);
+    'animation-duration': Animation.Duration := TPLInt(AValue^);
+    'animation-fill-mode': Animation.FillMode := TAnimationFillModeType(AValue^);
+    'animation-interation-count': Animation.IterationCount := TPLFloat(AValue^);
+    'animation-name': Animation.Name := TPLString(AValue^);
+    'animation-play-state': Animation.PlayState := TAnimationPlayStateType(AValue^);
+    'animation-timing-function': Animation.TimingFunction := TTimingFunctionType(AValue^);
+    'aspect-ratio': AspectRatio := TPLFloat(AValue^);
+    'backface-visibility': BackfaceVisibility := TPLBool(AValue^);
+    'background-attachment': Background.Attachment := TBackgroundAttachmentType(AValue^);
+    'background-clip': Background.Clip := TBoxModelType(AValue^);
+    'background-color': Background.Color := TPLColor(AValue^);
+    'background-image': Background.Image := IPLDrawingBitmap(AValue^);
+    'background-origin': Background.Origin := TBoxModelType(AValue^);
+    'background-position': Background.Position := TPLCSSSimpleUnitPoint(AValue^);
+    'background-position-x': Background.Position[0] := TPLCSSSimpleUnit(AValue^);
+    'background-position-y': Background.Position[1] := TPLCSSSimpleUnit(AValue^);
+    'background-repeat': Background.&Repeat := TBackgroundRepeatType(AValue^);
+    'background-size': Background.Size := TPLCSSSimpleUnitPoint(AValue^);
+    'border': Border.Calculated := TPLDrawingBorders(AValue^);
+    'border-left': ;
   end;
 end;
 

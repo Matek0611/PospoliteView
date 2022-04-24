@@ -164,6 +164,7 @@ type
   TPLCSSDeclarations = class(specialize TPLObjectList<TPLCSSProperty>, IPLCSSDeclarations)
   private
     FSelector: TPLString;
+    FObjectsCache: TPLHTMLObjects;
     function Compare(a, b: TPLCSSProperty): TPLBool; inline;
     function CompareSort(a, b: TPLCSSProperty): TPLSign;
     function GetProperties(AName: TPLString): TPLCSSProperty;
@@ -171,6 +172,7 @@ type
     function Search(AName: TPLString): SizeInt;
   public
     constructor Create(const AValue: TPLString = '');
+    destructor Destroy; override;
 
     procedure SetDeclarations(AValue: TPLString);
     function AsString: TPLString;
@@ -182,9 +184,11 @@ type
     procedure Delete(AName: TPLString);
     function IsFor(const AObject: TPLHTMLObject): TPLBool;
     procedure Merge(const ADeclarations: TPLCSSDeclarations);
+    function Clone: TPLCSSDeclarations;
 
     property Properties[AName: TPLString]: TPLCSSProperty read GetProperties;
     property Selector: TPLString read FSelector write FSelector;
+    property Cache: TPLHTMLObjects read FObjectsCache;
   end;
 
   TPLCSSDeclarationsList = class(specialize TPLObjectList<TPLCSSDeclarations>);
@@ -398,8 +402,13 @@ var
 begin
   Result := TPLCSSPropertyValuePartFunction.CreateForClone;
   Result.FKind := FKind;
+
   TPLCSSPropertyValuePartFunction(Result).FName := FName;
-  for v in FArguments do TPLCSSPropertyValuePartFunction(Result).FArguments.Add(v.Clone);
+  if not Assigned(TPLCSSPropertyValuePartFunction(Result).FArguments) then
+    TPLCSSPropertyValuePartFunction(Result).FArguments := TPLCSSPropertyValueParts.Create;
+
+  for v in FArguments do
+    TPLCSSPropertyValuePartFunction(Result).FArguments.Add(v.Clone);
 end;
 
 { TPLCSSPropertyValuePartStringOrIdentifier }
@@ -566,9 +575,17 @@ constructor TPLCSSDeclarations.Create(const AValue: TPLString);
 begin
   inherited Create(true);
 
+  FObjectsCache := TPLHTMLObjects.Create(false);
   FSelector := '';
 
   if not AValue.IsEmpty then SetDeclarations(AValue);
+end;
+
+destructor TPLCSSDeclarations.Destroy;
+begin
+  FObjectsCache.Free;
+
+  inherited Destroy;
 end;
 
 procedure TPLCSSDeclarations.SetDeclarations(AValue: TPLString);
@@ -667,7 +684,7 @@ end;
 function TPLCSSDeclarations.IsFor(const AObject: TPLHTMLObject): TPLBool;
 begin
   if TPLString.IsNullOrEmpty(FSelector) then exit(true);
-  Result := TPLHTMLDocumentQueries.isQuerySelectorFor(AObject, FSelector);
+  Result := FObjectsCache.Find(AObject) >= 0;
 end;
 
 procedure TPLCSSDeclarations.Merge(const ADeclarations: TPLCSSDeclarations);
@@ -678,6 +695,15 @@ begin
     if Exists(p.Name, d) then d.Assign(p)
     else Add(p.Clone);
   end;
+end;
+
+function TPLCSSDeclarations.Clone: TPLCSSDeclarations;
+var
+  prop: TPLCSSProperty;
+begin
+  Result := TPLCSSDeclarations.Create();
+
+  for prop in self do Result.Add(prop.Clone);
 end;
 
 { TPLCSSPropertyParser }

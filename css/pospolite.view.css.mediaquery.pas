@@ -652,28 +652,28 @@ begin
     end;
     'device-height', 'min-device-height', 'max-device-height':
     if HasValue and (FValue is TPLCSSPropertyValuePartDimension) then begin
-      vf := AutoLengthToPx(TPLCSSPropertyValuePartDimension(FValue).Value, TPLCSSPropertyValuePartDimension(FValue).&Unit, AEnvironment.DocumentBody);
+      vf := AutoLengthToPx(TPLCSSPropertyValuePartDimension(FValue).Value, TPLCSSPropertyValuePartDimension(FValue).&Unit, AEnvironment.DocumentBody, 'env:device-height');
       if FFeature.StartsWith('min') then Result := AEnvironment.FeatureDeviceHeight >= vf
       else if FFeature.StartsWith('max') then Result := AEnvironment.FeatureDeviceHeight <= vf
       else Result := AEnvironment.FeatureDeviceHeight = vf;
     end;
     'device-width', 'min-device-width', 'max-device-width':
     if HasValue and (FValue is TPLCSSPropertyValuePartDimension) then begin
-      vf := AutoLengthToPx(TPLCSSPropertyValuePartDimension(FValue).Value, TPLCSSPropertyValuePartDimension(FValue).&Unit, AEnvironment.DocumentBody);
+      vf := AutoLengthToPx(TPLCSSPropertyValuePartDimension(FValue).Value, TPLCSSPropertyValuePartDimension(FValue).&Unit, AEnvironment.DocumentBody, 'env:device-width');
       if FFeature.StartsWith('min') then Result := AEnvironment.FeatureDeviceWidth >= vf
       else if FFeature.StartsWith('max') then Result := AEnvironment.FeatureDeviceWidth <= vf
       else Result := AEnvironment.FeatureDeviceWidth = vf;
     end;
     'height', 'min-height', 'max-height':
     if HasValue and (FValue is TPLCSSPropertyValuePartDimension) then begin
-      vf := AutoLengthToPx(TPLCSSPropertyValuePartDimension(FValue).Value, TPLCSSPropertyValuePartDimension(FValue).&Unit, AEnvironment.DocumentBody);
+      vf := AutoLengthToPx(TPLCSSPropertyValuePartDimension(FValue).Value, TPLCSSPropertyValuePartDimension(FValue).&Unit, AEnvironment.DocumentBody, 'env:height');
       if FFeature.StartsWith('min') then Result := AEnvironment.FeatureHeight >= vf
       else if FFeature.StartsWith('max') then Result := AEnvironment.FeatureHeight <= vf
       else Result := AEnvironment.FeatureHeight = vf;
     end;
     'width', 'min-width', 'max-width':
     if HasValue and (FValue is TPLCSSPropertyValuePartDimension) then begin
-      vf := AutoLengthToPx(TPLCSSPropertyValuePartDimension(FValue).Value, TPLCSSPropertyValuePartDimension(FValue).&Unit, AEnvironment.DocumentBody);
+      vf := AutoLengthToPx(TPLCSSPropertyValuePartDimension(FValue).Value, TPLCSSPropertyValuePartDimension(FValue).&Unit, AEnvironment.DocumentBody, 'env:width');
       if FFeature.StartsWith('min') then Result := AEnvironment.FeatureWidth >= vf
       else if FFeature.StartsWith('max') then Result := AEnvironment.FeatureWidth <= vf
       else Result := AEnvironment.FeatureWidth = vf;
@@ -918,7 +918,7 @@ begin
           else vf1 := 0;
         end;
       end else begin
-        vf1 := AutoLengthToPx(TPLCSSPropertyValuePartDimension(FValueFirst).Value, TPLCSSPropertyValuePartDimension(FValueFirst).&Unit, AEnvironment.DocumentBody);
+        vf1 := AutoLengthToPx(TPLCSSPropertyValuePartDimension(FValueFirst).Value, TPLCSSPropertyValuePartDimension(FValueFirst).&Unit, AEnvironment.DocumentBody, 'env:' + FFeature);
       end;
 
       if HasTwoSides then begin
@@ -949,7 +949,7 @@ begin
             else vf2 := 0;
           end;
         end else begin
-          vf2 := AutoLengthToPx(TPLCSSPropertyValuePartDimension(FValueSecond).Value, TPLCSSPropertyValuePartDimension(FValueSecond).&Unit, AEnvironment.DocumentBody);
+          vf2 := AutoLengthToPx(TPLCSSPropertyValuePartDimension(FValueSecond).Value, TPLCSSPropertyValuePartDimension(FValueSecond).&Unit, AEnvironment.DocumentBody, 'env:' + FFeature);
         end;
 
         case FOperatorSecond of

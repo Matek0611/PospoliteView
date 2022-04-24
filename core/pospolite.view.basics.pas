@@ -552,6 +552,9 @@ type
     function RealCoords: TPLFloatArray; virtual; // Array[0..3]: Left, Top, Width, Height
     function CoordsInObject(const AX, AY: TPLFloat): TPLBool; virtual;
     function CoordsInObjectOnly(const AX, AY: TPLFloat): TPLBool;
+    function CalculateRelativeLength(AValue: TPLFloat; const AUnit: TPLString;
+      APropName: TPLString = ''): TPLFloat; virtual;
+    procedure SetEnvironment(AEnvironment: Pointer); virtual;
 
     property Zoom: TPLFloat read GetZoom write SetZoom;
     property State: TPLCSSElementState read GetState write SetState;
@@ -740,8 +743,8 @@ const
   function AngleDeg(AAngle: TPLFloat; const AUnit: TPLString = 'deg'): TPLFloat;
   function ScaleLengthToScreen(AValueInPx: TPLFloat; AHTMLObject: TPLHTMLObject = nil): TPLFloat;
   function AbsoluteLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject = nil): TPLFloat; // px, cm, mm, Q, in, pc, pt => px (scaled)
-  function RelativeLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject = nil): TPLFloat; // => px (scaled)
-  function AutoLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject = nil): TPLFloat; // auto detect absolute or relative value
+  function RelativeLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject = nil; APropName: TPLString = ''): TPLFloat; // => px (scaled)
+  function AutoLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject = nil; APropName: TPLString = ''): TPLFloat; // auto detect absolute or relative value
   function ObjectToVariant(AObject: TObject): Variant;
 
   operator := (a: TPLFloat) b: TPLString;

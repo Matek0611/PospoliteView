@@ -66,6 +66,8 @@ function NewDrawingBitmapD2D(AWidth, AHeight: TPLInt): IPLDrawingBitmap;
 
 implementation
 
+uses Forms;
+
 operator := (c: TPLColor) r: TD3DColorValue;
 begin
   r.r := c.Red / 255;
@@ -881,7 +883,7 @@ var
   Size: TPLFloat;
   Name: WideString;
 begin
-  Size := Font.Size * Factor;
+  Size := Font.Size * Factor * (Screen.PixelsPerInch / 96);
   Name := Font.Name;
   if WriteFactory.CreateTextFormat(PWideChar(Name), nil, Weight[Font.Weight],
     Style[Font.Style], Stretch[Font.Stretch], Size, PWideChar(PLD2D1Locale),

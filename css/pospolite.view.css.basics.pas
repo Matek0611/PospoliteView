@@ -18,7 +18,8 @@ unit Pospolite.View.CSS.Basics;
 interface
 
 uses
-  Classes, SysUtils, math, Pospolite.View.Basics, Pospolite.View.Drawing.Basics;
+  Classes, SysUtils, math, Pospolite.View.Basics, Pospolite.View.Drawing.Basics,
+  dialogs;
 
 type
 
@@ -67,46 +68,28 @@ implementation
 
 procedure RemoveCSSComments(var ASource: TPLString);
 var
-  i, x: SizeInt;
-  pom: TPLString;
-  cc, pc: TPLChar;
-  qt, comm: TPLBool;
+  i: SizeInt = 1;
+  pom: TPLString = '';
+  qt: TPLBool = false;
 begin
   if Length(ASource) = 0 then exit;
 
-  pom := ASource;
-  x := 1;
-  pc := #0;
-  comm := false;
-  qt := false;
+  while i <= Length(ASource) do begin
+    if ASource[i] in ['"', ''''] then qt := not qt else
+    if ASource[i] in [#10, #11, #13] then qt := false;
 
-  for i := 1 to Length(pom) do begin
-    cc := pom[i];
-
-    if (not comm) and not (cc in [#9, #10, #11, #13]) then begin
-      pom[x] := pom[i];
-      x -= 1;
+    if not qt and (Copy(ASource, i, 2) = '/*') then begin
+      i += 2;
+      while (i <= Length(ASource)) and (Copy(ASource, i, 2) <> '*/') do i += 1;
+      if Copy(ASource, i, 2) = '*/' then i += 2;
     end;
 
-    if cc in ['"', ''''] then qt := not qt else
-    if cc in [#10, #11, #13] then qt := false;
+    if (i <= Length(ASource)) and not (ASource[i] in [#0..#13]) then pom += ASource[i];
 
-    if not qt then begin
-      if (cc = ' ') and (pc = ' ') then x -= 1;
-      if (cc ='*') and (pc ='/') then begin
-        comm := true;
-        x -= 1;
-      end;
-      if (cc = '/') and (pc = '*') then begin
-        comm := false;
-        x -= 1;
-      end;
-    end;
-
-    pc := cc;
+    i += 1;
   end;
 
-  ASource := Copy(pom, 1, x - 1);
+  ASource := pom;
 end;
 
 function WithoutCommonPrefix(const AName: TPLString): TPLString;

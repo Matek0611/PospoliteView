@@ -59,27 +59,17 @@ begin
   Result := ScaleLengthToScreen(Result, AHTMLObject);
 end;
 
-function RelativeLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject): TPLFloat;
+function RelativeLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject; APropName: TPLString): TPLFloat;
 begin
-  case AUnit.ToLower of
-    '%': ;
-    'ch': ;
-    'em': ;
-    'ex': ;
-    'rem': ;
-    'vh': ;
-    'vw': ;
-    'vmin': ;
-    'vmax': ;
-    else Result := 0;
-  end;
+  if not Assigned(AHTMLObject) then exit(0);
+  Result := AHTMLObject.CalculateRelativeLength(AValue, AUnit, APropName);
 end;
 
-function AutoLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject): TPLFloat;
+function AutoLengthToPx(AValue: TPLFloat; const AUnit: TPLString; AHTMLObject: TPLHTMLObject; APropName: TPLString): TPLFloat;
 begin
   case AUnit.ToLower of
     'px', 'cm', 'mm', 'q', 'in', 'pc', 'pt': Result := AbsoluteLengthToPx(AValue, AUnit, AHTMLObject);
-    '%', 'ch', 'em', 'ex', 'rem', 'vh', 'vw', 'vmin', 'vmax': Result := RelativeLengthToPx(AValue, AUnit, AHTMLObject);
+    '%', 'ch', 'em', 'lh', 'ex', 'rem', 'vh', 'vw', 'vmin', 'vmax': Result := RelativeLengthToPx(AValue, AUnit, AHTMLObject, APropName);
     else Result := AValue;
   end;
 end;

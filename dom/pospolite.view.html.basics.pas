@@ -21,7 +21,7 @@ uses
   Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.Drawing.Renderer,
   Pospolite.View.Drawing.Basics, Pospolite.View.CSS.Declaration,
   Pospolite.View.HTML.Scrolling, Pospolite.View.HTML.Events,
-  Pospolite.View.CSS.Binder, math;
+  Pospolite.View.CSS.Binder, Pospolite.View.Drawing.Drawer, math;
 
 type
 
@@ -119,6 +119,7 @@ type
   private
     FBounds: TPLRectF;
     FBindings: TPLCSSStyleBind;
+    FEnvironment: Pointer;
   public
     constructor Create(AParent: TPLHTMLBasicObject);
       override;
@@ -130,6 +131,10 @@ type
     procedure RefreshStyles(const AParentStyles); override;
     procedure UpdatePositionLayout; override;
     procedure UpdateSizeLayout; override;
+    function CalculateRelativeLength(AValue: TPLFloat; const AUnit: TPLString;
+      APropName: TPLString=''): TPLFloat; override;
+    procedure SetEnvironment(AEnvironment: Pointer); override;
+    function CurrentFont: TPLDrawingFontData;
 
     property Bounds: TPLRectF read FBounds write FBounds;
     property Bindings: TPLCSSStyleBind read FBindings;
@@ -174,7 +179,9 @@ type
 
 implementation
 
-uses Controls, Variants, Pospolite.View.Threads, Pospolite.View.CSS.Basics;
+uses Controls, Variants, Forms, StrUtils, Graphics, Pospolite.View.Threads,
+  Pospolite.View.CSS.Basics, Pospolite.View.CSS.StyleSheet,
+  Pospolite.View.CSS.MediaQuery;
 
 operator :=(p: TPLCSSPropertyValuePart) r: TPLCSSSimpleUnit;
 begin
@@ -201,7 +208,7 @@ var
 begin
   for s in TPLCSSElementState do begin
     FStates[s] := TPLCSSDeclarations.Create();
-    TPLCSSDeclarations(FStates[s]).FreeObjects := false;
+    //TPLCSSDeclarations(FStates[s]).FreeObjects := false;
   end;
 end;
 
@@ -586,6 +593,7 @@ begin
   FNodeType := ontElementNode;
   FBounds := TPLRectF.Create(0, 0, 0, 0);
   FBindings := GetDefaultBindings;
+  FEnvironment := nil;
 end;
 
 destructor TPLHTMLNormalObject.Destroy;
@@ -613,6 +621,7 @@ var
   dcl: TPLCSSDeclarations;
   p: TPLCSSProperty;
   su: TPLCSSSimpleUnit;
+  propname: TPLString;
 
   function ParentCurrentBinding: TPLCSSBindingProperties; inline;
   begin
@@ -629,15 +638,25 @@ begin
     dcl := TPLCSSDeclarations(FStates[st]);
 
     for p in dcl do begin
+      propname := WithoutCommonPrefix(p.Name).ToLower;
+
       if p.Name.StartsWith('--') then FCustomProps.Add(p.Clone) else
-      case WithoutCommonPrefix(p.Name).ToLower of
-        'align-content': if p.Value.Count = 1 then begin
-          case p.Value[0].AsString.ToLower of
-            'initial', 'revert': FBindings.Properties[st].Align.Content := GetDefaultBindings.Properties[st].Align.Content;
-            'inherit', 'unset': FBindings.Properties[st].Align.Content := ParentCurrentBinding.Align.Content;
-            else FBindings.Properties[st].Align.Content := p.Value[0].AsString;
+      case propname of
+        'align-content':
+          if p.Value.Count = 1 then begin
+            case p.Value[0].AsString.ToLower of
+              'initial', 'revert': FBindings.Properties[st].SetProperty(propname, GetDefaultBindings.Properties[st].GetProperty(propname));
+              'inherit', 'unset': FBindings.Properties[st].SetProperty(propname, ParentCurrentBinding.GetProperty(propname));
+              else FBindings.Properties[st].SetProperty(propname, PString(p.Value[0].AsString));
+            end;
           end;
-        end;
+        //'align-content': if p.Value.Count = 1 then begin
+        //  case p.Value[0].AsString.ToLower of
+        //    'initial', 'revert': FBindings.Properties[st].Align.Content := GetDefaultBindings.Properties[st].Align.Content;
+        //    'inherit', 'unset': FBindings.Properties[st].Align.Content := ParentCurrentBinding.Align.Content;
+        //    else FBindings.Properties[st].Align.Content := p.Value[0].AsString;
+        //  end;
+        //end;
         // ... dodać resztę
         'background': ;
         // ...
@@ -717,10 +736,124 @@ begin
 end;
 
 procedure TPLHTMLNormalObject.UpdateSizeLayout;
+var
+  obj: TPLHTMLObject;
+  obn: TPLHTMLNormalObject absolute obj;
+  obt: TPLHTMLTextObject absolute obj;
 begin
   FSize.SetSize(0, 0);
 
+  for obj in self.Children do begin
+    if obj is TPLHTMLTextObject then begin
 
+    end;
+  end;
+end;
+
+function TPLHTMLNormalObject.CalculateRelativeLength(AValue: TPLFloat;
+  const AUnit: TPLString; APropName: TPLString): TPLFloat;
+var
+  env: TPLCSSMediaQueriesEnvironment;
+  objd: TPLHTMLObject;
+  obj: TPLHTMLNormalObject absolute objd;
+  r: Pospolite.View.Drawing.Renderer.IPLDrawingRenderer;
+  ur: TPLCSSSimpleUnit;
+begin
+  Result := 0;
+  if not Assigned(FEnvironment) then exit;
+  env := TPLCSSMediaQueriesEnvironment(FEnvironment^);
+
+  case AUnit.ToLower of
+    'vw':
+      Result := AValue * env.FeatureWidth / 100;
+    'vh':
+      Result := AValue * env.FeatureHeight / 100;
+    'vmin':
+      Result := AValue * min(env.FeatureWidth, env.FeatureHeight) / 100;
+    'vmax':
+      Result := AValue * max(env.FeatureWidth, env.FeatureHeight) / 100;
+    'rem':
+      if Assigned(env.DocumentBody) and Assigned(env.DocumentBody.Parent) and
+        (env.DocumentBody.Parent.Name = 'html') then begin
+          obj := env.DocumentBody.Parent as TPLHTMLNormalObject;
+          Result := AValue * obj.Bindings.Properties[FState].Font.Size.Calculated;
+        end else Result := AValue;
+    'em':
+      if Assigned(Parent) and (Parent is TPLHTMLNormalObject) then
+        Result := TPLHTMLNormalObject(Parent).Bindings.Properties[FState].Font.Size.Calculated
+      else
+        Result := Self.Bindings.Properties[FState].Font.Size.Calculated;
+    'ex':
+      Result := CalculateRelativeLength(AValue * 0.45, 'em', APropName);
+    'ch': begin
+      r := NewDrawingRenderer(nil);
+      Result := AValue * r.Drawer.Surface.TextSize(r.NewFont(CurrentFont), '0').X;
+    end;
+    '%': begin
+      case APropName.ToLower of
+        'env:aspect-ratio': Result := env.FeatureAspectRatio;
+        'env:device-aspect-ratio': Result := env.FeatureDeviceAspectRatio;
+        'env:device-width': Result := env.FeatureDeviceWidth;
+        'env:device-height': Result := env.FeatureDeviceHeight;
+        'env:width': Result := env.FeatureWidth;
+        'env:height': Result := env.FeatureHeight;
+        'env:resolution': Result := env.FeatureResolution;
+        'margin-left', 'padding-left', 'margin-right', 'padding-right',
+        'margin-top', 'padding-top', 'margin-bottom', 'padding-bottom':
+          if Assigned(Parent) and (Parent is TPLHTMLNormalObject) then begin
+            objd := Parent;
+            while Assigned(objd) and (objd.Display <> 'block') and not (objd is TPLHTMLNormalObject) do
+              objd := objd.Parent;
+            if Assigned(objd) then begin
+              if obj.Bindings.Properties[FState].WritingMode = wmHorizontalTB then
+                Result := obj.Bounds.Width
+              else
+                Result := obj.Bounds.Height;
+            end else Result := 0;
+          end else Result := 0;
+            //...
+        else Result := 0;
+      end;
+
+      Result *= AValue / 100;
+    end;
+    else Result := AValue;
+  end;
+end;
+
+procedure TPLHTMLNormalObject.SetEnvironment(AEnvironment: Pointer);
+begin
+  FEnvironment := AEnvironment;
+end;
+
+function TPLHTMLNormalObject.CurrentFont: TPLDrawingFontData;
+var
+  arr: TPLStringArray;
+  i: SizeInt;
+begin
+  with Result do begin
+    Name := 'Times New Roman';
+    arr := Bindings.Properties[FState].Font.Family;
+    for i := Low(arr) to High(arr) do begin
+      if LowerCase(arr[i]) = 'serif' then Name := 'Times New Roman'
+      else if LowerCase(arr[i]) = 'sans-serif' then Name := 'Arial'
+      else if LowerCase(arr[i]) = 'monospace' then Name := 'Consolas'
+      else if LowerCase(arr[i]) = 'cursive' then Name := 'Comic Sans MS'
+      else if LowerCase(arr[i]) = 'fantasy' then Name := 'Copperplate'
+      else if Pos(LowerCase(arr[i]), LowerCase(Screen.Fonts.Text)) > 0 then Name := arr[i]
+      else continue;
+      break;
+    end;
+
+    Color := Bindings.Properties[FState].Color;
+    Quality := fqCleartypeNatural;
+    Size := Bindings.Properties[FState].Font.Size.Calculated;
+    Weight := Bindings.Properties[FState].Font.Weight;
+    Style := Bindings.Properties[FState].Font.Style;
+    Stretch := Bindings.Properties[FState].Font.Stretch;
+    Decoration := Bindings.Properties[FState].Text.Decoration.Line;
+    VariantTags := Bindings.Properties[FState].Font.VariantTags;
+  end;
 end;
 
 { TPLHTMLObjectDIV }

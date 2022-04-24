@@ -73,6 +73,7 @@ type
     FKeyframes: TPLCSSStyleSheetPartRules;
     FMediaQuery: TPLString;
     FMedias: TPLCSSStyleSheetPartRules;
+    FNamespace: TPLString;
     FPages: TPLCSSStyleSheetPartSelectors;
     FSelectors: TPLCSSDeclarationsList;
   public
@@ -80,10 +81,13 @@ type
     destructor Destroy; override;
 
     procedure Load(ASource: TPLString; const AMerge: TPLBool = true);
+    procedure Merge(const AStyleSheet: TPLCSSStyleSheet);
     procedure CleanUp;
     function MediaAccepts(const AEnvironment: TPLCSSMediaQueriesEnvironment): TPLBool;
+    procedure SetupObject(const AObject: TPLHTMLObject; AEnvironment: Pointer);
 
     property Charset: TPLString read FCharset write FCharset;
+    property Namespace: TPLString read FNamespace write FNamespace;
     property FontFaces: TPLCSSStyleSheetPartSelectors read FFontFaces;
     property Imports: TPLCSSStyleSheetPartRules read FImports;
     property Keyframes: TPLCSSStyleSheetPartRules read FKeyframes;
@@ -159,7 +163,8 @@ type
 
 implementation
 
-uses Variants, Pospolite.View.CSS.Basics, Pospolite.View.HTML.Basics;
+uses Variants, Pospolite.View.CSS.Basics, Pospolite.View.HTML.Basics,
+  Pospolite.View.CSS.UserAgentStyleSheet;
 
 { TPLCSSStyleSheetPart }
 
@@ -215,6 +220,7 @@ begin
 
   FFileName := '';
   FMediaQuery := '';
+  FNamespace := 'http://www.w3.org/1999/xhtml';
 
   FSelectors := TPLCSSDeclarationsList.Create(true);
   FFontFaces := TPLCSSStyleSheetPartSelectors.Create(true);
@@ -246,6 +252,14 @@ begin
 
 end;
 
+procedure TPLCSSStyleSheet.Merge(const AStyleSheet: TPLCSSStyleSheet);
+var
+  i: SizeInt;
+begin
+  for i := 0 to AStyleSheet.Selectors.Count-1 do
+    FSelectors.Add(AStyleSheet.Selectors[i].Clone);
+end;
+
 procedure TPLCSSStyleSheet.CleanUp;
 begin
   FCharset := '';
@@ -274,36 +288,28 @@ begin
   end;
 end;
 
+procedure TPLCSSStyleSheet.SetupObject(const AObject: TPLHTMLObject;
+  AEnvironment: Pointer);
+begin
+  AObject.SetEnvironment(AEnvironment);
+
+
+end;
+
 { TPLCSSStylingThread }
 
 procedure TPLCSSStylingThread.UpdateStyles;
 
   procedure EnumStyleUpdates(obj: TPLHTMLObject);
-
-    procedure ApplyStylesheet(css: TPLCSSStyleSheet);
-    var
-      pr: TPLCSSStyleSheetPartRule;
-      ps: TPLCSSStyleSheetPartSelector;
-      pd: TPLCSSDeclarations;
-    begin
-      if not css.MediaAccepts(FManager.Environment) then exit;
-
-      for pd in css.Selectors do begin
-        if not pd.IsFor(obj) then continue;
-
-
-      end;
-    end;
-
   var
     e: TPLHTMLObject;
     st: TPLCSSStyleSheet;
   begin
     if not Assigned(obj) then exit;
 
-    ApplyStylesheet(FManager.Internal);
+    FManager.Internal.SetupObject(obj, @FManager.Environment);
     for st in FManager.Externals do
-      ApplyStylesheet(st);
+      st.SetupObject(obj, @FManager.Environment);
 
     if Suspended then exit;
 
@@ -490,6 +496,7 @@ end;
 procedure TPLCSSStyleSheetManager.ClearStyles;
 begin
   FInternal.CleanUp;
+  FInternal.Merge(TPLCSSStyleSheet(PLUserAgentInstance));
   FExternals.Clear;
 end;
 

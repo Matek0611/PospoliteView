@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <PathDelim Value="\"/>
     <Name Value="pospolite_view"/>
     <Type Value="RunAndDesignTime"/>
@@ -18,7 +18,7 @@
       </CodeGeneration>
     </CompilerOptions>
     <Version Major="1"/>
-    <Files Count="39">
+    <Files Count="40">
       <Item1>
         <Filename Value="gfx\pospolite.view.drawing.basics.pas"/>
         <AddToUsesPkgSection Value="False"/>
@@ -195,17 +195,23 @@
       </Item36>
       <Item37>
         <Filename Value="gfx\pospolite.view.drawing.nativedrawer.pas"/>
-        <UnitName Value="pospolite.view.drawing.nativedrawer"/>
+        <UnitName Value="Pospolite.View.Drawing.NativeDrawer"/>
       </Item37>
       <Item38>
         <Filename Value="frame\pospolite.view.controls.pas"/>
-        <UnitName Value="pospolite.view.controls"/>
+        <UnitName Value="Pospolite.View.Controls"/>
       </Item38>
       <Item39>
         <Filename Value="frame\pospolite.view.popups.pas"/>
-        <UnitName Value="pospolite.view.popups"/>
+        <UnitName Value="Pospolite.View.Popups"/>
       </Item39>
+      <Item40>
+        <Filename Value="css\pospolite.view.css.useragentstylesheet.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="Pospolite.View.CSS.UserAgentStyleSheet"/>
+      </Item40>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">
       <Item1>
         <PackageName Value="Printer4Lazarus"/>
