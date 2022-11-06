@@ -1,0 +1,7 @@
+*.o
+*.obj
+*.ppu
+*.compiled
+*.dbg
+lib/
+backup/
