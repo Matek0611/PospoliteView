@@ -32,6 +32,7 @@ type
 
   TPLHTMLFrame = class(TPLCustomControl)
   private
+    FDebug: TPLBool;
     FDocument: TPLHTMLDocument;
     FEventManager: TPLHTMLEventManager;
     FRenderingManager: TPLDrawingRendererManager;
@@ -94,6 +95,7 @@ type
     property StylesManager: TPLCSSStyleSheetManager read FStylesManager;
 
     property Version: TPLString read GetVersion;
+    property Debug: TPLBool read FDebug write FDebug;
   end;
 
 implementation
@@ -349,7 +351,7 @@ procedure TPLHTMLFrame.TripleClick;
 
     if obj.CoordsInObjectOnly(FPointer.X, FPointer.Y) then begin
       FEventManager.DoEvent(obj, 'tripleclick', [FPointer.X, FPointer.Y]);
-      //FEventManager.DoEvent(obj, 'click', [FPointer.X, FPointer.Y, 3]);
+      FEventManager.DoEvent(obj, 'click', [FPointer.X, FPointer.Y, 3]);
     end;
   end;
 
@@ -367,7 +369,7 @@ procedure TPLHTMLFrame.QuadClick;
 
     if obj.CoordsInObjectOnly(FPointer.X, FPointer.Y) then begin
       FEventManager.DoEvent(obj, 'quadclick', [FPointer.X, FPointer.Y]);
-      //FEventManager.DoEvent(obj, 'click', [FPointer.X, FPointer.Y, 4]);
+      FEventManager.DoEvent(obj, 'click', [FPointer.X, FPointer.Y, 4]);
     end;
   end;
 
@@ -447,6 +449,7 @@ begin
 
   FDocument := TPLHTMLDocument.Create;
   FPointer := TPLPointF.Create(-1, -1);
+  FDebug := false;
 
   FEventManager := TPLHTMLEventManager.Create;
   FStylesManager := TPLCSSStyleSheetManager.Create(FDocument);
@@ -493,6 +496,7 @@ begin
 
     dr := TPLDrawingRenderer.Create(FBuffer.Canvas);
     try
+      dr.DebugMode := FDebug;
       dr.Drawer.Surface.Clear(TPLColor.White); // NA RAZIE NAPRAWIONY BUG #D1 DZIĘKI TEJ LINII (#D1: Krytyczny - użycie CPU wzrasta co chwilę o kilka setnych MB mimo, że nie ma wycieków pamięci)
       //dr.Drawer.Surface.Clear(clRed);
 

@@ -565,7 +565,7 @@ var
 begin
   tmp := A;
   A := B;
-  B := A;
+  B := tmp;
 end;
 
 class function TPLFuncsOfClass.NewList(ATab: array of T; const AFreeObjects: TPLBool): specialize TPLObjectList<T>;
@@ -1042,6 +1042,7 @@ end;
 
 function TPLHTMLObject.RealCoords: TPLFloatArray;
 begin
+  Result := nil;
   SetLength(Result, 4);
 
   Result[0] := GetLeft;

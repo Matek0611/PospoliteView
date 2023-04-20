@@ -249,7 +249,11 @@ begin
   RemoveCSSComments(ASource);
   if not AMerge then CleanUp;
 
+  try
 
+  except
+    CleanUp;
+  end;
 end;
 
 procedure TPLCSSStyleSheet.Merge(const AStyleSheet: TPLCSSStyleSheet);

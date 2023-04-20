@@ -38,6 +38,7 @@ type
   protected
     FCustomProps: TPLCSSDeclarations;
     FSizeTransitionData: TPLVector4F;
+    FRenderer: Pospolite.View.Drawing.Renderer.IPLDrawingRenderer;
 
     procedure InitStates; override;
     procedure DoneStates; override;
@@ -116,7 +117,7 @@ type
   { TPLHTMLNormalObject }
 
   TPLHTMLNormalObject = class(TPLHTMLBasicObject)
-  private
+  protected
     FBounds: TPLRectF;
     FBindings: TPLCSSStyleBind;
     FEnvironment: Pointer;
@@ -142,9 +143,15 @@ type
 
   { TPLHTMLTextObject }
 
-  TPLHTMLTextObject = class(TPLHTMLBasicObject)
+  TPLHTMLTextObject = class(TPLHTMLNormalObject)
+  private
+    FFont: IPLDrawingFont;
   public
     constructor Create(AParent: TPLHTMLBasicObject); override;
+
+    procedure Render(ARenderer: TPLDrawingRenderer); override;
+    procedure UpdatePositionLayout; override;
+    procedure UpdateSizeLayout; override;
 
     function ToHTML: TPLString; override;
     function CoordsInObject(const AX, AY: TPLFloat): TPLBool; override;
@@ -232,6 +239,7 @@ end;
 procedure TPLHTMLBasicObject.Render(ARenderer: TPLDrawingRenderer);
 begin
   ARenderer.DrawHTMLObject(self);
+  FRenderer := TPLDrawingRenderer.Create(ARenderer.Drawer.Canvas);
 end;
 
 procedure TPLHTMLBasicObject.ApplyInlineStyles;
@@ -373,6 +381,7 @@ begin
   FNodeType := ontDocumentFragmentNode;
   FScrolling := TPLHTMLScrolling.Create(self);
   FFocused := false;
+  FRenderer := nil;
 
   FEventTarget := TPLHTMLEventTarget.Create(self);
   InitEventTarget;
@@ -573,6 +582,28 @@ begin
   FNodeType := ontTextNode;
 end;
 
+procedure TPLHTMLTextObject.Render(ARenderer: TPLDrawingRenderer);
+begin
+  FFont := ARenderer.NewFont(CurrentFont);
+
+  inherited Render(ARenderer);
+end;
+
+procedure TPLHTMLTextObject.UpdatePositionLayout;
+begin
+  FSize.SetPosition(FParent.GetLeft, FParent.GetTop);
+
+  inherited UpdatePositionLayout;
+end;
+
+procedure TPLHTMLTextObject.UpdateSizeLayout;
+begin
+  if Assigned(FFont) and Assigned(FRenderer) then
+    FSize.SetSize(FRenderer.Drawer.Surface.TextSize(FFont, Text));  // zrobić tak, by obliczanie tych wartości działało zawsze
+
+  inherited UpdateSizeLayout;
+end;
+
 function TPLHTMLTextObject.ToHTML: TPLString;
 begin
   Result := Text;
@@ -731,23 +762,11 @@ end;
 procedure TPLHTMLNormalObject.UpdatePositionLayout;
 begin
   FSize.SetPosition(0, 0);
-
-
 end;
 
 procedure TPLHTMLNormalObject.UpdateSizeLayout;
-var
-  obj: TPLHTMLObject;
-  obn: TPLHTMLNormalObject absolute obj;
-  obt: TPLHTMLTextObject absolute obj;
 begin
   FSize.SetSize(0, 0);
-
-  for obj in self.Children do begin
-    if obj is TPLHTMLTextObject then begin
-
-    end;
-  end;
 end;
 
 function TPLHTMLNormalObject.CalculateRelativeLength(AValue: TPLFloat;

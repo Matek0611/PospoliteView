@@ -1,0 +1,94 @@
+object Form1: TForm1
+  Left = 411
+  Height = 497
+  Top = 250
+  Width = 762
+  Caption = 'Demo'
+  ClientHeight = 497
+  ClientWidth = 762
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnMouseMove = FormMouseMove
+  OnPaint = FormPaint
+  OnShow = FormShow
+  LCLVersion = '2.2.4.0'
+  object Memo1: TMemo
+    Left = 10
+    Height = 399
+    Top = 88
+    Width = 742
+    Align = alClient
+    BorderSpacing.Top = 25
+    BorderSpacing.Around = 10
+    Lines.Strings = (
+      'screen and (min-width: 20px) and (hover) and any-pointer and (20px < height <= 100px)'
+    )
+    ParentFont = False
+    ScrollBars = ssAutoBoth
+    TabOrder = 0
+    Visible = False
+  end
+  object Panel1: TPanel
+    Left = 0
+    Height = 53
+    Top = 0
+    Width = 762
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 53
+    ClientWidth = 762
+    Color = clWhite
+    ParentColor = False
+    TabOrder = 1
+    object Edit1: TEdit
+      Left = 5
+      Height = 23
+      Top = 5
+      Width = 752
+      Align = alTop
+      BorderSpacing.Around = 5
+      OnEditingDone = Edit1EditingDone
+      ParentFont = False
+      TabOrder = 0
+      Text = 'linear-gradient(45deg, red, blue)'
+      Visible = False
+    end
+    object Button1: TButton
+      Left = 10
+      Height = 25
+      Top = 5
+      Width = 75
+      Caption = 'Wykonaj'
+      OnClick = Button1Click
+      ParentFont = False
+      TabOrder = 1
+    end
+    object Button2: TButton
+      Left = 94
+      Height = 25
+      Top = 5
+      Width = 75
+      Caption = 'Test URL'
+      OnClick = Button2Click
+      ParentFont = False
+      TabOrder = 2
+    end
+    object Shape1: TShape
+      Left = 0
+      Height = 1
+      Top = 52
+      Width = 762
+      Align = alBottom
+      Pen.Color = 14342874
+    end
+    object Button3: TButton
+      Left = 179
+      Height = 25
+      Top = 5
+      Width = 96
+      Caption = 'querySelector'
+      OnClick = Button3Click
+      TabOrder = 3
+    end
+  end
+end

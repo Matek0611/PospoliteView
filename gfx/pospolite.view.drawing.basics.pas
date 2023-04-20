@@ -133,11 +133,14 @@ type
     procedure SetRight(AValue: T);
   public
     constructor Create(ALeft, ATop, AWidth, AHeight: T);
+    constructor Create(APoints: TPLTypeArray);
+    constructor Create(APoints: specialize TArray<T>);
     function IsEmpty: TPLBool; inline;
     class function Empty: TPLRect; static; inline;
     function Inflate(AX, AY: T): TPLRect; overload;
     function Inflate(ALeft, ATop, AWidth, AHeight: T): TPLRect; overload;
     procedure SetSize(const AWidth, AHeight: T);
+    procedure SetSize(const ASize: TPLPointT);
     procedure SetPosition(const ALeft, ATop: T);
     function PointsPointers: TPLTypePointerArray;
     function Points: TPLTypeArray;
@@ -748,6 +751,22 @@ begin
   FHeight := AHeight;
 end;
 
+constructor TPLRect.Create(APoints: TPLTypeArray);
+begin
+  FLeft := APoints[0];
+  FTop := APoints[1];
+  FWidth := APoints[2];
+  FHeight := APoints[3];
+end;
+
+constructor TPLRect.Create(APoints: specialize TArray<T>);
+begin
+  FLeft := APoints[0];
+  FTop := APoints[1];
+  FWidth := APoints[2];
+  FHeight := APoints[3];
+end;
+
 function TPLRect.IsEmpty: TPLBool;
 begin
   Result := (Width <= 0) or (Height <= 0);
@@ -772,6 +791,12 @@ procedure TPLRect.SetSize(const AWidth, AHeight: T);
 begin
   FWidth := AWidth;
   FHeight := AHeight;
+end;
+
+procedure TPLRect.SetSize(const ASize: TPLPointT);
+begin
+  FWidth := ASize.X;
+  FHeight := ASize.Y;
 end;
 
 procedure TPLRect.SetPosition(const ALeft, ATop: T);

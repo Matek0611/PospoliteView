@@ -2617,7 +2617,8 @@ end;
 
 procedure TPLD2D1Drawer.DrawObjectDebug(const AObject: TPLHTMLObject);
 begin
-  //FSurface.;
+  FSurface.Rectangle(TPLRectF.Create(AObject.RealCoords));
+  FSurface.Stroke(NewDrawingPenD2D('red'));
 end;
 
 procedure TPLD2D1Drawer.DrawObjectShadow(const AObject: TPLHTMLObject);

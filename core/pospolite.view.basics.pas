@@ -533,7 +533,7 @@ type
     function ToObject: TPLHTMLObject;
     function PositionInParent: SizeInt;
     procedure RefreshStyles(const AParentStyles); virtual;
-    procedure UpdateLayout;
+    procedure UpdateLayout; virtual;
     procedure UpdatePositionLayout; virtual;
     procedure UpdateSizeLayout; virtual;
     procedure ApplyInlineStyles; virtual;
