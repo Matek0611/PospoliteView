@@ -100,7 +100,7 @@ type
 
 implementation
 
-uses variants, dialogs, Pospolite.View.CSS.Declaration;
+uses variants, dialogs, Pospolite.View.CSS.Declaration, Pospolite.View.Drawing.Drawer;
 
 { TPLHTMLFrame }
 
@@ -492,13 +492,13 @@ begin
     FBuffer.Canvas.Brush.Color := clWhite;
     FBuffer.Canvas.FillRect(FBuffer.Canvas.ClipRect);
 
-    //FBuffer.Canvas.TextOut(0, 0, FormatDateTime('hh:nn:ss,zzz', Now)); // fps test
+    //FBuffer.Canvas.TextOut(0, 0, FormatDateTime('hh:nn:ss,zzz', Now)); // fps test #1
 
     dr := TPLDrawingRenderer.Create(FBuffer.Canvas);
     try
       dr.DebugMode := FDebug;
       dr.Drawer.Surface.Clear(TPLColor.White); // NA RAZIE NAPRAWIONY BUG #D1 DZIĘKI TEJ LINII (#D1: Krytyczny - użycie CPU wzrasta co chwilę o kilka setnych MB mimo, że nie ma wycieków pamięci)
-      //dr.Drawer.Surface.Clear(clRed);
+      //dr.Drawer.Surface.TextOut(dr.NewFont(PLDrawingFontDataDef), FormatDateTime('hh:nn:ss,zzz', Now), TPLRectF.Create(0, 0, 200, 50), TPLTextDirections.Create(tdLeft, tdUp)); // fps test #2
 
       if Assigned(FDocument) and Assigned(FDocument.Root) then
         FDocument.Root.Draw(dr);

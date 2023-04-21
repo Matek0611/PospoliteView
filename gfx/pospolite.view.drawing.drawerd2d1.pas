@@ -2195,6 +2195,8 @@ begin
 
   Layout := CreateTextLayout((AFont as TPLDrawingFontD2D).Format, AText, MaxTextSize, MaxTextSize);
 
+  if not Assigned(Layout) then exit(TPLPointF.Empty);
+
   Layout.SetWordWrapping(ifthen(AWordWrap, 0, 1));
   Layout.SetFlowDirection(Ord(AWritingMode));
   Layout.SetReadingDirection(Ord(AReading));
@@ -2223,6 +2225,8 @@ begin
   if AWidth < 1 then exit(0);
 
   Layout := CreateTextLayout((AFont as TPLDrawingFontD2D).Format, AText, AWidth, MaxTextSize);
+
+  if not Assigned(Layout) then exit(0);
 
   Layout.SetWordWrapping(ifthen(AWordWrap, 0, 1));
   Layout.SetFlowDirection(Ord(AWritingMode));

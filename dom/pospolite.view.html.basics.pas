@@ -38,7 +38,6 @@ type
   protected
     FCustomProps: TPLCSSDeclarations;
     FSizeTransitionData: TPLVector4F;
-    FRenderer: Pospolite.View.Drawing.Renderer.IPLDrawingRenderer;
 
     procedure InitStates; override;
     procedure DoneStates; override;
@@ -146,6 +145,7 @@ type
   TPLHTMLTextObject = class(TPLHTMLNormalObject)
   private
     FFont: IPLDrawingFont;
+    FTextSize: TPLPointF;
   public
     constructor Create(AParent: TPLHTMLBasicObject); override;
 
@@ -239,7 +239,6 @@ end;
 procedure TPLHTMLBasicObject.Render(ARenderer: TPLDrawingRenderer);
 begin
   ARenderer.DrawHTMLObject(self);
-  FRenderer := TPLDrawingRenderer.Create(ARenderer.Drawer.Canvas);
 end;
 
 procedure TPLHTMLBasicObject.ApplyInlineStyles;
@@ -381,7 +380,6 @@ begin
   FNodeType := ontDocumentFragmentNode;
   FScrolling := TPLHTMLScrolling.Create(self);
   FFocused := false;
-  FRenderer := nil;
 
   FEventTarget := TPLHTMLEventTarget.Create(self);
   InitEventTarget;
@@ -585,6 +583,7 @@ end;
 procedure TPLHTMLTextObject.Render(ARenderer: TPLDrawingRenderer);
 begin
   FFont := ARenderer.NewFont(CurrentFont);
+  FTextSize := ARenderer.Drawer.Surface.TextSize(FFont, Text);
 
   inherited Render(ARenderer);
 end;
@@ -598,8 +597,7 @@ end;
 
 procedure TPLHTMLTextObject.UpdateSizeLayout;
 begin
-  if Assigned(FFont) and Assigned(FRenderer) then
-    FSize.SetSize(FRenderer.Drawer.Surface.TextSize(FFont, Text));  // zrobić tak, by obliczanie tych wartości działało zawsze
+  FSize.SetSize(FTextSize);
 
   inherited UpdateSizeLayout;
 end;
