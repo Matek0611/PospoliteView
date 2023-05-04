@@ -75,7 +75,7 @@
         </CompilerOptions>
       </Item2>
     </BuildModes>
-    <Units Count="114">
+    <Units Count="116">
       <Unit0>
         <Filename Value="project1.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -371,7 +371,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="5"/>
         <CursorPos X="28" Y="21"/>
-        <UsageCount Value="0"/>
+        <UsageCount Value="10"/>
       </Unit36>
       <Unit37>
         <Filename Value="..\..\..\fpc\3.0.4\source\rtl\objpas\classes\classesh.inc"/>
@@ -429,14 +429,14 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="1156"/>
         <CursorPos X="21" Y="1183"/>
-        <UsageCount Value="0"/>
+        <UsageCount Value="10"/>
       </Unit44>
       <Unit45>
         <Filename Value="..\core\pospolite.view.basics.pas"/>
         <UnitName Value="Pospolite.View.Basics"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="508"/>
-        <CursorPos X="16" Y="524"/>
+        <TopLine Value="512"/>
+        <CursorPos X="15" Y="531"/>
         <UsageCount Value="101"/>
         <Loaded Value="True"/>
       </Unit45>
@@ -445,16 +445,16 @@
         <UnitName Value="Pospolite.View.Frame"/>
         <EditorIndex Value="1"/>
         <TopLine Value="489"/>
-        <CursorPos X="44" Y="501"/>
+        <CursorPos X="49" Y="504"/>
         <UsageCount Value="101"/>
         <Loaded Value="True"/>
       </Unit46>
       <Unit47>
         <Filename Value="..\gfx\pospolite.view.drawing.drawer.pas"/>
         <UnitName Value="Pospolite.View.Drawing.Drawer"/>
-        <EditorIndex Value="5"/>
-        <TopLine Value="195"/>
-        <CursorPos X="57" Y="202"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="399"/>
+        <CursorPos X="3" Y="421"/>
         <UsageCount Value="101"/>
         <Loaded Value="True"/>
       </Unit47>
@@ -469,37 +469,36 @@
       <Unit49>
         <Filename Value="..\pospolite.view.registerall_icon.lrs"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="0"/>
+        <UsageCount Value="10"/>
       </Unit49>
       <Unit50>
         <Filename Value="..\pospolite_view.pas"/>
         <EditorIndex Value="-1"/>
         <CursorPos Y="5"/>
-        <UsageCount Value="0"/>
+        <UsageCount Value="10"/>
       </Unit50>
       <Unit51>
         <Filename Value="..\gfx\pospolite.view.drawing.renderer.pas"/>
         <UnitName Value="Pospolite.View.Drawing.Renderer"/>
-        <EditorIndex Value="6"/>
-        <TopLine Value="95"/>
-        <CursorPos X="14" Y="107"/>
+        <EditorIndex Value="8"/>
+        <TopLine Value="108"/>
+        <CursorPos X="62" Y="121"/>
         <UsageCount Value="101"/>
         <Loaded Value="True"/>
       </Unit51>
       <Unit52>
         <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
         <UnitName Value="Pospolite.View.Drawing.DrawerD2D1"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="7"/>
-        <TopLine Value="2695"/>
-        <CursorPos Y="2696"/>
+        <EditorIndex Value="9"/>
+        <TopLine Value="2514"/>
+        <CursorPos Y="2527"/>
         <UsageCount Value="101"/>
         <Loaded Value="True"/>
       </Unit52>
       <Unit53>
         <Filename Value="..\css\pospolite.view.css.stylesheet.pas"/>
         <UnitName Value="Pospolite.View.CSS.StyleSheet"/>
-        <EditorIndex Value="9"/>
+        <EditorIndex Value="11"/>
         <TopLine Value="241"/>
         <CursorPos X="5" Y="253"/>
         <UsageCount Value="100"/>
@@ -508,19 +507,21 @@
       <Unit54>
         <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
         <UnitName Value="Pospolite.View.HTML.Basics"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="4"/>
-        <TopLine Value="853"/>
-        <CursorPos X="71" Y="873"/>
+        <TopLine Value="574"/>
+        <CursorPos Y="593"/>
         <UsageCount Value="100"/>
         <Loaded Value="True"/>
       </Unit54>
       <Unit55>
         <Filename Value="..\css\pospolite.view.css.binder.pas"/>
         <UnitName Value="Pospolite.View.CSS.Binder"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="82"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="170"/>
         <CursorPos X="28" Y="195"/>
-        <UsageCount Value="99"/>
+        <UsageCount Value="101"/>
+        <Loaded Value="True"/>
       </Unit55>
       <Unit56>
         <Filename Value="..\dom\pospolite.view.html.layout.pas"/>
@@ -544,23 +545,23 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="2267"/>
         <CursorPos Y="2282"/>
-        <UsageCount Value="0"/>
+        <UsageCount Value="10"/>
       </Unit58>
       <Unit59>
         <Filename Value="..\core\pospolite.view.basics.generics.inc"/>
         <EditorIndex Value="3"/>
-        <TopLine Value="767"/>
-        <CursorPos Y="783"/>
-        <UsageCount Value="55"/>
+        <TopLine Value="891"/>
+        <CursorPos X="36" Y="919"/>
+        <UsageCount Value="57"/>
         <Loaded Value="True"/>
       </Unit59>
       <Unit60>
         <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.definitions.pas"/>
         <UnitName Value="Pospolite.View.Drawing.DrawerD2D1.Definitions"/>
-        <EditorIndex Value="8"/>
+        <EditorIndex Value="10"/>
         <TopLine Value="2381"/>
         <CursorPos X="33" Y="2393"/>
-        <UsageCount Value="36"/>
+        <UsageCount Value="38"/>
         <Loaded Value="True"/>
       </Unit60>
       <Unit61>
@@ -624,7 +625,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="67"/>
         <CursorPos X="92" Y="160"/>
-        <UsageCount Value="0"/>
+        <UsageCount Value="10"/>
       </Unit68>
       <Unit69>
         <Filename Value="..\..\..\fpc\3.2.2\source\rtl\objpas\objpas.pp"/>
@@ -755,10 +756,10 @@
       <Unit87>
         <Filename Value="..\dom\pospolite.view.html.parser.pas"/>
         <UnitName Value="Pospolite.View.HTML.Parser"/>
-        <EditorIndex Value="11"/>
-        <TopLine Value="277"/>
-        <CursorPos X="40" Y="298"/>
-        <UsageCount Value="75"/>
+        <EditorIndex Value="13"/>
+        <TopLine Value="284"/>
+        <CursorPos X="41" Y="293"/>
+        <UsageCount Value="77"/>
         <Loaded Value="True"/>
       </Unit87>
       <Unit88>
@@ -771,7 +772,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="215"/>
         <CursorPos X="7" Y="224"/>
-        <UsageCount Value="0"/>
+        <UsageCount Value="10"/>
       </Unit89>
       <Unit90>
         <Filename Value="..\css\pospolite.view.css.animation.pas"/>
@@ -784,10 +785,10 @@
       <Unit91>
         <Filename Value="..\frame\pospolite.view.controls.pas"/>
         <UnitName Value="Pospolite.View.Controls"/>
-        <EditorIndex Value="10"/>
+        <EditorIndex Value="12"/>
         <TopLine Value="742"/>
         <CursorPos X="26" Y="758"/>
-        <UsageCount Value="64"/>
+        <UsageCount Value="66"/>
         <Loaded Value="True"/>
       </Unit91>
       <Unit92>
@@ -953,128 +954,140 @@
         <CursorPos X="121" Y="438"/>
         <UsageCount Value="9"/>
       </Unit113>
+      <Unit114>
+        <Filename Value="D:\lazarus\fpc\3.2.2\source\rtl\objpas\objpas.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="489"/>
+        <CursorPos X="44" Y="208"/>
+        <UsageCount Value="10"/>
+      </Unit114>
+      <Unit115>
+        <Filename Value="..\dom\pospolite.view.html.scrolling.pas"/>
+        <UnitName Value="Pospolite.View.HTML.Scrolling"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="101"/>
+        <CursorPos X="15" Y="112"/>
+        <UsageCount Value="12"/>
+        <Loaded Value="True"/>
+      </Unit115>
     </Units>
-    <JumpHistory Count="30" HistoryIndex="27">
+    <JumpHistory Count="29" HistoryIndex="28">
       <Position1>
         <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
-        <Caret Line="585" TopLine="572"/>
+        <Caret Line="588" Column="34" TopLine="577"/>
       </Position1>
       <Position2>
         <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
-        <Caret Line="850" TopLine="846"/>
+        <Caret Line="152" Column="15" TopLine="139"/>
       </Position2>
       <Position3>
         <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
-        <Caret Line="585" TopLine="572"/>
+        <Caret Line="46" Column="32" TopLine="33"/>
       </Position3>
       <Position4>
-        <Filename Value="..\gfx\pospolite.view.drawing.renderer.pas"/>
-        <Caret Line="239" TopLine="226"/>
+        <Filename Value="..\frame\pospolite.view.frame.pas"/>
+        <Caret Line="504" Column="49" TopLine="485"/>
       </Position4>
       <Position5>
-        <Filename Value="..\gfx\pospolite.view.drawing.renderer.pas"/>
-        <Caret Line="240" TopLine="226"/>
+        <Filename Value="..\core\pospolite.view.basics.pas"/>
+        <Caret Line="531" Column="19" TopLine="519"/>
       </Position5>
       <Position6>
-        <Filename Value="..\gfx\pospolite.view.drawing.renderer.pas"/>
-        <Caret Line="241" TopLine="226"/>
+        <Filename Value="..\core\pospolite.view.basics.generics.inc"/>
+        <Caret Line="919" Column="16" TopLine="906"/>
       </Position6>
       <Position7>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="2694" TopLine="2681"/>
+        <Filename Value="..\core\pospolite.view.basics.pas"/>
+        <Caret Line="513" Column="18" TopLine="499"/>
       </Position7>
       <Position8>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="2695" TopLine="2681"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="45" Column="18" TopLine="33"/>
       </Position8>
       <Position9>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="1558" TopLine="1545"/>
+        <Filename Value="..\core\pospolite.view.basics.pas"/>
+        <Caret Line="513" Column="18" TopLine="499"/>
       </Position9>
       <Position10>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="1559" TopLine="1545"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="230" Column="37" TopLine="220"/>
       </Position10>
       <Position11>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="1561" TopLine="1539"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="235" Column="39" TopLine="219"/>
       </Position11>
       <Position12>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="1558" TopLine="1539"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="232" Column="24" TopLine="222"/>
       </Position12>
       <Position13>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="1562" TopLine="1540"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="237" Column="54" TopLine="222"/>
       </Position13>
       <Position14>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="1558" TopLine="1540"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="46" Column="19" TopLine="28"/>
       </Position14>
       <Position15>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="1562" TopLine="1540"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="236" Column="35" TopLine="219"/>
       </Position15>
       <Position16>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="1558" TopLine="1540"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="153" Column="50" TopLine="137"/>
       </Position16>
       <Position17>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="1562" TopLine="1540"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="165" Column="50" TopLine="149"/>
       </Position17>
       <Position18>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="2694" TopLine="2681"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="153" Column="21" TopLine="150"/>
       </Position18>
       <Position19>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="2696" TopLine="2681"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="594" Column="32" TopLine="580"/>
       </Position19>
       <Position20>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="2694" TopLine="2681"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="190" Column="43" TopLine="177"/>
       </Position20>
       <Position21>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawerd2d1.pas"/>
-        <Caret Line="2696" TopLine="2681"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="237" Column="39" TopLine="224"/>
       </Position21>
       <Position22>
-        <Filename Value="..\gfx\pospolite.view.drawing.renderer.pas"/>
-        <Caret Line="249" TopLine="227"/>
+        <Filename Value="..\dom\pospolite.view.html.scrolling.pas"/>
+        <Caret Line="58" Column="18" TopLine="41"/>
       </Position22>
       <Position23>
         <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
-        <Caret Line="865" TopLine="845"/>
+        <Caret Line="239" Column="52" TopLine="227"/>
       </Position23>
       <Position24>
-        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
-        <Caret Line="585" TopLine="572"/>
+        <Filename Value="..\dom\pospolite.view.html.scrolling.pas"/>
+        <Caret Line="112" Column="15" TopLine="101"/>
       </Position24>
       <Position25>
         <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
-        <Caret Line="863" Column="80" TopLine="843"/>
+        <Caret Line="590" Column="31" TopLine="576"/>
       </Position25>
       <Position26>
-        <Filename Value="..\frame\pospolite.view.frame.pas"/>
-        <Caret Line="501" Column="139" TopLine="484"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="593" Column="28" TopLine="576"/>
       </Position26>
       <Position27>
-        <Filename Value="..\frame\pospolite.view.frame.pas"/>
-        <Caret Line="503" Column="15" TopLine="484"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="588" Column="24" TopLine="576"/>
       </Position27>
       <Position28>
-        <Filename Value="..\frame\pospolite.view.frame.pas"/>
-        <Caret Line="501" Column="44" TopLine="489"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="587" Column="45" TopLine="574"/>
       </Position28>
       <Position29>
-        <Filename Value="..\gfx\pospolite.view.drawing.renderer.pas"/>
-        <Caret Line="107" Column="14" TopLine="95"/>
+        <Filename Value="..\dom\pospolite.view.html.basics.pas"/>
+        <Caret Line="192" Column="32" TopLine="179"/>
       </Position29>
-      <Position30>
-        <Filename Value="..\gfx\pospolite.view.drawing.drawer.pas"/>
-        <Caret Line="216" Column="24" TopLine="195"/>
-      </Position30>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>
@@ -1082,30 +1095,15 @@
     </RunParams>
   </ProjectSession>
   <Debugging>
-    <BreakPoints>
-      <Item>
-        <Kind Value="bpkSource"/>
-        <WatchScope Value="wpsLocal"/>
-        <WatchKind Value="wpkWrite"/>
-        <Source Value="..\dom\pospolite.view.html.basics.pas"/>
-        <InitialEnabled Value="False"/>
-        <Line Value="586"/>
-      </Item>
-      <Item>
-        <Kind Value="bpkSource"/>
-        <WatchScope Value="wpsLocal"/>
-        <WatchKind Value="wpkWrite"/>
-        <Source Value="..\dom\pospolite.view.html.basics.pas"/>
-        <InitialEnabled Value="False"/>
-        <Line Value="585"/>
-      </Item>
-    </BreakPoints>
     <Watches>
       <Item>
         <Expression Value="arenderer.fdrawer.fsurface"/>
       </Item>
       <Item>
         <Expression Value="self"/>
+      </Item>
+      <Item>
+        <Expression Value="ftext"/>
       </Item>
     </Watches>
   </Debugging>

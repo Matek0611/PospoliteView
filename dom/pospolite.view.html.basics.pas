@@ -18,10 +18,11 @@ unit Pospolite.View.HTML.Basics;
 interface
 
 uses
-  Classes, SysUtils, Pospolite.View.Basics, Pospolite.View.Drawing.Renderer,
+  Classes, SysUtils, Math, Graphics,
+  Pospolite.View.Basics, Pospolite.View.Drawing.Renderer,
   Pospolite.View.Drawing.Basics, Pospolite.View.CSS.Declaration,
   Pospolite.View.HTML.Scrolling, Pospolite.View.HTML.Events,
-  Pospolite.View.CSS.Binder, Pospolite.View.Drawing.Drawer, math;
+  Pospolite.View.CSS.Binder, Pospolite.View.Drawing.Drawer;
 
 type
 
@@ -41,8 +42,8 @@ type
 
     procedure InitStates; override;
     procedure DoneStates; override;
-    procedure DoDraw(ADrawer: Pointer); override;
-    procedure Render(ARenderer: TPLDrawingRenderer); virtual;
+    procedure DoDraw(ACanvas: Pointer); override;
+    procedure Render(ACanvas: TCanvas); virtual;
     procedure {%H-}ApplyInlineStyles; override;
   protected
     // https://developer.mozilla.org/en-US/docs/Web/Events
@@ -149,7 +150,7 @@ type
   public
     constructor Create(AParent: TPLHTMLBasicObject); override;
 
-    procedure Render(ARenderer: TPLDrawingRenderer); override;
+    procedure Render(ACanvas: TCanvas); override;
     procedure UpdatePositionLayout; override;
     procedure UpdateSizeLayout; override;
 
@@ -161,7 +162,7 @@ type
 
   TPLHTMLObjectDIV = class(TPLHTMLNormalObject)
   protected
-    procedure Render(ARenderer: TPLDrawingRenderer); override;
+    procedure Render(ACanvas: TCanvas); override;
   public
     constructor Create(AParent: TPLHTMLBasicObject); override;
   end;
@@ -186,7 +187,7 @@ type
 
 implementation
 
-uses Controls, Variants, Forms, StrUtils, Graphics, Pospolite.View.Threads,
+uses Controls, Variants, Forms, StrUtils, Pospolite.View.Threads,
   Pospolite.View.CSS.Basics, Pospolite.View.CSS.StyleSheet,
   Pospolite.View.CSS.MediaQuery;
 
@@ -227,18 +228,19 @@ begin
     TPLCSSDeclarations(FStates[s]).Free;
 end;
 
-procedure TPLHTMLBasicObject.DoDraw(ADrawer: Pointer);
+procedure TPLHTMLBasicObject.DoDraw(ACanvas: Pointer);
 begin
-  inherited DoDraw(ADrawer);
+  inherited DoDraw(ACanvas);
+
   if (GetLeft + GetWidth < 0) or (GetTop + GetHeight < 0) or not IsVisible then exit;
 
-  Render(TPLDrawingRenderer(ADrawer));
-  FScrolling.Draw(TPLDrawingRenderer(ADrawer));
+  Render(TCanvas(ACanvas));
+  FScrolling.Draw(TCanvas(ACanvas));
 end;
 
-procedure TPLHTMLBasicObject.Render(ARenderer: TPLDrawingRenderer);
+procedure TPLHTMLBasicObject.Render(ACanvas: TCanvas);
 begin
-  ARenderer.DrawHTMLObject(self);
+  NewDrawingRenderer(ACanvas).DrawHTMLObject(self);
 end;
 
 procedure TPLHTMLBasicObject.ApplyInlineStyles;
@@ -580,12 +582,17 @@ begin
   FNodeType := ontTextNode;
 end;
 
-procedure TPLHTMLTextObject.Render(ARenderer: TPLDrawingRenderer);
+procedure TPLHTMLTextObject.Render(ACanvas: TCanvas);
+var
+  ARenderer: Pospolite.View.Drawing.Renderer.IPLDrawingRenderer;
 begin
+  ARenderer := NewDrawingRenderer(ACanvas);
+
   FFont := ARenderer.NewFont(CurrentFont);
   FTextSize := ARenderer.Drawer.Surface.TextSize(FFont, Text);
+  ARenderer.Drawer.Surface.TextOut(FFont, Text, FSize, TPLTextDirections.Create(Bindings.Properties[FState].Text.Align, Bindings.Properties[FState].Text.AlignLast));
 
-  inherited Render(ARenderer);
+  inherited Render(ACanvas);
 end;
 
 procedure TPLHTMLTextObject.UpdatePositionLayout;
@@ -875,9 +882,9 @@ end;
 
 { TPLHTMLObjectDIV }
 
-procedure TPLHTMLObjectDIV.Render(ARenderer: TPLDrawingRenderer);
+procedure TPLHTMLObjectDIV.Render(ACanvas: TCanvas);
 begin
-  inherited Render(ARenderer);
+  inherited Render(ACanvas);
 end;
 
 constructor TPLHTMLObjectDIV.Create(AParent: TPLHTMLBasicObject);

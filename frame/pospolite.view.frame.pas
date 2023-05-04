@@ -501,7 +501,7 @@ begin
       //dr.Drawer.Surface.TextOut(dr.NewFont(PLDrawingFontDataDef), FormatDateTime('hh:nn:ss,zzz', Now), TPLRectF.Create(0, 0, 200, 50), TPLTextDirections.Create(tdLeft, tdUp)); // fps test #2
 
       if Assigned(FDocument) and Assigned(FDocument.Root) then
-        FDocument.Root.Draw(dr);
+        FDocument.Root.Draw(FBuffer.Canvas);
     finally
       dr.Free;
     end;

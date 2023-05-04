@@ -825,7 +825,7 @@ begin
   FZoom := AValue;
 end;
 
-procedure TPLHTMLObject.DoDraw(ADrawer: Pointer);
+procedure TPLHTMLObject.DoDraw(ACanvas: Pointer);
 begin
   // ...
 end;
@@ -906,7 +906,7 @@ begin
   // ...
 end;
 
-procedure TPLHTMLObject.Draw(ADrawer: Pointer);
+procedure TPLHTMLObject.Draw(ACanvas: Pointer);
 var
   obj: TPLHTMLObject;
   wr: TPLBool;
@@ -915,10 +915,10 @@ begin
 
   wr := Assigned(Parent) and (Parent.ZIndex <= ZIndex);
 
-  if wr then DoDraw(ADrawer);
+  if wr then DoDraw(ACanvas);
   for obj in FChildren do
-    obj.Draw(ADrawer);
-  if not wr then DoDraw(ADrawer);
+    obj.Draw(ACanvas);
+  if not wr then DoDraw(ACanvas);
 end;
 
 function TPLHTMLObject.ToHTML: TPLString;

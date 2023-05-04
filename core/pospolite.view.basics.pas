@@ -510,7 +510,7 @@ type
     procedure SetText(AValue: TPLString);
     procedure SetZoom(AValue: TPLFloat);
   protected
-    procedure DoDraw(ADrawer: Pointer); virtual;
+    procedure DoDraw(ACanvas: Pointer); virtual;
     function DoToHTMLChildren: TPLString;
     procedure InitStates; virtual;
     procedure DoneStates; virtual;
@@ -528,7 +528,7 @@ type
       AState: TPLCSSElementState; AIndex: SizeInt = 0); virtual;
 
     procedure UpdateScrollbars; virtual;
-    procedure Draw(ADrawer: Pointer);
+    procedure Draw(ACanvas: Pointer);
     function ToHTML: TPLString; virtual;
     function ToObject: TPLHTMLObject;
     function PositionInParent: SizeInt;
